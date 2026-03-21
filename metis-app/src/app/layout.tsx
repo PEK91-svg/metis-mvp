@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import Sidebar from "../components/Sidebar";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,10 +25,7 @@ export default function RootLayout({
   return (
     <html lang="it" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   );
