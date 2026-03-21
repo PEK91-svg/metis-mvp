@@ -10,33 +10,35 @@ import {
   RiskModelResults,
 } from './types';
 
-// ── Altman Z-Score (1968, revised for private firms) ──────────────────────────
-// Z = 1.2*X1 + 1.4*X2 + 3.3*X3 + 0.6*X4 + 1.0*X5
+// ── Altman Z'-Score (1983, private firms) ─────────────────────────────────────
+// Revised model for non-listed companies — X4 uses book value of equity, not market.
+// Z' = 0.717*X1 + 0.847*X2 + 3.107*X3 + 0.420*X4 + 0.998*X5
+// Thresholds: >2.9 Safe · 1.23–2.9 Grey · <1.23 Distress
 export function calculateAltman(b: ParsedBilancio): AltmanResult {
   const ta = b.totaleAttivo || 1;
   const tl = b.totaleDebiti || 1;
 
-  const x1 = b.capitaleDiLavoro / ta;        // Working Capital / Total Assets
+  const x1 = b.capitaleDiLavoro / ta;         // Working Capital / Total Assets
   const x2 = b.utiliNonDistribuiti / ta;       // Retained Earnings / Total Assets
-  const x3 = b.ebit / ta;                     // EBIT / Total Assets
-  const x4 = b.valoreAzioneMercato / tl;      // Market Value Equity / Total Liabilities
-  const x5 = b.fatturato / ta;                // Sales / Total Assets
+  const x3 = b.ebit / ta;                      // EBIT / Total Assets
+  const x4 = b.patrimonioNetto / tl;           // Book Value of Equity / Total Liabilities (private firm)
+  const x5 = b.fatturato / ta;                 // Sales / Total Assets
 
-  const score = 1.2 * x1 + 1.4 * x2 + 3.3 * x3 + 0.6 * x4 + 1.0 * x5;
+  const score = 0.717 * x1 + 0.847 * x2 + 3.107 * x3 + 0.420 * x4 + 0.998 * x5;
   const rounded = Math.round(score * 100) / 100;
 
   let status: AltmanResult['status'];
   let description: string;
 
-  if (rounded > 2.99) {
+  if (rounded > 2.9) {
     status = 'SAFE ZONE';
-    description = `Lo Z-Score di ${rounded} posiziona l'azienda nella zona di sicurezza (>2.99). La struttura finanziaria è solida con bassa probabilità di insolvenza nei prossimi 24 mesi.`;
-  } else if (rounded >= 1.81) {
+    description = `Lo Z'-Score di ${rounded} posiziona l'azienda nella zona di sicurezza (>2.9). La struttura finanziaria è solida con bassa probabilità di insolvenza nei prossimi 24 mesi.`;
+  } else if (rounded >= 1.23) {
     status = 'GREY ZONE';
-    description = `Lo Z-Score di ${rounded} colloca l'azienda nella zona grigia (1.81-2.99). È necessario un monitoraggio attento: il profilo di rischio non è ancora critico ma presenta segnali di attenzione.`;
+    description = `Lo Z'-Score di ${rounded} colloca l'azienda nella zona grigia (1.23–2.9). È necessario un monitoraggio attento: il profilo di rischio non è ancora critico ma presenta segnali di attenzione.`;
   } else {
     status = 'DISTRESS ZONE';
-    description = `Lo Z-Score di ${rounded} indica zona di distress (<1.81). Rischio elevato di default: la combinazione di leverage, redditività e liquidità richiede intervento immediato.`;
+    description = `Lo Z'-Score di ${rounded} indica zona di distress (<1.23). Rischio elevato di default: la combinazione di leverage, redditività e liquidità richiede intervento immediato.`;
   }
 
   return {
@@ -223,11 +225,11 @@ export function calculateAllModels(bilancio: ParsedBilancio): RiskModelResults {
 // ── Estimate PD from model consensus ──────────────────────────────────────────
 export function estimatePD(models: RiskModelResults): number {
   // Weighted average of model-implied PDs
-  // Altman: approximate PD mapping
+  // Altman Z' thresholds: >2.9 Safe, 1.23–2.9 Grey, <1.23 Distress (Altman 1983, private firms)
   let altmanPD: number;
-  if (models.altman.score > 2.99) altmanPD = 0.5;
-  else if (models.altman.score > 1.81) altmanPD = 3.0 + (2.99 - models.altman.score) * 5;
-  else altmanPD = 15.0 + (1.81 - models.altman.score) * 10;
+  if (models.altman.score > 2.9) altmanPD = 0.5;
+  else if (models.altman.score >= 1.23) altmanPD = 3.0 + (2.9 - models.altman.score) * 5;
+  else altmanPD = 15.0 + (1.23 - models.altman.score) * 10;
 
   const ohlsonPD = models.ohlson.probability;
   const zmijewskiPD = models.zmijewski.probability;

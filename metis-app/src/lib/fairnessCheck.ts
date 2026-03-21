@@ -71,7 +71,7 @@ function checkTransparency(
     'Formule deterministiche',
     'Tutti i calcoli sono basati su formule pubblicate e riproducibili',
     'PASS',
-    'Modelli utilizzati: Altman Z-Score (1968), Ohlson O-Score (1980), Zmijewski X-Score (1984). Nessun modello black-box o ML opaco impiegato.'
+    "Modelli utilizzati: Altman Z'-Score (1983, private firms), Ohlson O-Score (1980), Zmijewski X-Score (1984). Nessun modello black-box o ML opaco impiegato."
   ));
 
   // T4: Componenti del modello esposti

@@ -37,7 +37,7 @@ function safeDeltaPct(azienda: number, riferimento: number): number {
 // ── Soglie di Rischio Standard ──────────────────────────────────────────────
 const SOGLIE = {
   ebitdaMargin: { value: 5, label: 'EBITDA Margin minimo accettabile', higherIsBetter: true },
-  altmanScore: { value: 1.81, label: 'Soglia distress Altman Z-Score', higherIsBetter: true },
+  altmanScore: { value: 1.23, label: 'Soglia distress Altman Z\'-Score (private firms)', higherIsBetter: true },
   dscrBase: { value: 1.0, label: 'DSCR minimo copertura debito', higherIsBetter: true },
   leverage: { value: 4.0, label: 'Leverage massimo accettabile (D/PN)', higherIsBetter: false },
   pd: { value: 5.0, label: 'PD massima accettabile', higherIsBetter: false },
