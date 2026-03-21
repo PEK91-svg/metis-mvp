@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
 export default function MetisApp() {
+  const router = useRouter();
   const [step, setStep] = useState<"upload" | "loading" | "dashboard">("upload");
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [apiData, setApiData] = useState<any>(null);
@@ -192,10 +194,15 @@ export default function MetisApp() {
           </div>
         )}
         <header className="flex justify-between items-center">
-          <div className="flex flex-col">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.push("/home")} className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div className="flex flex-col">
             <h1 className="font-space text-2xl font-semibold text-white">
               Dossier: {safeData?.company_name || "ALFA ROMEO SRL"} <span className="text-text-muted text-base ml-3 font-normal">ID: {safeData?.dossier_id || "PEF-2026-X892"}</span>
             </h1>
+          </div>
           </div>
           <div className="flex items-center gap-3">
             <button

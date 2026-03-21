@@ -664,7 +664,7 @@ export default function HomeDashboard() {
                       className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-black/10' : ''} hover:bg-white/5 transition group`}
                     >
                       <td className="px-4 py-2.5">
-                        <Link href="/dossier" className="text-cyan hover:text-white transition text-sm font-medium">
+                        <Link href={`/pratica?id=${c.id}`} className="text-cyan hover:text-white transition text-sm font-medium">
                           {c.name}
                         </Link>
                         <div className="text-[10px] text-text-muted mt-0.5">{c.piva} · {c.sector}</div>
