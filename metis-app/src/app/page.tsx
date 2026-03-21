@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import jsPDF from "jspdf";
 
 export default function MetisApp() {
   const [step, setStep] = useState<"upload" | "loading" | "dashboard">("upload");
@@ -14,7 +13,6 @@ export default function MetisApp() {
   const [showDelibera, setShowDelibera] = useState(false);
 
   const exportPDF = () => {
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const d = apiData;
     const company = d?.company_name || "ALFA ROMEO SRL";
     const dossierId = d?.dossier_id || "PEF-2026-X892";
@@ -22,75 +20,58 @@ export default function MetisApp() {
     const altman = d?.risk_models?.altman?.score || "3.12";
     const altmanStatus = d?.risk_models?.altman?.status || "SAFE ZONE";
     const dscr = d?.forecast_dscr?.base || "1.45x";
-    const biasNote = "De-biasing FairBoost™ applicato — Nessuna discriminazione rilevata.";
     const date = new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" });
 
-    // Header
-    doc.setFillColor(9, 13, 20);
-    doc.rect(0, 0, 210, 40, "F");
-    doc.setTextColor(0, 229, 255);
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("METIS", 14, 16);
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text("by FINOMNIA — AI Credit Underwriting Platform", 14, 22);
-    doc.setFontSize(9);
-    doc.setTextColor(241, 245, 249);
-    doc.text(`REPORT DELIBERA — Generato il ${date}`, 14, 30);
-    doc.setTextColor(123, 44, 191);
-    doc.text(`EU AI Act Compliant | Glass-Box Report | Modello: Explainable AI`, 14, 36);
+    const html = `
+      <!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+      <title>Metis Report — ${company}</title>
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background:#fff; color:#1a1a2e; padding:0; }
+        .header { background:#090D14; color:#00E5FF; padding:24px 32px; }
+        .header h1 { font-size:28px; letter-spacing:8px; margin-bottom:4px; }
+        .header small { color:#94A3B8; font-size:11px; display:block; margin-bottom:6px; }
+        .header .badge { color:#7B2CBF; font-size:10px; }
+        .company-bar { background:#0e1521; color:#F1F5F9; padding:16px 32px; display:flex; justify-content:space-between; align-items:center; }
+        .company-bar h2 { font-size:20px; }
+        .company-bar small { color:#94A3B8; font-size:11px; }
+        .section { padding:24px 32px; }
+        .section h3 { font-size:12px; text-transform:uppercase; letter-spacing:3px; color:#00E5FF; border-bottom:1px solid #00E5FF33; padding-bottom:8px; margin-bottom:16px; }
+        .metric-row { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; margin-bottom:6px; background:#f8fafc; border-left:3px solid #00E5FF; border-radius:4px; }
+        .metric-label { font-size:12px; color:#64748b; }
+        .metric-value { font-size:13px; font-weight:700; color:#1a1a2e; }
+        .fair { border-color:#00FF66 }
+        .danger { border-color:#FF0055 }
+        .warning { border-color:#FACC15 }
+        .disclaimer { margin:32px 32px 0; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:14px; font-size:10px; color:#64748b; line-height:1.6; }
+        .footer { background:#090D14; color:#475569; font-size:10px; padding:14px 32px; margin-top:24px; text-align:center; }
+      </style></head><body>
+      <div class="header">
+        <h1>METIS</h1>
+        <small>by FINOMNIA — AI Credit Underwriting Platform</small>
+        <small>REPORT DELIBERA — ${date}</small>
+        <div class="badge">EU AI Act Compliant | Glass-Box Report | Explainable AI</div>
+      </div>
+      <div class="company-bar">
+        <div><h2>${company}</h2><small>Dossier ID: ${dossierId}</small></div>
+        <div><small>Data Analisi: ${date}</small></div>
+      </div>
+      <div class="section">
+        <h3>KPI Principali</h3>
+        <div class="metric-row warning"><span class="metric-label">Probabilità di Default (PD)</span><span class="metric-value">${pd}</span></div>
+        <div class="metric-row"><span class="metric-label">Altman Z-Score</span><span class="metric-value">${altman} — ${altmanStatus}</span></div>
+        <div class="metric-row"><span class="metric-label">Forecast DSCR Base 12M</span><span class="metric-value">${dscr}</span></div>
+        <div class="metric-row fair"><span class="metric-label">Fair Lending Score (EU AI Act)</span><span class="metric-value">Verificato — De-biasing FairBoost™ applicato</span></div>
+      </div>
+      <div class="disclaimer">
+        <strong>EU AI Act — Classificazione:</strong> Questo sistema è classificato come “Supporto Decisionale ad Alto Rischio”. Nessuna delibera viene eseguita automaticamente. L’operatore umano rimane sempre e inconfutabilmente responsabile della decisione finale. Tutti i modelli di calcolo sono di tipo Glass-Box (Explainable AI).
+      </div>
+      <div class="footer">FINOMNIA S.r.l. — Metis v2.0 — Dossier: ${dossierId} — ${date}</div>
+      <script>window.onload = () => { window.print(); }<\/script>
+      </body></html>`;
 
-    // Company info
-    doc.setFillColor(14, 21, 33);
-    doc.rect(0, 42, 210, 30, "F");
-    doc.setTextColor(241, 245, 249);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text(company, 14, 54);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(148, 163, 184);
-    doc.text(`Dossier ID: ${dossierId}`, 14, 62);
-    doc.text(`Data Analisi: ${date}`, 80, 62);
-
-    // Metrics
-    doc.setTextColor(0, 229, 255);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("KPI PRINCIPALI", 14, 82);
-    doc.setDrawColor(0, 229, 255);
-    doc.line(14, 84, 196, 84);
-
-    const metrics = [
-      ["Probabilità di Default (PD)", pd],
-      ["Altman Z-Score", `${altman} — ${altmanStatus}`],
-      ["Forecast DSCR Base 12M", dscr],
-      ["Fair Lending Score", "Verificato — " + biasNote],
-    ];
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(241, 245, 249);
-    doc.setFontSize(9);
-    metrics.forEach(([label, value], i) => {
-      const y = 92 + i * 12;
-      doc.setFillColor(20, 30, 50);
-      doc.rect(14, y - 4, 182, 10, "F");
-      doc.setTextColor(148, 163, 184);
-      doc.text(label, 18, y + 2);
-      doc.setTextColor(241, 245, 249);
-      doc.text(String(value), 120, y + 2);
-    });
-
-    // Footer
-    const footerY = 270;
-    doc.setFillColor(9, 13, 20);
-    doc.rect(0, footerY, 210, 30, "F");
-    doc.setFontSize(7);
-    doc.setTextColor(148, 163, 184);
-    doc.text("EU AI Act — Questo sistema è classificato come Supporto Decisionale. La delibera finale è a carico esclusivo di un operatore umano.", 14, footerY + 8, { maxWidth: 182 });
-    doc.text(`FINOMNIA S.r.l. — Metis v2.0 — ${date}`, 14, footerY + 18);
-
-    doc.save(`Metis_Report_${company.replace(/\s/g, "_")}_${dossierId}.pdf`);
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

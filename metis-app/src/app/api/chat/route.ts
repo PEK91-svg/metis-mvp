@@ -22,7 +22,7 @@ FORMATO: Risposte brevi e chiare. Usa bullet points quando lista documenti o ste
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     // Build history from messages (all but last which is the new user message)
     const history = messages.slice(0, -1).map((msg: {role: string; content: string}) => ({
