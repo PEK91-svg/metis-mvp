@@ -48,7 +48,7 @@ function detectZScoreAnomalies(
     source: string;
   }[] = [
     { kpi: 'EBITDA Margin', value: b.ebitdaMargin, mean: bench.settore.ebitdaMarginMedia, higherIsBetter: true, source: 'Conto Economico → EBITDA / Ricavi' },
-    { kpi: 'Altman Z-Score', value: models.altman.score, mean: bench.settore.altmanMedia, higherIsBetter: true, source: 'Modello Altman (1968) → componenti X1-X5' },
+    { kpi: 'Altman Z-Score', value: models.altman.score, mean: bench.settore.altmanMedia, higherIsBetter: true, source: "Modello Altman Z' (1983, private firms) → componenti X1-X5" },
     { kpi: 'DSCR', value: models.dscr.base, mean: bench.settore.dscrMedia, higherIsBetter: true, source: 'EBITDA / Debt Service annuale' },
     { kpi: 'Leverage', value: leverage, mean: bench.settore.leverageMedia, higherIsBetter: false, source: 'Stato Patrimoniale → Totale Debiti / Patrimonio Netto' },
     { kpi: 'Current Ratio', value: currentRatio, mean: bench.settore.currentRatioMedia, higherIsBetter: true, source: 'Stato Patrimoniale → Attivo Corrente / Passivo Corrente' },
@@ -180,18 +180,18 @@ function detectRuleBasedAnomalies(
     });
   }
 
-  // Altman < 1.81
-  if (models.altman.score < 1.81) {
+  // Altman Z' < 1.23 (private firm threshold, Altman 1983)
+  if (models.altman.score < 1.23) {
     anomalies.push({
       id: genId(),
       kpi: 'Altman Z-Score',
       severity: 'CRITICAL',
       type: 'RULE',
-      title: 'Z-Score in Distress Zone',
-      description: `Altman Z-Score a ${models.altman.score} (soglia distress: 1.81). Il modello indica probabilità elevata di insolvenza entro 24 mesi.`,
+      title: "Z'-Score in Distress Zone",
+      description: `Altman Z'-Score a ${models.altman.score} (soglia distress PMI: 1.23). Il modello indica probabilità elevata di insolvenza entro 24 mesi.`,
       value: models.altman.score,
-      threshold: 1.81,
-      source: 'Modello Altman (1968) → Z = 1.2X1 + 1.4X2 + 3.3X3 + 0.6X4 + X5',
+      threshold: 1.23,
+      source: "Modello Altman Z' (1983, private firms) → Z' = 0.717X1 + 0.847X2 + 3.107X3 + 0.420X4 + 0.998X5",
     });
   }
 
