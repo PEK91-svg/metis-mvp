@@ -11,6 +11,7 @@ export default function MetisApp() {
   const [selectedModel, setSelectedModel] = useState<string>("altman");
   const [expandedCol, setExpandedCol] = useState<number | null>(null);
   const [showDelibera, setShowDelibera] = useState(false);
+  const [backendError, setBackendError] = useState(false);
 
   const exportPDF = () => {
     const d = apiData;
@@ -108,7 +109,8 @@ export default function MetisApp() {
       setTimeout(() => setStep("dashboard"), 500); 
     } catch (e) {
       console.error("Backend non raggiungibile. Fallback static mock.", e);
-      setTimeout(() => setStep("dashboard"), 3500);
+      setBackendError(true);
+      setTimeout(() => setStep("dashboard"), 500);
     }
   };
 
@@ -183,6 +185,12 @@ export default function MetisApp() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-6 gap-6 h-full overflow-hidden">
+        {backendError && (
+          <div className="flex items-center gap-2 bg-yellow/10 border border-yellow/30 text-yellow text-xs font-space px-4 py-2 rounded-lg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Backend non raggiungibile — dati dimostrativi in uso. Avvia il server FastAPI su porta 8000.
+          </div>
+        )}
         <header className="flex justify-between items-center">
           <div className="flex flex-col">
             <h1 className="font-space text-2xl font-semibold text-white">
@@ -397,7 +405,9 @@ export default function MetisApp() {
                   const label = m?.name || (key === 'altman' ? 'Altman Z-Score' : key === 'ohlson' ? 'Ohlson O-Score' : key === 'zmijewski' ? 'Zmijewski X-Score' : 'Modigliani-Miller');
                   const isExpanded = selectedModel === key;
                   const isDistress = m?.status?.includes('DISTRESS') || m?.status?.includes('ALTO') || m?.status?.includes('OVER');
-                  const color = isDistress ? 'red' : 'cyan';
+                  const cc = isDistress
+                    ? { text: 'text-red', b30: 'border-red/30', b40: 'border-red/40', b50: 'border-red/50', bg: 'bg-red/10' }
+                    : { text: 'text-cyan', b30: 'border-cyan/30', b40: 'border-cyan/40', b50: 'border-cyan/50', bg: 'bg-cyan/10' };
                   const mainValue = key === 'modigliani' ? (m?.leverage ?? 0.34) : (m?.score ?? (key === 'altman' ? 3.12 : key === 'ohlson' ? -2.85 : -1.72));
                   const extraLabel = key === 'modigliani' ? `WACC ${m?.wacc || 7.2}%` : (key !== 'altman' && m?.pd_pct !== undefined) ? `PD ${m.pd_pct}%` : '';
 
@@ -414,9 +424,9 @@ export default function MetisApp() {
                           <span className="text-[9px] text-text-muted hidden sm:inline">({m?.author || ''})</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          {extraLabel && <span className={`text-[9px] px-1.5 py-0.5 rounded border font-space font-semibold border-${color}/30 text-${color} bg-${color}/10`}>{extraLabel}</span>}
-                          <span className={`font-space text-lg font-bold text-${color}`}>{mainValue}</span>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded border font-semibold border-${color}/40 text-${color} bg-${color}/10`}>{m?.status || 'N/A'}</span>
+                          {extraLabel && <span className={`text-[9px] px-1.5 py-0.5 rounded border font-space font-semibold ${cc.b30} ${cc.text} ${cc.bg}`}>{extraLabel}</span>}
+                          <span className={`font-space text-lg font-bold ${cc.text}`}>{mainValue}</span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded border font-semibold ${cc.b40} ${cc.text} ${cc.bg}`}>{m?.status || 'N/A'}</span>
                           <svg className={`w-3.5 h-3.5 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
@@ -427,14 +437,14 @@ export default function MetisApp() {
                       {isExpanded && (
                         <div className="px-5 pb-4 pt-1 border-t border-glass-border animate-[fadeUp_0.2s_ease-out_forwards]">
                           <div className="flex items-end gap-4 mb-3">
-                            <span className={`font-space text-5xl font-bold text-${color}`}>{mainValue}</span>
+                            <span className={`font-space text-5xl font-bold ${cc.text}`}>{mainValue}</span>
                             <div className="flex flex-col gap-1 mb-1">
-                              <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold tracking-wider border-${color}/50 text-${color} bg-${color}/10`}>{m?.status || 'SAFE ZONE'}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold tracking-wider ${cc.b50} ${cc.text} ${cc.bg}`}>{m?.status || 'SAFE ZONE'}</span>
                               {key !== 'altman' && key !== 'modigliani' && m?.pd_pct !== undefined && (
-                                <span className="text-[10px] text-text-muted">PD stimata: <strong className={`text-${color}`}>{m.pd_pct}%</strong></span>
+                                <span className="text-[10px] text-text-muted">PD stimata: <strong className={cc.text}>{m.pd_pct}%</strong></span>
                               )}
                               {key === 'modigliani' && (
-                                <span className="text-[10px] text-text-muted">WACC: <strong className={`text-${color}`}>{m?.wacc || 7.2}%</strong></span>
+                                <span className="text-[10px] text-text-muted">WACC: <strong className={cc.text}>{m?.wacc || 7.2}%</strong></span>
                               )}
                             </div>
                           </div>

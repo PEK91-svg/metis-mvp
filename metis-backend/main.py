@@ -1,7 +1,10 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from duckduckgo_search import DDGS
+
+_executor = ThreadPoolExecutor()
 
 app = FastAPI(
     title="Metis AI Orchestrator", 
@@ -11,7 +14,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -139,8 +142,9 @@ async def analyze_dossier(file: UploadFile = File(...)):
     mismatch_pct = round(abs(debiti_cr - debiti_bilancio) / debiti_bilancio * 100, 1)
     mismatch_alert = mismatch_pct > 10
 
-    # LIVE Web Sentiment via DuckDuckGo (Module 2)
-    sentiment = agent_news_crawl(company_name)
+    # LIVE Web Sentiment via DuckDuckGo (Module 2) — run in thread pool to avoid blocking event loop
+    loop = asyncio.get_event_loop()
+    sentiment = await loop.run_in_executor(_executor, agent_news_crawl, company_name)
 
     # DSCR Forecast Module 7 - Triple Scenario
     if z_score > 2.0:

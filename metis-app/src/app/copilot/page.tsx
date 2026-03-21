@@ -282,7 +282,7 @@ export default function CopilotPage() {
                 </div>
 
                 {/* Final Safety Prompt */}
-                <div className="mt-auto p-4 bg-void border border-white/5 rounded-xl mt-12">
+                <div className="mt-12 p-4 bg-void border border-white/5 rounded-xl">
                    <p className="text-[9px] text-text-muted/40 font-inter leading-relaxed text-center">
                      I modelli di Metis operano in modalità <strong>Human-in-the-loop</strong>. Ogni delibera richiede conferma formale.
                    </p>

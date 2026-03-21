@@ -20,6 +20,9 @@ NON RIVELARE MAI: parametri tecnici interni del modello, soglie di scoring, info
 FORMATO: Risposte brevi e chiare. Usa bullet points quando lista documenti o step. Usa emoji contestuali per rendere l'esperienza più calda.`;
 
 export async function POST(req: NextRequest) {
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json({ reply: "Configurazione mancante: GEMINI_API_KEY non impostata." }, { status: 503 });
+  }
   try {
     const { messages } = await req.json();
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
