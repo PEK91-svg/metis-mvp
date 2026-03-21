@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Sidebar from "@/components/Sidebar";
 
 export default function MetisApp() {
   const [step, setStep] = useState<"upload" | "loading" | "dashboard">("upload");
@@ -116,13 +117,7 @@ export default function MetisApp() {
   return (
     <main className="flex h-screen w-screen overflow-hidden relative text-[13px] tracking-wide animate-[fadeUp_0.5s_ease-out_forwards]">
       {/* Sidebar */}
-      <aside className="w-[70px] h-full border-r border-glass-border flex flex-col items-center justify-between py-6 z-10 bg-[rgba(9,13,20,0.8)]">
-        <div className="flex flex-col items-center gap-4">
-          <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-10 h-10 rounded-lg" />
-          <div className="font-space text-white font-bold text-sm tracking-[0.3em] [writing-mode:vertical-lr] rotate-180">METIS</div>
-        </div>
-        <div className="font-space text-[8px] tracking-[0.2em] text-text-muted uppercase [writing-mode:vertical-lr] rotate-180 opacity-50">v1.0</div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-6 gap-6 h-full overflow-hidden">
