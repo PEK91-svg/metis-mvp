@@ -1,135 +1,756 @@
 "use client";
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import { loadPratiche } from '@/lib/storage';
+import type { Pratica } from '@/lib/types';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+type Status = 'APPROVATA' | 'IN ANALISI' | 'DA REVISIONARE' | 'SOSPESA' | 'RIFIUTATA';
+type RiskLevel = 'BASSO' | 'MEDIO' | 'ALTO' | 'CRITICO';
 
 interface Company {
   id: number;
   name: string;
   piva: string;
-  pd: string;
-  altman: string;
-  status: string;
+  pd: number;
+  altman: number;
+  status: Status;
+  risk: RiskLevel;
+  operator: string;
   updated: string;
+  created: string;
+  sector: string;
+  revenue: number;
 }
 
+interface Notification {
+  id: number;
+  type: 'warning' | 'info' | 'danger' | 'success';
+  message: string;
+  time: string;
+  read: boolean;
+}
+
+// ─── Mock Data ───────────────────────────────────────────────────────────────
+const OPERATORS = ['M. Rossi', 'L. Bianchi', 'G. Verdi', 'A. Neri', 'S. Russo'];
+
 const mockCompanies: Company[] = [
-  { id: 1, name: 'Alpha S.p.A.', piva: 'IT12345678901', pd: '2.1%', altman: '3.12', status: 'APPROVATA', updated: '2024-11-01' },
-  { id: 2, name: 'Beta Ltd.', piva: 'IT98765432109', pd: '3.5%', altman: '2.85', status: 'IN ANALISI', updated: '2024-10-28' },
-  { id: 3, name: 'Gamma SRL', piva: 'IT11223344556', pd: '1.8%', altman: '3.45', status: 'DA REVISIONARE', updated: '2024-10-30' },
+  { id: 1,  name: 'Alpha S.p.A.',        piva: 'IT12345678901', pd: 2.1,  altman: 3.12, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-18', created: '2025-01-15', sector: 'Manifatturiero', revenue: 15400000 },
+  { id: 2,  name: 'Beta Ltd.',           piva: 'IT98765432109', pd: 3.5,  altman: 2.85, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'L. Bianchi', updated: '2025-03-17', created: '2025-02-10', sector: 'Servizi',        revenue: 8200000 },
+  { id: 3,  name: 'Gamma SRL',           piva: 'IT11223344556', pd: 1.8,  altman: 3.45, status: 'DA REVISIONARE', risk: 'BASSO',   operator: 'G. Verdi',   updated: '2025-03-16', created: '2025-01-22', sector: 'Tech',           revenue: 22100000 },
+  { id: 4,  name: 'Delta Corp.',         piva: 'IT99887766554', pd: 5.2,  altman: 1.95, status: 'SOSPESA',        risk: 'ALTO',    operator: 'A. Neri',    updated: '2025-03-15', created: '2025-02-05', sector: 'Edilizia',       revenue: 4500000 },
+  { id: 5,  name: 'Epsilon S.r.l.',      piva: 'IT55443322110', pd: 0.9,  altman: 4.10, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-14', created: '2025-01-08', sector: 'Alimentare',     revenue: 31000000 },
+  { id: 6,  name: 'Zeta Industries',     piva: 'IT66778899001', pd: 7.8,  altman: 1.45, status: 'RIFIUTATA',      risk: 'CRITICO', operator: 'S. Russo',   updated: '2025-03-13', created: '2025-03-01', sector: 'Manifatturiero', revenue: 2100000 },
+  { id: 7,  name: 'Eta Holding',         piva: 'IT22334455667', pd: 1.5,  altman: 3.80, status: 'APPROVATA',      risk: 'BASSO',   operator: 'L. Bianchi', updated: '2025-03-12', created: '2025-01-20', sector: 'Servizi',        revenue: 45000000 },
+  { id: 8,  name: 'Theta Finance',       piva: 'IT33445566778', pd: 4.1,  altman: 2.20, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'G. Verdi',   updated: '2025-03-11', created: '2025-02-18', sector: 'Finanza',        revenue: 12800000 },
+  { id: 9,  name: 'Iota Tech',           piva: 'IT44556677889', pd: 2.8,  altman: 2.95, status: 'DA REVISIONARE', risk: 'MEDIO',   operator: 'A. Neri',    updated: '2025-03-10', created: '2025-02-25', sector: 'Tech',           revenue: 9700000 },
+  { id: 10, name: 'Kappa Logistics',     piva: 'IT55667788990', pd: 6.3,  altman: 1.60, status: 'SOSPESA',        risk: 'ALTO',    operator: 'S. Russo',   updated: '2025-03-09', created: '2025-01-30', sector: 'Trasporti',      revenue: 6300000 },
+  { id: 11, name: 'Lambda Group',        piva: 'IT66778800112', pd: 1.2,  altman: 3.95, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-08', created: '2025-01-12', sector: 'Alimentare',     revenue: 28500000 },
+  { id: 12, name: 'Mu Pharma',           piva: 'IT77889911223', pd: 3.2,  altman: 2.70, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'L. Bianchi', updated: '2025-03-07', created: '2025-03-05', sector: 'Pharma',         revenue: 18000000 },
+  { id: 13, name: 'Nu Energy',           piva: 'IT88990022334', pd: 8.5,  altman: 1.10, status: 'RIFIUTATA',      risk: 'CRITICO', operator: 'G. Verdi',   updated: '2025-03-06', created: '2025-02-15', sector: 'Energia',        revenue: 3400000 },
+  { id: 14, name: 'Xi Construction',     piva: 'IT99001133445', pd: 4.8,  altman: 2.05, status: 'DA REVISIONARE', risk: 'ALTO',    operator: 'A. Neri',    updated: '2025-03-05', created: '2025-02-20', sector: 'Edilizia',       revenue: 7600000 },
+  { id: 15, name: 'Omicron Digital',     piva: 'IT00112244556', pd: 1.0,  altman: 4.25, status: 'APPROVATA',      risk: 'BASSO',   operator: 'S. Russo',   updated: '2025-03-04', created: '2025-01-05', sector: 'Tech',           revenue: 52000000 },
+  { id: 16, name: 'Pi Consulting',       piva: 'IT11223355667', pd: 2.5,  altman: 3.10, status: 'IN ANALISI',     risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-03', created: '2025-03-02', sector: 'Servizi',        revenue: 5200000 },
+  { id: 17, name: 'Rho Automotive',      piva: 'IT22334466778', pd: 5.9,  altman: 1.75, status: 'SOSPESA',        risk: 'ALTO',    operator: 'L. Bianchi', updated: '2025-03-02', created: '2025-02-08', sector: 'Automotive',     revenue: 14200000 },
+  { id: 18, name: 'Sigma Textiles',      piva: 'IT33445577889', pd: 3.8,  altman: 2.50, status: 'DA REVISIONARE', risk: 'MEDIO',   operator: 'G. Verdi',   updated: '2025-03-01', created: '2025-01-28', sector: 'Manifatturiero', revenue: 11000000 },
 ];
 
-const KPI_CARDS = (total: number, inAnalysis: number, approved: number, avgPD: string) => [
-  { label: 'Pratiche Totali', value: total, cls: 'border-cyan/30 text-cyan bg-cyan/10' },
-  { label: 'In Analisi', value: inAnalysis, cls: 'border-purple/30 text-purple bg-purple/10' },
-  { label: 'Approvate', value: approved, cls: 'border-green/30 text-green bg-green/10' },
-  { label: 'PD medio', value: avgPD, cls: 'border-yellow/30 text-yellow bg-yellow/10' },
+const mockNotifications: Notification[] = [
+  { id: 1, type: 'danger',  message: 'Zeta Industries: PD oltre soglia critica (7.8%)',     time: '2 min fa',  read: false },
+  { id: 2, type: 'warning', message: 'Delta Corp.: pratica sospesa da oltre 15 giorni',     time: '1 ora fa',  read: false },
+  { id: 3, type: 'info',    message: 'Mu Pharma: nuova documentazione caricata',            time: '3 ore fa',  read: false },
+  { id: 4, type: 'success', message: 'Lambda Group: approvazione completata',                time: '5 ore fa',  read: true },
+  { id: 5, type: 'warning', message: 'Kappa Logistics: Altman Z-score sotto 1.8',           time: '1 giorno fa', read: true },
 ];
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const STATUS_CONFIG: Record<Status, { color: string; icon: string; border: string; bg: string; text: string }> = {
+  'APPROVATA':      { color: 'green',  icon: '✓', border: 'border-green/50',  bg: 'bg-green/10',  text: 'text-green' },
+  'IN ANALISI':     { color: 'cyan',   icon: '◎', border: 'border-cyan/50',   bg: 'bg-cyan/10',   text: 'text-cyan' },
+  'DA REVISIONARE': { color: 'yellow', icon: '⚠', border: 'border-yellow/50', bg: 'bg-yellow/10', text: 'text-yellow' },
+  'SOSPESA':        { color: 'purple', icon: '⏸', border: 'border-purple/50', bg: 'bg-purple/10', text: 'text-purple' },
+  'RIFIUTATA':      { color: 'red',    icon: '✕', border: 'border-red/50',    bg: 'bg-red/10',    text: 'text-red' },
+};
+
+const RISK_CONFIG: Record<RiskLevel, { border: string; bg: string; text: string }> = {
+  'BASSO':   { border: 'border-green/50',  bg: 'bg-green/10',  text: 'text-green' },
+  'MEDIO':   { border: 'border-yellow/50', bg: 'bg-yellow/10', text: 'text-yellow' },
+  'ALTO':    { border: 'border-red/40',    bg: 'bg-red/10',    text: 'text-red' },
+  'CRITICO': { border: 'border-red/70',    bg: 'bg-red/20',    text: 'text-red' },
+};
+
+type SortKey = 'name' | 'pd' | 'altman' | 'status' | 'updated' | 'risk' | 'revenue';
+type SortDir = 'asc' | 'desc';
+
+function formatCurrency(val: number): string {
+  if (val >= 1_000_000) return `€${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000) return `€${(val / 1_000).toFixed(0)}K`;
+  return `€${val}`;
+}
+
+function formatDate(d: string): string {
+  return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ─── Subcomponents ───────────────────────────────────────────────────────────
+
+function StatusDistributionChart({ companies }: { companies: Company[] }) {
+  const total = companies.length || 1;
+  const counts: Record<Status, number> = {
+    'APPROVATA': 0, 'IN ANALISI': 0, 'DA REVISIONARE': 0, 'SOSPESA': 0, 'RIFIUTATA': 0,
+  };
+  companies.forEach(c => counts[c.status]++);
+
+  const bars: { status: Status; count: number; pct: number }[] = (Object.keys(counts) as Status[]).map(s => ({
+    status: s, count: counts[s], pct: (counts[s] / total) * 100,
+  }));
+
+  const colorMap: Record<Status, string> = {
+    'APPROVATA': '#00FF66', 'IN ANALISI': '#00E5FF', 'DA REVISIONARE': '#FACC15', 'SOSPESA': '#7B2CBF', 'RIFIUTATA': '#FF0055',
+  };
+
+  return (
+    <div className="glass-panel p-4">
+      <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Stati</h3>
+      <div className="flex gap-1 h-3 rounded-full overflow-hidden bg-black/30 mb-3">
+        {bars.filter(b => b.count > 0).map(b => (
+          <div key={b.status} style={{ width: `${b.pct}%`, backgroundColor: colorMap[b.status] }} className="transition-all duration-500" title={`${b.status}: ${b.count}`} />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {bars.map(b => (
+          <div key={b.status} className="flex items-center gap-1.5 text-[11px]">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorMap[b.status] }} />
+            <span className="text-text-muted">{b.status}</span>
+            <span className="text-white font-semibold">{b.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RiskDistributionChart({ companies }: { companies: Company[] }) {
+  const total = companies.length || 1;
+  const counts: Record<RiskLevel, number> = { 'BASSO': 0, 'MEDIO': 0, 'ALTO': 0, 'CRITICO': 0 };
+  companies.forEach(c => counts[c.risk]++);
+
+  const riskColors: Record<RiskLevel, string> = {
+    'BASSO': '#00FF66', 'MEDIO': '#FACC15', 'ALTO': '#FF0055', 'CRITICO': '#FF0055',
+  };
+
+  return (
+    <div className="glass-panel p-4">
+      <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Rischio</h3>
+      <div className="grid grid-cols-4 gap-2">
+        {(Object.keys(counts) as RiskLevel[]).map(r => {
+          const pct = (counts[r] / total) * 100;
+          return (
+            <div key={r} className="flex flex-col items-center gap-1">
+              <div className="w-full h-16 bg-black/30 rounded-md relative overflow-hidden flex items-end">
+                <div
+                  className="w-full rounded-t-sm transition-all duration-700"
+                  style={{ height: `${Math.max(pct, 5)}%`, backgroundColor: riskColors[r], opacity: r === 'CRITICO' ? 0.8 : 0.6 }}
+                />
+              </div>
+              <span className="text-[10px] text-text-muted uppercase">{r}</span>
+              <span className="text-xs font-bold" style={{ color: riskColors[r] }}>{counts[r]}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PDTrendMiniChart({ companies }: { companies: Company[] }) {
+  const sorted = [...companies].sort((a, b) => a.pd - b.pd);
+  const max = Math.max(...companies.map(c => c.pd), 1);
+  const step = 100 / (sorted.length || 1);
+
+  const points = sorted.map((c, i) => ({
+    x: i * step + step / 2,
+    y: 100 - (c.pd / max) * 80 - 10,
+    pd: c.pd,
+    name: c.name,
+  }));
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  return (
+    <div className="glass-panel p-4">
+      <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">PD Distribution</h3>
+      <svg viewBox="0 0 100 60" className="w-full h-20" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="pdGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Area fill */}
+        <path d={`${pathD} L ${points[points.length - 1]?.x ?? 0} 55 L ${points[0]?.x ?? 0} 55 Z`} fill="url(#pdGrad)" />
+        {/* Line */}
+        <path d={pathD} fill="none" stroke="#00E5FF" strokeWidth="0.8" />
+        {/* Danger threshold */}
+        <line x1="0" y1={100 - (5 / max) * 80 - 10} x2="100" y2={100 - (5 / max) * 80 - 10} stroke="#FF0055" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.5" />
+        {/* Dots */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="1.2" fill={p.pd > 5 ? '#FF0055' : '#00E5FF'} />
+        ))}
+      </svg>
+      <div className="flex justify-between text-[9px] text-text-muted mt-1">
+        <span>Min: {Math.min(...companies.map(c => c.pd)).toFixed(1)}%</span>
+        <span className="text-red/60">Soglia: 5.0%</span>
+        <span>Max: {Math.max(...companies.map(c => c.pd)).toFixed(1)}%</span>
+      </div>
+    </div>
+  );
+}
+
+// Quick actions dropdown
+function QuickActions({ company, onAction }: { company: Company; onAction: (action: string, company: Company) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const actions = [
+    { label: 'Apri Dossier', icon: '📂', key: 'open' },
+    { label: 'Assegna Operatore', icon: '👤', key: 'assign' },
+    { label: 'Cambia Stato', icon: '🔄', key: 'status' },
+    { label: 'Archivia', icon: '📦', key: 'archive' },
+  ];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-7 h-7 rounded-md flex items-center justify-center text-text-muted hover:text-white hover:bg-white/10 transition text-sm"
+      >
+        ⋮
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 glass-panel border border-white/10 py-1 min-w-[180px] shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+          {actions.map(a => (
+            <button
+              key={a.key}
+              onClick={() => { onAction(a.key, company); setOpen(false); }}
+              className="w-full text-left px-3 py-2 text-xs text-text-muted hover:text-white hover:bg-white/5 transition flex items-center gap-2"
+            >
+              <span>{a.icon}</span> {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Notification panel
+function NotificationPanel({ notifications, open, onClose, onMarkRead }: {
+  notifications: Notification[];
+  open: boolean;
+  onClose: () => void;
+  onMarkRead: (id: number) => void;
+}) {
+  if (!open) return null;
+
+  const typeColors: Record<string, string> = {
+    danger: 'border-l-red bg-red/5', warning: 'border-l-yellow bg-yellow/5',
+    info: 'border-l-cyan bg-cyan/5', success: 'border-l-green bg-green/5',
+  };
+
+  return (
+    <div className="absolute right-6 top-14 z-50 w-96 glass-panel border border-white/10 shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div className="flex items-center justify-between p-3 border-b border-white/10">
+        <span className="text-xs uppercase tracking-wider text-cyan font-semibold">Notifiche</span>
+        <button onClick={onClose} className="text-text-muted hover:text-white text-sm">✕</button>
+      </div>
+      <div className="max-h-80 overflow-y-auto">
+        {notifications.map(n => (
+          <div
+            key={n.id}
+            onClick={() => onMarkRead(n.id)}
+            className={`p-3 border-b border-white/5 border-l-2 cursor-pointer hover:bg-white/5 transition ${typeColors[n.type]} ${n.read ? 'opacity-50' : ''}`}
+          >
+            <p className="text-xs text-white leading-relaxed">{n.message}</p>
+            <span className="text-[10px] text-text-muted mt-1 block">{n.time}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Sort indicator
+function SortIndicator({ sortKey, currentKey, dir }: { sortKey: SortKey; currentKey: SortKey; dir: SortDir }) {
+  if (sortKey !== currentKey) return <span className="text-white/20 ml-1">↕</span>;
+  return <span className="text-cyan ml-1">{dir === 'asc' ? '↑' : '↓'}</span>;
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function HomeDashboard() {
-  const [filter, setFilter] = useState('');
+  // Filters
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [companies] = useState(mockCompanies);
+  const [riskFilter, setRiskFilter] = useState('');
+  const [operatorFilter, setOperatorFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [pdMin, setPdMin] = useState('');
+  const [pdMax, setPdMax] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  const filtered = companies.filter((c) => {
-    const matchesName = c.name.toLowerCase().includes(filter.toLowerCase());
-    const matchesStatus = statusFilter ? c.status === statusFilter : true;
-    return matchesName && matchesStatus;
-  });
+  // Sorting
+  const [sortKey, setSortKey] = useState<SortKey>('updated');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const total = companies.length;
-  const inAnalysis = companies.filter((c) => c.status === 'IN ANALISI').length;
-  const approved = companies.filter((c) => c.status === 'APPROVATA').length;
-  const avgPD = (
-    companies.reduce((sum, c) => sum + parseFloat(c.pd.replace('%', '')), 0) / total
-  ).toFixed(2) + '%';
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
+  // Notifications
+  const [notifications, setNotifications] = useState(mockNotifications);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Data: merge localStorage pratiche with mock data
+  const [companies, setCompanies] = useState(mockCompanies);
+
+  useEffect(() => {
+    const stored = loadPratiche();
+    if (stored.length > 0) {
+      // Convert stored pratiche to Company format and merge
+      const fromStorage: Company[] = stored.map((p: Pratica, idx: number) => ({
+        id: 100 + idx,
+        name: p.name,
+        piva: p.piva,
+        pd: p.pd,
+        altman: p.altman,
+        status: p.status as Status,
+        risk: p.risk as RiskLevel,
+        operator: p.operator,
+        updated: p.updated.slice(0, 10),
+        created: p.created.slice(0, 10),
+        sector: p.sector,
+        revenue: p.revenue,
+      }));
+      // Merge: stored first, then mock (avoiding duplicates by name)
+      const storedNames = new Set(fromStorage.map(c => c.name));
+      const merged = [...fromStorage, ...mockCompanies.filter(c => !storedNames.has(c.name))];
+      setCompanies(merged);
+    }
+  }, []);
+
+  // Filtered data
+  const filtered = useMemo(() => {
+    return companies.filter(c => {
+      if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.piva.includes(search) && !c.sector.toLowerCase().includes(search.toLowerCase())) return false;
+      if (statusFilter && c.status !== statusFilter) return false;
+      if (riskFilter && c.risk !== riskFilter) return false;
+      if (operatorFilter && c.operator !== operatorFilter) return false;
+      if (dateFrom && c.updated < dateFrom) return false;
+      if (dateTo && c.updated > dateTo) return false;
+      if (pdMin && c.pd < parseFloat(pdMin)) return false;
+      if (pdMax && c.pd > parseFloat(pdMax)) return false;
+      return true;
+    });
+  }, [companies, search, statusFilter, riskFilter, operatorFilter, dateFrom, dateTo, pdMin, pdMax]);
+
+  // Sorted data
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case 'name': cmp = a.name.localeCompare(b.name); break;
+        case 'pd': cmp = a.pd - b.pd; break;
+        case 'altman': cmp = a.altman - b.altman; break;
+        case 'status': cmp = a.status.localeCompare(b.status); break;
+        case 'updated': cmp = a.updated.localeCompare(b.updated); break;
+        case 'risk': { const order: Record<RiskLevel, number> = { BASSO: 0, MEDIO: 1, ALTO: 2, CRITICO: 3 }; cmp = order[a.risk] - order[b.risk]; break; }
+        case 'revenue': cmp = a.revenue - b.revenue; break;
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+  }, [filtered, sortKey, sortDir]);
+
+  // Paginated data
+  const totalPages = Math.ceil(sorted.length / perPage);
+  const paginated = sorted.slice((page - 1) * perPage, page * perPage);
+
+  // Dynamic KPIs
+  const kpis = useMemo(() => {
+    const total = companies.length;
+    const inAnalysis = companies.filter(c => c.status === 'IN ANALISI').length;
+    const approved = companies.filter(c => c.status === 'APPROVATA').length;
+    const rejected = companies.filter(c => c.status === 'RIFIUTATA').length;
+    const highRisk = companies.filter(c => c.risk === 'ALTO' || c.risk === 'CRITICO').length;
+    const avgPD = total > 0 ? companies.reduce((s, c) => s + c.pd, 0) / total : 0;
+    const avgAltman = total > 0 ? companies.reduce((s, c) => s + c.altman, 0) / total : 0;
+    const totalRevenue = companies.reduce((s, c) => s + c.revenue, 0);
+
+    return { total, inAnalysis, approved, rejected, highRisk, avgPD, avgAltman, totalRevenue };
+  }, [companies]);
+
+  // Handlers
+  const handleSort = useCallback((key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+    setPage(1);
+  }, [sortKey]);
+
+  const handleAction = useCallback((action: string, company: Company) => {
+    // In a real app, these would trigger API calls
+    console.log(`Action: ${action} on ${company.name}`);
+  }, []);
+
+  const handleMarkRead = useCallback((id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Export CSV
+  const exportCSV = useCallback(() => {
+    const headers = ['Azienda', 'P.IVA', 'PD%', 'Altman', 'Stato', 'Rischio', 'Operatore', 'Aggiornato', 'Settore', 'Fatturato'];
+    const rows = filtered.map(c => [c.name, c.piva, c.pd, c.altman, c.status, c.risk, c.operator, c.updated, c.sector, c.revenue]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `metis-pratiche-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filtered]);
+
+  const clearFilters = () => {
+    setSearch(''); setStatusFilter(''); setRiskFilter(''); setOperatorFilter('');
+    setDateFrom(''); setDateTo(''); setPdMin(''); setPdMax('');
+    setPage(1);
+  };
+
+  const activeFilterCount = [statusFilter, riskFilter, operatorFilter, dateFrom, dateTo, pdMin, pdMax].filter(Boolean).length;
+
+  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <Sidebar />
-      <main className="flex-1 flex flex-col bg-[rgba(9,13,20,0.85)] backdrop-blur-xl p-6 overflow-auto">
-        {/* KPI Bar */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {KPI_CARDS(total, inAnalysis, approved, avgPD).map((kpi, i) => (
-            <div key={i} className={`glass-panel flex flex-col items-center justify-center p-4 border ${kpi.cls}`}>
-              <span className="text-sm uppercase tracking-wider text-text-muted">{kpi.label}</span>
-              <span className="text-2xl font-bold mt-1">{kpi.value}</span>
+      <main className="flex-1 flex flex-col bg-[rgba(9,13,20,0.85)] backdrop-blur-xl overflow-hidden relative">
+        {/* Ambient background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.08),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(0,229,255,0.06),_transparent_50%)] pointer-events-none" />
+
+        <div className="relative flex-1 flex flex-col p-6 overflow-auto">
+          {/* Header */}
+          <header className="flex items-center justify-between mb-5">
+            <div>
+              <h1 className="text-xl font-bold font-[var(--font-space)] tracking-wide text-white">
+                Pratiche Creditizie
+              </h1>
+              <p className="text-xs text-text-muted mt-0.5">
+                Panoramica e gestione del portafoglio in analisi
+              </p>
             </div>
-          ))}
-        </section>
+            <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 hover:border-cyan/30 hover:bg-cyan/5 transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red text-[9px] text-white rounded-full flex items-center justify-center font-bold animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              <NotificationPanel notifications={notifications} open={showNotifications} onClose={() => setShowNotifications(false)} onMarkRead={handleMarkRead} />
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Cerca azienda…"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full md:w-64 bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan/50"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-purple/50"
-          >
-            <option value="">Tutti gli stati</option>
-            <option value="APPROVATA">Approvata</option>
-            <option value="IN ANALISI">In Analisi</option>
-            <option value="DA REVISIONARE">Da Revisionare</option>
-            <option value="SOSPESA">Sospesa</option>
-          </select>
-          <Link href="/" className="ml-auto">
-            <button className="flex items-center gap-2 bg-cyan/10 text-cyan hover:bg-cyan/20 border border-cyan/30 rounded-lg px-4 py-2 text-sm font-medium transition">
-              + Nuova Pratica
-            </button>
-          </Link>
-        </div>
+              {/* Export */}
+              <button
+                onClick={exportCSV}
+                className="flex items-center gap-2 border border-white/10 hover:border-green/30 hover:bg-green/5 rounded-xl px-3 py-2 text-xs text-text-muted hover:text-green transition"
+                title="Esporta CSV"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+              </button>
 
-        {/* Company Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr className="bg-black/30">
-                <th className="px-4 py-2 text-left text-xs text-text-muted uppercase">Azienda</th>
-                <th className="px-4 py-2 text-left text-xs text-text-muted uppercase">P.IVA</th>
-                <th className="px-4 py-2 text-left text-xs text-text-muted uppercase">PD</th>
-                <th className="px-4 py-2 text-left text-xs text-text-muted uppercase">Altman</th>
-                <th className="px-4 py-2 text-left text-xs text-text-muted uppercase">Stato</th>
-                <th className="px-4 py-2 text-left text-xs text-text-muted uppercase">Aggiornato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c, idx) => (
-                <tr
-                  key={c.id}
-                  className={`glass-panel border-b border-glass-border ${idx % 2 === 0 ? 'bg-black/20' : ''} hover:bg-black/30 transition`}
-                >
-                  <td className="px-4 py-2">
-                    <Link href="/" className="text-cyan hover:underline">
-                      {c.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2 text-sm text-text-muted">{c.piva}</td>
-                  <td className="px-4 py-2 text-sm">{c.pd}</td>
-                  <td className="px-4 py-2 text-sm">{c.altman}</td>
-                  <td className="px-4 py-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium border ${
-                      c.status === 'APPROVATA'
-                        ? 'border-green/50 text-green bg-green/10'
-                        : c.status === 'IN ANALISI'
-                        ? 'border-cyan/50 text-cyan bg-cyan/10'
-                        : c.status === 'DA REVISIONARE'
-                        ? 'border-yellow/50 text-yellow bg-yellow/10'
-                        : 'border-white/20 text-text-muted bg-white/5'
-                    }`}>
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-sm text-text-muted">{c.updated}</td>
+              {/* New practice */}
+              <Link href="/dossier">
+                <button className="flex items-center gap-2 bg-cyan/10 text-cyan hover:bg-cyan/20 border border-cyan/30 rounded-xl px-4 py-2 text-xs font-semibold transition shadow-[0_0_15px_rgba(0,229,255,0.1)] hover:shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                  <span className="text-base">+</span> Nuova Pratica
+                </button>
+              </Link>
+            </div>
+          </header>
+
+          {/* KPI Cards */}
+          <section className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-5">
+            {[
+              { label: 'Totali', value: kpis.total, cls: 'border-cyan/30 text-cyan', glow: 'shadow-[0_0_10px_rgba(0,229,255,0.08)]' },
+              { label: 'In Analisi', value: kpis.inAnalysis, cls: 'border-purple/30 text-purple', glow: 'shadow-[0_0_10px_rgba(123,44,191,0.08)]' },
+              { label: 'Approvate', value: kpis.approved, cls: 'border-green/30 text-green', glow: 'shadow-[0_0_10px_rgba(0,255,102,0.08)]' },
+              { label: 'Rifiutate', value: kpis.rejected, cls: 'border-red/30 text-red', glow: 'shadow-[0_0_10px_rgba(255,0,85,0.08)]' },
+              { label: 'Alto Rischio', value: kpis.highRisk, cls: 'border-yellow/30 text-yellow', glow: 'shadow-[0_0_10px_rgba(250,204,21,0.08)]' },
+              { label: 'PD Medio', value: kpis.avgPD.toFixed(2) + '%', cls: 'border-cyan/30 text-cyan', glow: '' },
+              { label: 'Altman Medio', value: kpis.avgAltman.toFixed(2), cls: 'border-green/30 text-green', glow: '' },
+              { label: 'Rev. Totale', value: formatCurrency(kpis.totalRevenue), cls: 'border-purple/30 text-purple', glow: '' },
+            ].map((kpi, i) => (
+              <div key={i} className={`glass-panel flex flex-col items-center justify-center p-3 border ${kpi.cls} ${kpi.glow}`}>
+                <span className="text-[10px] uppercase tracking-wider text-text-muted font-[var(--font-space)]">{kpi.label}</span>
+                <span className="text-lg font-bold mt-0.5 font-[var(--font-space)]">{kpi.value}</span>
+              </div>
+            ))}
+          </section>
+
+          {/* Charts row */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+            <StatusDistributionChart companies={companies} />
+            <RiskDistributionChart companies={companies} />
+            <PDTrendMiniChart companies={companies} />
+          </section>
+
+          {/* Search + Filters Bar */}
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col md:flex-row items-center gap-3">
+              {/* Global search */}
+              <div className="relative w-full md:w-80">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input
+                  type="text"
+                  placeholder="Cerca per nome, P.IVA, settore…"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  className="w-full bg-black/30 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition"
+                />
+              </div>
+
+              {/* Status filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-purple/50 transition"
+              >
+                <option value="">Tutti gli stati</option>
+                {(Object.keys(STATUS_CONFIG) as Status[]).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+
+              {/* Risk filter */}
+              <select
+                value={riskFilter}
+                onChange={(e) => { setRiskFilter(e.target.value); setPage(1); }}
+                className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-yellow/50 transition"
+              >
+                <option value="">Tutti i rischi</option>
+                {(Object.keys(RISK_CONFIG) as RiskLevel[]).map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+
+              {/* Toggle advanced filters */}
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`flex items-center gap-1.5 border rounded-lg px-3 py-2 text-xs transition ${
+                  showAdvancedFilters || activeFilterCount > 0
+                    ? 'border-cyan/50 text-cyan bg-cyan/10'
+                    : 'border-white/10 text-text-muted hover:border-white/20'
+                }`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Filtri {activeFilterCount > 0 && `(${activeFilterCount})`}
+              </button>
+
+              {activeFilterCount > 0 && (
+                <button onClick={clearFilters} className="text-xs text-red/70 hover:text-red transition">
+                  Resetta filtri
+                </button>
+              )}
+
+              {/* Results count */}
+              <span className="ml-auto text-xs text-text-muted">
+                {filtered.length} di {companies.length} pratiche
+              </span>
+            </div>
+
+            {/* Advanced filters panel */}
+            {showAdvancedFilters && (
+              <div className="glass-panel p-4 grid grid-cols-2 md:grid-cols-5 gap-3 animate-[fadeIn_0.2s_ease-out]">
+                <div>
+                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">Operatore</label>
+                  <select
+                    value={operatorFilter}
+                    onChange={(e) => { setOperatorFilter(e.target.value); setPage(1); }}
+                    className="w-full bg-black/30 border border-white/10 rounded-lg py-1.5 px-2 text-xs text-white focus:outline-none focus:border-cyan/50"
+                  >
+                    <option value="">Tutti</option>
+                    {OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">Data da</label>
+                  <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                    className="w-full bg-black/30 border border-white/10 rounded-lg py-1.5 px-2 text-xs text-white focus:outline-none focus:border-cyan/50" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">Data a</label>
+                  <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                    className="w-full bg-black/30 border border-white/10 rounded-lg py-1.5 px-2 text-xs text-white focus:outline-none focus:border-cyan/50" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">PD min (%)</label>
+                  <input type="number" step="0.1" value={pdMin} onChange={(e) => { setPdMin(e.target.value); setPage(1); }}
+                    placeholder="0.0"
+                    className="w-full bg-black/30 border border-white/10 rounded-lg py-1.5 px-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan/50" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-text-muted uppercase tracking-wider block mb-1">PD max (%)</label>
+                  <input type="number" step="0.1" value={pdMax} onChange={(e) => { setPdMax(e.target.value); setPage(1); }}
+                    placeholder="100.0"
+                    className="w-full bg-black/30 border border-white/10 rounded-lg py-1.5 px-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan/50" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Table */}
+          <div className="flex-1 overflow-x-auto glass-panel">
+            <table className="min-w-full table-auto">
+              <thead>
+                <tr className="bg-black/30 border-b border-white/10">
+                  {([
+                    { key: 'name' as SortKey, label: 'Azienda', w: '' },
+                    { key: 'pd' as SortKey, label: 'PD', w: 'w-20' },
+                    { key: 'altman' as SortKey, label: 'Altman Z', w: 'w-20' },
+                    { key: 'risk' as SortKey, label: 'Rischio', w: 'w-24' },
+                    { key: 'status' as SortKey, label: 'Stato', w: 'w-32' },
+                    { key: 'revenue' as SortKey, label: 'Fatturato', w: 'w-28' },
+                    { key: 'updated' as SortKey, label: 'Aggiornato', w: 'w-28' },
+                  ]).map(col => (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className={`px-4 py-2.5 text-left text-[10px] text-text-muted uppercase tracking-wider cursor-pointer hover:text-cyan transition select-none ${col.w}`}
+                    >
+                      {col.label}
+                      <SortIndicator sortKey={col.key} currentKey={sortKey} dir={sortDir} />
+                    </th>
+                  ))}
+                  <th className="px-4 py-2.5 text-left text-[10px] text-text-muted uppercase tracking-wider w-20">Operatore</th>
+                  <th className="px-2 py-2.5 w-10"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-12 text-center text-sm text-text-muted">
+                      Nessuna pratica trovata con i filtri selezionati.
+                    </td>
+                  </tr>
+                ) : paginated.map((c, idx) => {
+                  const stCfg = STATUS_CONFIG[c.status];
+                  const rCfg = RISK_CONFIG[c.risk];
+                  return (
+                    <tr
+                      key={c.id}
+                      className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-black/10' : ''} hover:bg-white/5 transition group`}
+                    >
+                      <td className="px-4 py-2.5">
+                        <Link href="/dossier" className="text-cyan hover:text-white transition text-sm font-medium">
+                          {c.name}
+                        </Link>
+                        <div className="text-[10px] text-text-muted mt-0.5">{c.piva} · {c.sector}</div>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-sm font-mono ${c.pd > 5 ? 'text-red' : c.pd > 3 ? 'text-yellow' : 'text-green'}`}>
+                          {c.pd.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-sm font-mono ${c.altman < 1.8 ? 'text-red' : c.altman < 2.7 ? 'text-yellow' : 'text-green'}`}>
+                          {c.altman.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${rCfg.border} ${rCfg.bg} ${rCfg.text}`}>
+                          {c.risk}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${stCfg.border} ${stCfg.bg} ${stCfg.text}`}>
+                          <span>{stCfg.icon}</span> {c.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-sm text-text-muted font-mono">{formatCurrency(c.revenue)}</td>
+                      <td className="px-4 py-2.5 text-xs text-text-muted">{formatDate(c.updated)}</td>
+                      <td className="px-4 py-2.5 text-xs text-text-muted">{c.operator}</td>
+                      <td className="px-2 py-2.5">
+                        <QuickActions company={c} onAction={handleAction} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-text-muted">Righe per pagina:</span>
+                <select
+                  value={perPage}
+                  onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+                  className="bg-black/30 border border-white/10 rounded py-1 px-2 text-xs text-white focus:outline-none"
+                >
+                  {[5, 10, 25].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-xs text-text-muted hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-lg border flex items-center justify-center text-xs transition ${
+                      p === page
+                        ? 'border-cyan/50 text-cyan bg-cyan/10'
+                        : 'border-white/10 text-text-muted hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-xs text-text-muted hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  ›
+                </button>
+              </div>
+
+              <span className="text-xs text-text-muted">
+                Pagina {page} di {totalPages}
+              </span>
+            </div>
+          )}
         </div>
       </main>
     </div>
