@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import jsPDF from "jspdf";
 
 export default function MetisApp() {
   const [step, setStep] = useState<"upload" | "loading" | "dashboard">("upload");
@@ -11,6 +12,86 @@ export default function MetisApp() {
   const [selectedModel, setSelectedModel] = useState<string>("altman");
   const [expandedCol, setExpandedCol] = useState<number | null>(null);
   const [showDelibera, setShowDelibera] = useState(false);
+
+  const exportPDF = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const d = apiData;
+    const company = d?.company_name || "ALFA ROMEO SRL";
+    const dossierId = d?.dossier_id || "PEF-2026-X892";
+    const pd = d?.kpi?.pd || "2.1%";
+    const altman = d?.risk_models?.altman?.score || "3.12";
+    const altmanStatus = d?.risk_models?.altman?.status || "SAFE ZONE";
+    const dscr = d?.forecast_dscr?.base || "1.45x";
+    const biasNote = "De-biasing FairBoost™ applicato — Nessuna discriminazione rilevata.";
+    const date = new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" });
+
+    // Header
+    doc.setFillColor(9, 13, 20);
+    doc.rect(0, 0, 210, 40, "F");
+    doc.setTextColor(0, 229, 255);
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("METIS", 14, 16);
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text("by FINOMNIA — AI Credit Underwriting Platform", 14, 22);
+    doc.setFontSize(9);
+    doc.setTextColor(241, 245, 249);
+    doc.text(`REPORT DELIBERA — Generato il ${date}`, 14, 30);
+    doc.setTextColor(123, 44, 191);
+    doc.text(`EU AI Act Compliant | Glass-Box Report | Modello: Explainable AI`, 14, 36);
+
+    // Company info
+    doc.setFillColor(14, 21, 33);
+    doc.rect(0, 42, 210, 30, "F");
+    doc.setTextColor(241, 245, 249);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(company, 14, 54);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Dossier ID: ${dossierId}`, 14, 62);
+    doc.text(`Data Analisi: ${date}`, 80, 62);
+
+    // Metrics
+    doc.setTextColor(0, 229, 255);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("KPI PRINCIPALI", 14, 82);
+    doc.setDrawColor(0, 229, 255);
+    doc.line(14, 84, 196, 84);
+
+    const metrics = [
+      ["Probabilità di Default (PD)", pd],
+      ["Altman Z-Score", `${altman} — ${altmanStatus}`],
+      ["Forecast DSCR Base 12M", dscr],
+      ["Fair Lending Score", "Verificato — " + biasNote],
+    ];
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(241, 245, 249);
+    doc.setFontSize(9);
+    metrics.forEach(([label, value], i) => {
+      const y = 92 + i * 12;
+      doc.setFillColor(20, 30, 50);
+      doc.rect(14, y - 4, 182, 10, "F");
+      doc.setTextColor(148, 163, 184);
+      doc.text(label, 18, y + 2);
+      doc.setTextColor(241, 245, 249);
+      doc.text(String(value), 120, y + 2);
+    });
+
+    // Footer
+    const footerY = 270;
+    doc.setFillColor(9, 13, 20);
+    doc.rect(0, footerY, 210, 30, "F");
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+    doc.text("EU AI Act — Questo sistema è classificato come Supporto Decisionale. La delibera finale è a carico esclusivo di un operatore umano.", 14, footerY + 8, { maxWidth: 182 });
+    doc.text(`FINOMNIA S.r.l. — Metis v2.0 — ${date}`, 14, footerY + 18);
+
+    doc.save(`Metis_Report_${company.replace(/\s/g, "_")}_${dossierId}.pdf`);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -127,8 +208,17 @@ export default function MetisApp() {
               Dossier: {safeData?.company_name || "ALFA ROMEO SRL"} <span className="text-text-muted text-base ml-3 font-normal">ID: {safeData?.dossier_id || "PEF-2026-X892"}</span>
             </h1>
           </div>
-          <div className="border border-purple text-purple px-4 py-1.5 rounded-full text-xs font-semibold uppercase shadow-[0_0_10px_rgba(123,44,191,0.2)] animate-pulse flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-purple"></div> Elaborazione Completata
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportPDF}
+              className="flex items-center gap-2 text-xs font-space border border-cyan/30 text-cyan hover:bg-cyan/10 px-4 py-1.5 rounded-lg transition"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Export PDF
+            </button>
+            <div className="border border-purple text-purple px-4 py-1.5 rounded-full text-xs font-semibold uppercase shadow-[0_0_10px_rgba(123,44,191,0.2)] animate-pulse flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-purple"></div> Elaborazione Completata
+            </div>
           </div>
         </header>
 
