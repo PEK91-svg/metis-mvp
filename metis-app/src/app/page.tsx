@@ -265,14 +265,35 @@ export default function MetisApp() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-black/20 border border-glass-border rounded-lg p-5 text-center relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-green shadow-sm">
-                  <div className="text-xs text-text-muted font-space uppercase tracking-wide">DSCR (Stress)</div>
-                  <div className="font-space text-3xl my-3 text-green font-bold">{safeData?.kpi.dscr || '1.45x'}</div>
+              {/* DSCR Forecast - 3 Scenari (Module 7) */}
+              <div className="mb-6 bg-black/20 border border-glass-border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <div className="font-space text-xs tracking-widest text-text-muted uppercase">Forecast DSCR Prospettico 12M</div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${
+                    safeData?.forecast_dscr?.scenario_selezionato === 'STRESS' ? 'border-red/50 text-red bg-red/10' : 'border-green/50 text-green bg-green/10'
+                  }`}>Scenario: {safeData?.forecast_dscr?.scenario_selezionato || 'BASE'}</span>
                 </div>
-                <div className="bg-black/20 border border-glass-border rounded-lg p-5 text-center relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-yellow shadow-sm">
-                  <div className="text-xs text-text-muted font-space uppercase tracking-wide">Prob. Default</div>
-                  <div className="font-space text-3xl my-3 text-yellow font-bold">{safeData?.kpi.pd || '2.1%'}</div>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className={`text-center p-3 rounded-lg border ${safeData?.forecast_dscr?.scenario_selezionato === 'BASE' && parseFloat(safeData?.forecast_dscr?.ottimistico) >= 1 ? 'border-green/30 bg-green/5' : 'border-glass-border bg-black/20'}`}>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider">Ottimistico</div>
+                    <div className="font-space text-2xl text-green font-bold mt-1">{safeData?.forecast_dscr?.ottimistico || '1.67x'}</div>
+                  </div>
+                  <div className={`text-center p-3 rounded-lg border ${safeData?.forecast_dscr?.scenario_selezionato === 'BASE' ? 'border-cyan/40 bg-cyan/5 ring-1 ring-cyan/20' : 'border-glass-border bg-black/20'}`}>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider">Base</div>
+                    <div className={`font-space text-2xl font-bold mt-1 ${parseFloat(safeData?.forecast_dscr?.base) >= 1 ? 'text-cyan' : 'text-red'}`}>{safeData?.forecast_dscr?.base || '1.45x'}</div>
+                  </div>
+                  <div className={`text-center p-3 rounded-lg border ${safeData?.forecast_dscr?.scenario_selezionato === 'STRESS' ? 'border-red/40 bg-red/5 ring-1 ring-red/20' : 'border-glass-border bg-black/20'}`}>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider">Stress</div>
+                    <div className={`font-space text-2xl font-bold mt-1 ${parseFloat(safeData?.forecast_dscr?.stress) >= 1 ? 'text-yellow' : 'text-red'}`}>{safeData?.forecast_dscr?.stress || '1.02x'}</div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-text-muted border-l-2 border-glass-border pl-2 leading-relaxed">{safeData?.forecast_dscr?.nota || 'Scenario selezionato automaticamente in base ai trend CR e di bilancio.'}</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 mb-6">
+                <div className="bg-black/20 border border-glass-border rounded-lg p-4 text-center relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-yellow shadow-sm">
+                  <div className="text-xs text-text-muted font-space uppercase tracking-wide">Probabilità di Default (PD)</div>
+                  <div className="font-space text-3xl my-2 text-yellow font-bold">{safeData?.kpi.pd || '2.1%'}</div>
                 </div>
               </div>
 

@@ -127,6 +127,27 @@ async def analyze_dossier(file: UploadFile = File(...)):
     # LIVE Web Sentiment via DuckDuckGo (Module 2)
     sentiment = agent_news_crawl(company_name)
 
+    # DSCR Forecast Module 7 - Triple Scenario
+    if z_score > 2.0:
+        dscr_base = 1.45
+        cr_trend = "STABILE"
+    else:
+        dscr_base = 0.85
+        cr_trend = "DETERIORAMENTO"
+    
+    dscr_ottimistico = round(dscr_base * 1.15, 2)
+    dscr_stress = round(dscr_base * 0.70, 2)
+    
+    if dscr_stress >= 1.0:
+        scenario_selezionato = "BASE"
+        forecast_nota = "I trend CR e di bilancio non evidenziano tensioni: si applica lo scenario Base."
+    elif dscr_base >= 1.0:
+        scenario_selezionato = "STRESS"
+        forecast_nota = f"Il trend CR ({cr_trend}) suggerisce cautela: si raccomanda lo scenario Stress per la delibera."
+    else:
+        scenario_selezionato = "STRESS"
+        forecast_nota = f"DSCR insufficiente anche nello scenario Base ({dscr_base}x). Scenario Stress obbligatorio."
+
     return {
         "status": "success",
         "dossier_id": f"PEF-2026-{filename[:4].upper()}",
@@ -154,6 +175,13 @@ async def analyze_dossier(file: UploadFile = File(...)):
             "debiti_cr": debiti_cr,
             "mismatch_pct": mismatch_pct,
             "alert": mismatch_alert
+        },
+        "forecast_dscr": {
+            "ottimistico": f"{dscr_ottimistico}x",
+            "base": f"{dscr_base}x",
+            "stress": f"{dscr_stress}x",
+            "scenario_selezionato": scenario_selezionato,
+            "nota": forecast_nota
         },
         "swot_matrix": {
             "strengths": ["Fatturato Storico Crescente", "Garanzie MCC in essere"],
