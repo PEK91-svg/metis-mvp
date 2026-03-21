@@ -7,6 +7,7 @@ export default function MetisApp() {
   const [apiData, setApiData] = useState<any>(null);
   const [loadingText, setLoadingText] = useState("Inizializzazione Swarm Multi-Agente...");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>("altman");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -239,30 +240,60 @@ export default function MetisApp() {
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
               
-              {/* Altman Z-Score Hero Widget */}
-              <div className="mb-6 bg-black/30 border border-glass-border rounded-xl p-5 relative overflow-hidden group">
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 transition opacity-20 ${
-                    (safeData?.kpi.z_score_status === 'DISTRESS ZONE') ? 'bg-red' : 
-                    (safeData?.kpi.z_score_status === 'GREY ZONE') ? 'bg-yellow' : 'bg-cyan'
-                }`}></div>
-                <div className="font-space text-xs tracking-widest text-text-muted uppercase mb-3">Modello Altman Z-Score</div>
-                <div className="flex items-end gap-3">
-                  <span className={`font-space text-5xl font-bold ${
-                    (safeData?.kpi.z_score_status === 'DISTRESS ZONE') ? 'text-red' : 
-                    (safeData?.kpi.z_score_status === 'GREY ZONE') ? 'text-yellow' : 'text-cyan'
-                  }`}>
-                    {safeData?.kpi.altman_z_score || '3.12'}
-                  </span>
-                  <span className={`text-[10px] px-2 py-1 rounded border mb-2 font-semibold tracking-wider ${
-                    (safeData?.kpi.z_score_status === 'DISTRESS ZONE') ? 'border-red/50 text-red bg-red/10' : 
-                    (safeData?.kpi.z_score_status === 'GREY ZONE') ? 'border-yellow/50 text-yellow bg-yellow/10' : 'border-cyan/50 text-cyan bg-cyan/10'
-                  }`}>
-                    {safeData?.kpi.z_score_status || "SAFE ZONE"}
-                  </span>
+              {/* Multi-Model Risk Selector */}
+              <div className="mb-6 bg-black/30 border border-glass-border rounded-xl p-5 relative overflow-hidden">
+                <div className="flex gap-1 mb-4 bg-black/40 p-1 rounded-lg">
+                  {['altman', 'ohlson', 'zmijewski', 'modigliani'].map((key) => {
+                    const model = safeData?.risk_models?.[key];
+                    const label = key === 'altman' ? 'Altman' : key === 'ohlson' ? 'Ohlson' : key === 'zmijewski' ? 'Zmijewski' : 'Modigliani';
+                    return (
+                      <button key={key} onClick={() => setSelectedModel(key)}
+                        className={`flex-1 py-1.5 px-2 rounded text-[10px] font-space font-semibold tracking-wider transition ${
+                          selectedModel === key ? 'bg-cyan/20 text-cyan border border-cyan/30' : 'text-text-muted hover:text-white hover:bg-white/5 border border-transparent'
+                        }`}>{label}</button>
+                    );
+                  })}
                 </div>
-                <p className="text-[11px] text-text-muted mt-3 max-w-[90%] leading-relaxed border-l-2 border-glass-border pl-2">
-                  Calcolo strutturale matematico basato sull'EBIT e liquidità estratti. Distanza dal default a 24 mesi.
-                </p>
+                {(() => {
+                  const m = safeData?.risk_models?.[selectedModel];
+                  const isDistress = m?.status?.includes('DISTRESS') || m?.status?.includes('ALTO') || m?.status?.includes('OVER');
+                  const isGrey = m?.status?.includes('GREY') || m?.status?.includes('MISTO');
+                  const color = isDistress ? 'red' : isGrey ? 'yellow' : 'cyan';
+                  const mainValue = selectedModel === 'modigliani' 
+                    ? (m?.leverage ?? 0.34) 
+                    : (m?.score ?? (selectedModel === 'altman' ? 3.12 : -2.85));
+                  const mainLabel = selectedModel === 'modigliani' ? 'Leverage' : 'Score';
+                  return (
+                    <>
+                      <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 opacity-20 bg-${color}`}></div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-space text-xs tracking-widest text-text-muted uppercase">{m?.name || 'Altman Z-Score'}</span>
+                        <span className="text-[9px] text-text-muted">({m?.author || 'E. Altman (1968)'})</span>
+                      </div>
+                      <div className="flex items-end gap-3 mt-2">
+                        <span className={`font-space text-5xl font-bold text-${color}`}>{mainValue}</span>
+                        <span className={`text-[10px] px-2 py-1 rounded border mb-2 font-semibold tracking-wider border-${color}/50 text-${color} bg-${color}/10`}>
+                          {m?.status || 'SAFE ZONE'}
+                        </span>
+                      </div>
+                      {selectedModel !== 'modigliani' && selectedModel !== 'altman' && m?.pd_pct !== undefined && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[10px] text-text-muted">PD stimata:</span>
+                          <span className={`font-space text-sm font-bold text-${color}`}>{m.pd_pct}%</span>
+                        </div>
+                      )}
+                      {selectedModel === 'modigliani' && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[10px] text-text-muted">WACC:</span>
+                          <span className={`font-space text-sm font-bold text-${color}`}>{m?.wacc || 7.2}%</span>
+                        </div>
+                      )}
+                      <p className="text-[10px] text-text-muted mt-3 border-l-2 border-glass-border pl-2 leading-relaxed">
+                        {m?.description || 'Calcolo strutturale matematico deterministico.'}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* DSCR Forecast - 3 Scenari (Module 7) */}
