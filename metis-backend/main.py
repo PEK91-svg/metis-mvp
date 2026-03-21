@@ -167,6 +167,23 @@ async def analyze_dossier(file: UploadFile = File(...)):
         "status": "success",
         "dossier_id": f"PEF-2026-{filename[:4].upper()}",
         "company_name": f"{company_name} SRL",
+        "company_info": {
+            "indirizzo": "Via Giuseppe Verdi 42, 20121 Milano (MI)",
+            "lat": 45.4708,
+            "lng": 9.1911,
+            "pec": f"info@{company_name.lower().replace(' ', '')}.pec.it",
+            "codice_fiscale": "12345678901",
+            "partita_iva": "IT12345678901",
+            "rea": "MI-2054321",
+            "capitale_sociale": "€ 500.000 i.v.",
+            "data_costituzione": "15/03/2018",
+            "forma_giuridica": "Società a Responsabilità Limitata",
+            "struttura_societaria": [
+                {"nome": "Mario Rossi", "ruolo": "Amministratore Unico / Legale Rappresentante", "quota": "60%"},
+                {"nome": "Laura Bianchi", "ruolo": "Socio", "quota": "25%"},
+                {"nome": "Giuseppe Verdi", "ruolo": "Socio", "quota": "15%"}
+            ]
+        },
         "kpi": {
             "dscr": "1.45x" if z_score > 2.0 else "0.85x",
             "pd": "2.1%" if z_score > 2.0 else "18.5%",

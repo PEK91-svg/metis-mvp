@@ -8,6 +8,8 @@ export default function MetisApp() {
   const [loadingText, setLoadingText] = useState("Inizializzazione Swarm Multi-Agente...");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("altman");
+  const [expandedCol, setExpandedCol] = useState<number | null>(null);
+  const [showDelibera, setShowDelibera] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -49,10 +51,19 @@ export default function MetisApp() {
 
   if (step === "upload") {
     return (
-      <main className="flex items-center justify-center h-screen w-screen overflow-hidden">
+      <main className="flex items-center justify-center h-screen w-screen overflow-hidden relative">
+        {/* Background Banner */}
+        <div className="absolute inset-0 z-0">
+          <img src="/hero-banner.png" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-[rgba(9,13,20,0.75)]"></div>
+        </div>
         <div className="glass-panel p-10 max-w-[650px] w-full text-center relative z-10 mx-4">
-          <div className="font-space text-cyan font-bold text-5xl tracking-widest mb-4">METIS</div>
-          <p className="text-text-main text-base mb-2">Automazione "Glass-Box" per l'Istruttoria di Fido</p>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-14 h-14 rounded-xl" />
+            <span className="font-space font-bold text-5xl tracking-widest text-white">METIS</span>
+          </div>
+          <div className="font-space text-[10px] tracking-[0.4em] text-text-muted uppercase mb-1">by FINOMNIA</div>
+          <p className="text-text-main text-base mb-2">Automazione «Glass-Box» per l'Istruttoria di Fido</p>
           <p className="text-text-muted text-sm mb-10">Conforme con EU AI Act - Nessun processo Black Box autorizzato.</p>
           
           <div className="relative border-2 border-dashed border-glass-border hover:border-cyan transition rounded-xl p-16 mb-8 cursor-pointer bg-black/20 group">
@@ -105,8 +116,12 @@ export default function MetisApp() {
   return (
     <main className="flex h-screen w-screen overflow-hidden relative text-[13px] tracking-wide animate-[fadeUp_0.5s_ease-out_forwards]">
       {/* Sidebar */}
-      <aside className="w-[70px] h-full border-r border-glass-border flex flex-col items-center py-8 z-10 bg-[rgba(9,13,20,0.8)]">
-        <div className="font-space text-cyan font-bold text-2xl tracking-widest [writing-mode:vertical-lr] rotate-180">METIS</div>
+      <aside className="w-[70px] h-full border-r border-glass-border flex flex-col items-center justify-between py-6 z-10 bg-[rgba(9,13,20,0.8)]">
+        <div className="flex flex-col items-center gap-4">
+          <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-10 h-10 rounded-lg" />
+          <div className="font-space text-white font-bold text-sm tracking-[0.3em] [writing-mode:vertical-lr] rotate-180">METIS</div>
+        </div>
+        <div className="font-space text-[8px] tracking-[0.2em] text-text-muted uppercase [writing-mode:vertical-lr] rotate-180 opacity-50">v1.0</div>
       </aside>
 
       {/* Main Content */}
@@ -122,14 +137,69 @@ export default function MetisApp() {
           </div>
         </header>
 
-        <div className="grid grid-cols-[1.1fr_1.3fr_1fr] gap-6 h-full min-h-0">
+        <div className={`grid ${expandedCol !== null ? 'grid-cols-1' : 'grid-cols-[1.1fr_1.3fr_1fr]'} gap-6 h-full min-h-0 transition-all duration-300`}>
           
           {/* Column 1: Sources */}
-          <section className="glass-panel flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl">
-              1. Raw Data Sources (OCR)
+          <section className={`glass-panel flex flex-col overflow-hidden ${expandedCol !== null && expandedCol !== 1 ? 'hidden' : ''}`}>
+            <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl flex justify-between items-center">
+              <span>1. Raw Data Sources (OCR)</span>
+              <button onClick={() => setExpandedCol(expandedCol === 1 ? null : 1)} className="text-text-muted hover:text-cyan transition p-1 rounded hover:bg-white/5" title={expandedCol === 1 ? 'Riduci' : 'Espandi'}>
+                {expandedCol === 1 ? (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 10l5 5m0 0v-4m0 4h-4" /></svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>
+                )}
+              </button>
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
+
+              {/* Company Location + Struttura Societaria */}
+              <div className="border border-glass-border rounded-lg mb-4 bg-black/30 overflow-hidden">
+                <iframe 
+                  src={`https://www.google.com/maps?q=${safeData?.company_info?.lat || 45.4708},${safeData?.company_info?.lng || 9.1911}&z=15&output=embed`}
+                  className="w-full h-[140px] border-0 opacity-80"
+                  loading="lazy"
+                  allowFullScreen
+                ></iframe>
+                <div className="p-4">
+                  <div className="flex gap-1 mb-3 bg-black/40 p-0.5 rounded">
+                    <button onClick={() => setSelectedModel(selectedModel === '_addr' ? 'altman' : '_addr')}
+                      className={`flex-1 py-1 rounded text-[10px] font-space font-semibold tracking-wider transition ${selectedModel === '_addr' ? 'bg-cyan/20 text-cyan' : 'text-text-muted hover:text-white'}`}>Indirizzo</button>
+                    <button onClick={() => setSelectedModel(selectedModel === '_corp' ? 'altman' : '_corp')}
+                      className={`flex-1 py-1 rounded text-[10px] font-space font-semibold tracking-wider transition ${selectedModel === '_corp' ? 'bg-cyan/20 text-cyan' : 'text-text-muted hover:text-white'}`}>Struttura Societaria</button>
+                  </div>
+
+                  {selectedModel === '_addr' && (
+                    <div className="text-[11px] text-text-muted space-y-1.5 animate-[fadeUp_0.2s_ease-out]">
+                      <div className="flex justify-between"><span className="text-text-muted">Sede Legale</span><span className="text-white font-medium">{safeData?.company_info?.indirizzo || 'Via G. Verdi 42, Milano'}</span></div>
+                      <div className="flex justify-between"><span>Forma Giuridica</span><span className="text-white">{safeData?.company_info?.forma_giuridica || 'SRL'}</span></div>
+                      <div className="flex justify-between"><span>P.IVA</span><span className="text-white font-mono text-[10px]">{safeData?.company_info?.partita_iva || 'IT12345678901'}</span></div>
+                      <div className="flex justify-between"><span>PEC</span><span className="text-cyan text-[10px]">{safeData?.company_info?.pec || ''}</span></div>
+                      <div className="flex justify-between"><span>REA</span><span className="text-white">{safeData?.company_info?.rea || ''}</span></div>
+                      <div className="flex justify-between"><span>Capitale Sociale</span><span className="text-white font-semibold">{safeData?.company_info?.capitale_sociale || ''}</span></div>
+                      <div className="flex justify-between"><span>Costituzione</span><span className="text-white">{safeData?.company_info?.data_costituzione || ''}</span></div>
+                    </div>
+                  )}
+
+                  {selectedModel === '_corp' && (
+                    <div className="space-y-2 animate-[fadeUp_0.2s_ease-out]">
+                      {(safeData?.company_info?.struttura_societaria || [{nome:'Mario Rossi',ruolo:'Amm. Unico',quota:'60%'}]).map((s: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between bg-black/20 rounded p-2 border border-glass-border">
+                          <div>
+                            <div className="text-[11px] text-white font-semibold">{s.nome}</div>
+                            <div className="text-[9px] text-text-muted">{s.ruolo}</div>
+                          </div>
+                          <span className="font-space text-sm text-cyan font-bold">{s.quota}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedModel !== '_addr' && selectedModel !== '_corp' && (
+                    <div className="text-[10px] text-text-muted text-center py-1">Clicca su un tab per i dettagli</div>
+                  )}
+                </div>
+              </div>
               <div className="border border-glass-border rounded-lg p-5 mb-4 bg-black/30 transition hover:border-glass-hover">
                 <div className="font-space text-sm font-semibold mb-3 text-white">Documento Caricato</div>
                 <div className="text-[13px] text-text-muted leading-relaxed">
@@ -157,9 +227,16 @@ export default function MetisApp() {
           </section>
 
           {/* Column 2: Agentic Output */}
-          <section className="glass-panel flex flex-col overflow-hidden">
-             <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl">
-              2. Narrative Generation (XAI)
+          <section className={`glass-panel flex flex-col overflow-hidden ${expandedCol !== null && expandedCol !== 2 ? 'hidden' : ''}`}>
+             <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl flex justify-between items-center">
+              <span>2. Narrative Generation (XAI)</span>
+              <button onClick={() => setExpandedCol(expandedCol === 2 ? null : 2)} className="text-text-muted hover:text-cyan transition p-1 rounded hover:bg-white/5" title={expandedCol === 2 ? 'Riduci' : 'Espandi'}>
+                {expandedCol === 2 ? (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 10l5 5m0 0v-4m0 4h-4" /></svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>
+                )}
+              </button>
             </div>
             <div className="p-5 flex-1 overflow-y-auto pr-3">
               
@@ -234,66 +311,75 @@ export default function MetisApp() {
           </section>
 
           {/* Column 3: Matrices & KPIs */}
-          <section className="glass-panel flex flex-col overflow-hidden">
-             <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl">
-              3. Dashboards & Matrices
+          <section className={`glass-panel flex flex-col overflow-hidden ${expandedCol !== null && expandedCol !== 3 ? 'hidden' : ''}`}>
+             <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl flex justify-between items-center">
+              <span>3. Dashboards &amp; Matrices</span>
+              <button onClick={() => setExpandedCol(expandedCol === 3 ? null : 3)} className="text-text-muted hover:text-cyan transition p-1 rounded hover:bg-white/5" title={expandedCol === 3 ? 'Riduci' : 'Espandi'}>
+                {expandedCol === 3 ? (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 10l5 5m0 0v-4m0 4h-4" /></svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>
+                )}
+              </button>
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
               
-              {/* Multi-Model Risk Selector */}
-              <div className="mb-6 bg-black/30 border border-glass-border rounded-xl p-5 relative overflow-hidden">
-                <div className="flex gap-1 mb-4 bg-black/40 p-1 rounded-lg">
-                  {['altman', 'ohlson', 'zmijewski', 'modigliani'].map((key) => {
-                    const model = safeData?.risk_models?.[key];
-                    const label = key === 'altman' ? 'Altman' : key === 'ohlson' ? 'Ohlson' : key === 'zmijewski' ? 'Zmijewski' : 'Modigliani';
-                    return (
-                      <button key={key} onClick={() => setSelectedModel(key)}
-                        className={`flex-1 py-1.5 px-2 rounded text-[10px] font-space font-semibold tracking-wider transition ${
-                          selectedModel === key ? 'bg-cyan/20 text-cyan border border-cyan/30' : 'text-text-muted hover:text-white hover:bg-white/5 border border-transparent'
-                        }`}>{label}</button>
-                    );
-                  })}
-                </div>
-                {(() => {
-                  const m = safeData?.risk_models?.[selectedModel];
+              {/* Multi-Model Risk Selector — Expand/Collapse */}
+              <div className="mb-6 space-y-2">
+                {['altman', 'ohlson', 'zmijewski', 'modigliani'].map((key) => {
+                  const m = safeData?.risk_models?.[key];
+                  const label = m?.name || (key === 'altman' ? 'Altman Z-Score' : key === 'ohlson' ? 'Ohlson O-Score' : key === 'zmijewski' ? 'Zmijewski X-Score' : 'Modigliani-Miller');
+                  const isExpanded = selectedModel === key;
                   const isDistress = m?.status?.includes('DISTRESS') || m?.status?.includes('ALTO') || m?.status?.includes('OVER');
-                  const isGrey = m?.status?.includes('GREY') || m?.status?.includes('MISTO');
-                  const color = isDistress ? 'red' : isGrey ? 'yellow' : 'cyan';
-                  const mainValue = selectedModel === 'modigliani' 
-                    ? (m?.leverage ?? 0.34) 
-                    : (m?.score ?? (selectedModel === 'altman' ? 3.12 : -2.85));
-                  const mainLabel = selectedModel === 'modigliani' ? 'Leverage' : 'Score';
+                  const color = isDistress ? 'red' : 'cyan';
+                  const mainValue = key === 'modigliani' ? (m?.leverage ?? 0.34) : (m?.score ?? (key === 'altman' ? 3.12 : key === 'ohlson' ? -2.85 : -1.72));
+                  const extraLabel = key === 'modigliani' ? `WACC ${m?.wacc || 7.2}%` : (key !== 'altman' && m?.pd_pct !== undefined) ? `PD ${m.pd_pct}%` : '';
+
                   return (
-                    <>
-                      <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 opacity-20 bg-${color}`}></div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-space text-xs tracking-widest text-text-muted uppercase">{m?.name || 'Altman Z-Score'}</span>
-                        <span className="text-[9px] text-text-muted">({m?.author || 'E. Altman (1968)'})</span>
-                      </div>
-                      <div className="flex items-end gap-3 mt-2">
-                        <span className={`font-space text-5xl font-bold text-${color}`}>{mainValue}</span>
-                        <span className={`text-[10px] px-2 py-1 rounded border mb-2 font-semibold tracking-wider border-${color}/50 text-${color} bg-${color}/10`}>
-                          {m?.status || 'SAFE ZONE'}
-                        </span>
-                      </div>
-                      {selectedModel !== 'modigliani' && selectedModel !== 'altman' && m?.pd_pct !== undefined && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[10px] text-text-muted">PD stimata:</span>
-                          <span className={`font-space text-sm font-bold text-${color}`}>{m.pd_pct}%</span>
+                    <div key={key} className={`bg-black/30 border rounded-xl overflow-hidden transition-all duration-300 ${
+                      isExpanded ? 'border-cyan/30' : 'border-glass-border'
+                    }`}>
+                      {/* Collapsed Bar — Always Visible */}
+                      <button onClick={() => setSelectedModel(isExpanded ? '' : key)}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition group">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${isDistress ? 'bg-red shadow-[0_0_6px_var(--color-red)]' : 'bg-cyan shadow-[0_0_6px_var(--color-cyan)]'}`}></div>
+                          <span className="font-space text-[11px] text-white font-semibold tracking-wider">{label}</span>
+                          <span className="text-[9px] text-text-muted hidden sm:inline">({m?.author || ''})</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {extraLabel && <span className={`text-[9px] px-1.5 py-0.5 rounded border font-space font-semibold border-${color}/30 text-${color} bg-${color}/10`}>{extraLabel}</span>}
+                          <span className={`font-space text-lg font-bold text-${color}`}>{mainValue}</span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded border font-semibold border-${color}/40 text-${color} bg-${color}/10`}>{m?.status || 'N/A'}</span>
+                          <svg className={`w-3.5 h-3.5 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </button>
+
+                      {/* Expanded Detail */}
+                      {isExpanded && (
+                        <div className="px-5 pb-4 pt-1 border-t border-glass-border animate-[fadeUp_0.2s_ease-out_forwards]">
+                          <div className="flex items-end gap-4 mb-3">
+                            <span className={`font-space text-5xl font-bold text-${color}`}>{mainValue}</span>
+                            <div className="flex flex-col gap-1 mb-1">
+                              <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold tracking-wider border-${color}/50 text-${color} bg-${color}/10`}>{m?.status || 'SAFE ZONE'}</span>
+                              {key !== 'altman' && key !== 'modigliani' && m?.pd_pct !== undefined && (
+                                <span className="text-[10px] text-text-muted">PD stimata: <strong className={`text-${color}`}>{m.pd_pct}%</strong></span>
+                              )}
+                              {key === 'modigliani' && (
+                                <span className="text-[10px] text-text-muted">WACC: <strong className={`text-${color}`}>{m?.wacc || 7.2}%</strong></span>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-text-muted border-l-2 border-glass-border pl-2 leading-relaxed">
+                            {m?.description || 'Calcolo strutturale matematico deterministico.'}
+                          </p>
                         </div>
                       )}
-                      {selectedModel === 'modigliani' && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[10px] text-text-muted">WACC:</span>
-                          <span className={`font-space text-sm font-bold text-${color}`}>{m?.wacc || 7.2}%</span>
-                        </div>
-                      )}
-                      <p className="text-[10px] text-text-muted mt-3 border-l-2 border-glass-border pl-2 leading-relaxed">
-                        {m?.description || 'Calcolo strutturale matematico deterministico.'}
-                      </p>
-                    </>
+                    </div>
                   );
-                })()}
+                })}
               </div>
 
               {/* DSCR Forecast - 3 Scenari (Module 7) */}
@@ -430,31 +516,49 @@ export default function MetisApp() {
         </div>
       </div>
 
-      {/* EU AI Act Disclaimer (Module 7) */}
-      <div className="absolute top-0 right-[70px] left-[70px] bg-[rgba(123,44,191,0.1)] border-b border-purple/30 py-1.5 px-6 text-center z-40">
-        <span className="text-[10px] text-purple tracking-wider font-space">🇪🇺 EU AI Act Compliance: Questo sistema è classificato come "Supporto Decisionale". Nessuna delibera automatica. L'umano è responsabile finale.</span>
+      {/* EU AI Act Disclaimer (Footer) */}
+      <div className="absolute bottom-0 right-[70px] left-[70px] bg-[rgba(123,44,191,0.06)] border-t border-purple/20 py-1 px-6 text-center z-40">
+        <span className="text-[9px] text-purple/70 tracking-wider font-space">EU AI Act Compliance: Questo sistema è classificato come &quot;Supporto Decisionale&quot;. Nessuna delibera automatica. L&apos;umano è responsabile finale.</span>
       </div>
 
       {/* Floating Action Bar - DELIBERA */}
       {step === "dashboard" && safeData && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6 bg-[rgba(9,13,20,0.95)] border border-glass-border p-3 rounded-full shadow-[0_15px_30px_rgba(0,0,0,0.8)] backdrop-blur-md z-50 animate-[fadeUp_0.8s_ease-out_forwards]">
-          <div className="px-5 font-space text-xs text-white uppercase tracking-widest border-r border-glass-border font-bold">Azione Comitato Deliberante</div>
-          <button 
-             onClick={() => alert("✅ Pratica PEF Approvata. Generazione del fascicolo in PDF per il Comitato Crediti avviata con esito positivo.")}
-             className="bg-[rgba(0,255,102,0.1)] hover:bg-[rgba(0,255,102,0.2)] hover:shadow-[0_0_15px_rgba(0,255,102,0.2)] border border-[rgba(0,255,102,0.4)] text-green px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
-            APPROVA PEF
+        <>
+          {/* Toggle Button */}
+          <button onClick={() => setShowDelibera(!showDelibera)}
+            className={`fixed bottom-6 right-8 z-50 w-12 h-12 rounded-full flex items-center justify-center border shadow-lg transition-all duration-300 ${
+              showDelibera ? 'bg-red/20 border-red/50 text-red hover:bg-red/30' : 'bg-cyan/20 border-cyan/50 text-cyan hover:bg-cyan/30 animate-pulse'
+            }`}
+            title={showDelibera ? 'Chiudi Delibera' : 'Apri Delibera'}>
+            {showDelibera ? (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            )}
           </button>
-          <button 
-             onClick={() => alert("⏳ Pratica Sospesa. Le richieste di integrazione documentale sono state notificate al Gestore Corporate.")}
-             className="bg-[rgba(250,204,21,0.1)] hover:bg-[rgba(250,204,21,0.2)] hover:shadow-[0_0_15px_rgba(250,204,21,0.2)] border border-[rgba(250,204,21,0.4)] text-yellow px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
-            RICHIEDI INTEGRAZIONI
-          </button>
-          <button 
-             onClick={() => alert("❌ Pratica Declinata definitivamente. Verbale di diniego e inserimento motivazione in piattaforma.")}
-             className="bg-[rgba(255,0,85,0.1)] hover:bg-[rgba(255,0,85,0.2)] hover:shadow-[0_0_15px_rgba(255,0,85,0.2)] border border-[rgba(255,0,85,0.4)] text-red px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
-            BOCCHIA PRATICA
-          </button>
-        </div>
+
+          {/* Delibera Bar */}
+          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6 bg-[rgba(9,13,20,0.95)] border border-glass-border p-3 rounded-full shadow-[0_15px_30px_rgba(0,0,0,0.8)] backdrop-blur-md z-50 transition-all duration-500 ${
+            showDelibera ? 'translate-y-0 opacity-100' : 'translate-y-[120px] opacity-0 pointer-events-none'
+          }`}>
+            <div className="px-5 font-space text-xs text-white uppercase tracking-widest border-r border-glass-border font-bold">Azione Comitato Deliberante</div>
+            <button 
+               onClick={() => alert("✅ Pratica PEF Approvata. Generazione del fascicolo in PDF per il Comitato Crediti avviata con esito positivo.")}
+               className="bg-[rgba(0,255,102,0.1)] hover:bg-[rgba(0,255,102,0.2)] hover:shadow-[0_0_15px_rgba(0,255,102,0.2)] border border-[rgba(0,255,102,0.4)] text-green px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
+              APPROVA PEF
+            </button>
+            <button 
+               onClick={() => alert("⏳ Pratica Sospesa. Le richieste di integrazione documentale sono state notificate al Gestore Corporate.")}
+               className="bg-[rgba(250,204,21,0.1)] hover:bg-[rgba(250,204,21,0.2)] hover:shadow-[0_0_15px_rgba(250,204,21,0.2)] border border-[rgba(250,204,21,0.4)] text-yellow px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
+              RICHIEDI INTEGRAZIONI
+            </button>
+            <button 
+               onClick={() => alert("❌ Pratica Declinata definitivamente. Verbale di diniego e inserimento motivazione in piattaforma.")}
+               className="bg-[rgba(255,0,85,0.1)] hover:bg-[rgba(255,0,85,0.2)] hover:shadow-[0_0_15px_rgba(255,0,85,0.2)] border border-[rgba(255,0,85,0.4)] text-red px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
+              BOCCIA PRATICA
+            </button>
+          </div>
+        </>
       )}
 
       <style dangerouslySetInnerHTML={{__html: `
