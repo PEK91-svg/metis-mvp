@@ -105,16 +105,16 @@ const STATUS_STYLE: Record<string, { bg: string; border: string; text: string; l
 // ============================================================================
 export default function RuleEngine() {
   const [policies, setPolicies] = useState<Policy[]>(MOCK_POLICIES);
-  const [currentPolicy, setCurrentPolicy] = useState<Policy>(MOCK_POLICIES[0]);
-  const [showPolicyList, setShowPolicyList] = useState(false);
+  const [currentPolicy, setCurrentPolicy] = useState<Policy | null>(null);
+  const [view, setView] = useState<"list" | "editor">("list");
   const [showNewModal, setShowNewModal] = useState(false);
   const [newPolicyName, setNewPolicyName] = useState("");
   const [newPolicyDesc, setNewPolicyDesc] = useState("");
   const [saveFlash, setSaveFlash] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(currentPolicy.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(currentPolicy.edges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(currentPolicy?.nodes || []);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(currentPolicy?.edges || []);
   const [selectedNode, setSelectedNode] = useState<Node<RuleNodeData> | null>(null);
   const [rightPanel, setRightPanel] = useState<"simulator" | "properties">("simulator");
 
@@ -125,11 +125,12 @@ export default function RuleEngine() {
     setEdges(policy.edges);
     setSelectedNode(null);
     setRightPanel("simulator");
-    setShowPolicyList(false);
+    setView("editor");
   }, [setNodes, setEdges]);
 
   // Save current policy
   const savePolicy = useCallback(() => {
+    if (!currentPolicy) return;
     const updated: Policy = {
       ...currentPolicy,
       nodes: nodes,
@@ -165,15 +166,13 @@ export default function RuleEngine() {
 
   // Delete policy
   const deletePolicy = useCallback((id: string) => {
-    setPolicies(prev => {
-      const remaining = prev.filter(p => p.id !== id);
-      if (currentPolicy.id === id && remaining.length > 0) {
-        loadPolicy(remaining[0]);
-      }
-      return remaining;
-    });
+    setPolicies(prev => prev.filter(p => p.id !== id));
+    if (currentPolicy?.id === id) {
+      setCurrentPolicy(null);
+      setView("list");
+    }
     setDeleteConfirm(null);
-  }, [currentPolicy, loadPolicy]);
+  }, [currentPolicy]);
 
   // Duplicate policy
   const duplicatePolicy = useCallback((policy: Policy) => {
@@ -193,8 +192,8 @@ export default function RuleEngine() {
   // Toggle policy status
   const toggleStatus = useCallback((id: string, newStatus: Policy["status"]) => {
     setPolicies(prev => prev.map(p => p.id === id ? { ...p, status: newStatus, updatedAt: new Date().toISOString().split("T")[0] } : p));
-    if (currentPolicy.id === id) {
-      setCurrentPolicy(prev => ({ ...prev, status: newStatus }));
+    if (currentPolicy?.id === id) {
+      setCurrentPolicy(prev => prev ? { ...prev, status: newStatus } : null);
     }
   }, [currentPolicy]);
 
@@ -222,7 +221,65 @@ export default function RuleEngine() {
     setRightPanel("simulator");
   }, [setNodes, setEdges]);
 
-  const ss = STATUS_STYLE[currentPolicy.status];
+  const ss = currentPolicy ? STATUS_STYLE[currentPolicy.status] : STATUS_STYLE.draft;
+
+  // ── Helper: render a policy card (shared between list and drawer) ──
+  const renderPolicyCard = (p: Policy, size: "large" | "compact" = "compact") => {
+    const ps = STATUS_STYLE[p.status];
+    const isCurrent = currentPolicy?.id === p.id;
+    const isLarge = size === "large";
+    return (
+      <div key={p.id} className={`rounded-xl border p-${isLarge ? "5" : "3"} transition ${isCurrent && view === "editor" ? "border-cyan/40 bg-cyan/5" : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]"}`}>
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={() => loadPolicy(p)} className="text-left flex-1">
+            <div className={`text-white ${isLarge ? "text-base" : "text-sm"} font-medium hover:text-cyan transition`}>{p.name}</div>
+          </button>
+          <span className={`text-[8px] px-2 py-0.5 rounded ${ps.bg} ${ps.border} ${ps.text} border font-space uppercase tracking-widest`}>{ps.label}</span>
+        </div>
+        <p className={`text-text-muted ${isLarge ? "text-xs mb-3" : "text-[10px] mb-2"}`}>{p.description}</p>
+        {isLarge && (
+          <div className="flex items-center gap-4 mb-3 text-[10px] text-white/30 font-space">
+            <span>{p.nodes.length} nodes</span>
+            <span>{p.edges.length} edges</span>
+            <span>Creata: {p.createdAt}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] text-white/30 font-space">v{p.version} &bull; {p.updatedAt}</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => loadPolicy(p)} className={`${isLarge ? "w-7 h-7" : "w-6 h-6"} rounded bg-white/5 hover:bg-cyan/10 text-white/30 hover:text-cyan flex items-center justify-center transition`} title="Modifica">
+              <svg width={isLarge ? "13" : "11"} height={isLarge ? "13" : "11"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button onClick={() => duplicatePolicy(p)} className={`${isLarge ? "w-7 h-7" : "w-6 h-6"} rounded bg-white/5 hover:bg-purple/10 text-white/30 hover:text-purple flex items-center justify-center transition`} title="Duplica">
+              <svg width={isLarge ? "13" : "11"} height={isLarge ? "13" : "11"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            {p.status === "draft" && (
+              <button onClick={() => toggleStatus(p.id, "active")} className={`${isLarge ? "w-7 h-7" : "w-6 h-6"} rounded bg-white/5 hover:bg-green/10 text-white/30 hover:text-green flex items-center justify-center transition`} title="Attiva">
+                <svg width={isLarge ? "13" : "11"} height={isLarge ? "13" : "11"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            )}
+            {p.status === "active" && (
+              <button onClick={() => toggleStatus(p.id, "archived")} className={`${isLarge ? "w-7 h-7" : "w-6 h-6"} rounded bg-white/5 hover:bg-yellow/10 text-white/30 hover:text-yellow flex items-center justify-center transition`} title="Archivia">
+                <svg width={isLarge ? "13" : "11"} height={isLarge ? "13" : "11"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/></svg>
+              </button>
+            )}
+            <button onClick={() => setDeleteConfirm(p.id)} className={`${isLarge ? "w-7 h-7" : "w-6 h-6"} rounded bg-white/5 hover:bg-red/10 text-white/30 hover:text-red flex items-center justify-center transition`} title="Elimina">
+              <svg width={isLarge ? "13" : "11"} height={isLarge ? "13" : "11"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        {deleteConfirm === p.id && (
+          <div className="mt-2 p-2 bg-red/10 border border-red/30 rounded-lg flex items-center justify-between">
+            <span className="text-red text-[10px]">Eliminare questa policy?</span>
+            <div className="flex gap-1">
+              <button onClick={() => deletePolicy(p.id)} className="px-2 py-1 bg-red text-white text-[9px] font-space uppercase rounded font-bold">Si</button>
+              <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-white/10 text-white/60 text-[9px] font-space uppercase rounded">No</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <main className="flex h-screen w-screen bg-[var(--color-void)] overflow-hidden relative text-[13px] tracking-wide font-inter">
@@ -230,160 +287,112 @@ export default function RuleEngine() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <header className="h-[70px] border-b border-white/10 flex items-center justify-between px-8 bg-black/20 backdrop-blur-md z-10">
-          <div className="flex items-center gap-4">
-            {/* Policy Selector */}
-            <button
-              onClick={() => setShowPolicyList(!showPolicyList)}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-3 py-2 transition"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div>
-              <h1 className="font-space text-lg text-white font-semibold">{currentPolicy.name}</h1>
-              <div className="flex items-center gap-2 text-xs font-space tracking-widest mt-0.5">
-                <span className={`px-2 py-[1px] rounded ${ss.bg} ${ss.border} ${ss.text} text-[9px] uppercase font-bold border`}>{ss.label}</span>
-                <span className="text-white/30">&bull;</span>
-                <span className="text-purple uppercase text-[10px]">v{currentPolicy.version}</span>
-                <span className="text-white/30">&bull;</span>
-                <span className="text-white/30 text-[10px]">{nodes.length} nodes &middot; {edges.length} edges</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Panel toggle */}
-            <div className="flex bg-black/40 border border-white/10 rounded-lg overflow-hidden">
-              <button onClick={() => setRightPanel("simulator")} className={`px-3 py-2 text-[10px] font-space uppercase tracking-widest transition ${rightPanel === "simulator" ? "bg-cyan/10 text-cyan border-r border-cyan/30" : "text-white/40 hover:text-white/60 border-r border-white/10"}`}>
-                Simulator
-              </button>
-              <button onClick={() => setRightPanel("properties")} className={`px-3 py-2 text-[10px] font-space uppercase tracking-widest transition ${rightPanel === "properties" ? "bg-purple/10 text-purple" : "text-white/40 hover:text-white/60"}`}>
-                Properties
-              </button>
-            </div>
-
-            {/* Save */}
-            <button
-              onClick={savePolicy}
-              className={`flex items-center gap-1.5 text-xs font-space px-4 py-2 rounded-lg transition ${
-                saveFlash
-                  ? "bg-green/20 text-green border border-green/30"
-                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              {saveFlash ? (
-                <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg> Salvato</>
-              ) : (
-                <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salva</>
-              )}
-            </button>
-
-            {/* METIS logo */}
-            <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/10">
-              <img src="/finomnia-logo.png" alt="METIS" className="w-7 h-7 rounded-lg shadow-[0_0_10px_rgba(0,229,255,0.15)]" />
-              <span className="font-space text-sm font-bold tracking-widest text-white">METIS</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Workspace */}
-        <div className="flex-1 flex relative overflow-hidden">
-          {/* Policy List Drawer */}
-          {showPolicyList && (
-            <div className="absolute top-0 left-0 bottom-0 w-[320px] z-30 bg-[rgba(9,13,20,0.98)] backdrop-blur-xl border-r border-white/10 flex flex-col shadow-2xl">
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                <h3 className="font-space text-sm font-semibold text-white">Policy Salvate</h3>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => { setShowNewModal(true); setShowPolicyList(false); }} className="w-8 h-8 rounded-lg bg-cyan/10 border border-cyan/30 text-cyan hover:bg-cyan/20 flex items-center justify-center transition" title="Nuova Policy">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </button>
-                  <button onClick={() => setShowPolicyList(false)} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
+        {/* ══════════════════════════════════════════════════════════════════
+            VIEW: POLICY LIST
+           ══════════════════════════════════════════════════════════════════ */}
+        {view === "list" && (
+          <>
+            <header className="h-[70px] border-b border-white/10 flex items-center justify-between px-8 bg-black/20 backdrop-blur-md z-10">
+              <div>
+                <h1 className="font-space text-lg text-white font-semibold">Visual Policy Editor</h1>
+                <div className="flex items-center gap-2 text-xs font-space tracking-widest mt-0.5">
+                  <span className="text-purple uppercase text-[10px]">{policies.length} policy salvate</span>
+                  <span className="text-white/30">&bull;</span>
+                  <span className="text-green text-[10px]">{policies.filter(p => p.status === "active").length} attive</span>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {policies.map(p => {
-                  const ps = STATUS_STYLE[p.status];
-                  const isCurrent = p.id === currentPolicy.id;
-                  return (
-                    <div key={p.id} className={`rounded-lg border p-3 transition ${isCurrent ? "border-cyan/40 bg-cyan/5" : "border-white/10 bg-white/5 hover:border-white/20"}`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <button onClick={() => loadPolicy(p)} className="text-left flex-1">
-                          <div className="text-white text-sm font-medium">{p.name}</div>
-                        </button>
-                        <span className={`text-[8px] px-1.5 py-0.5 rounded ${ps.bg} ${ps.border} ${ps.text} border font-space uppercase tracking-widest`}>{ps.label}</span>
-                      </div>
-                      <p className="text-text-muted text-[10px] mb-2">{p.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-white/30 font-space">v{p.version} &bull; {p.updatedAt}</span>
-                        <div className="flex items-center gap-1">
-                          {/* Load */}
-                          <button onClick={() => loadPolicy(p)} className="w-6 h-6 rounded bg-white/5 hover:bg-cyan/10 text-white/30 hover:text-cyan flex items-center justify-center transition" title="Carica">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
-                          </button>
-                          {/* Duplicate */}
-                          <button onClick={() => duplicatePolicy(p)} className="w-6 h-6 rounded bg-white/5 hover:bg-purple/10 text-white/30 hover:text-purple flex items-center justify-center transition" title="Duplica">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                          </button>
-                          {/* Toggle active */}
-                          {p.status === "draft" && (
-                            <button onClick={() => toggleStatus(p.id, "active")} className="w-6 h-6 rounded bg-white/5 hover:bg-green/10 text-white/30 hover:text-green flex items-center justify-center transition" title="Attiva">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            </button>
-                          )}
-                          {p.status === "active" && (
-                            <button onClick={() => toggleStatus(p.id, "archived")} className="w-6 h-6 rounded bg-white/5 hover:bg-yellow/10 text-white/30 hover:text-yellow flex items-center justify-center transition" title="Archivia">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/></svg>
-                            </button>
-                          )}
-                          {/* Delete */}
-                          <button onClick={() => setDeleteConfirm(p.id)} className="w-6 h-6 rounded bg-white/5 hover:bg-red/10 text-white/30 hover:text-red flex items-center justify-center transition" title="Elimina">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                          </button>
-                        </div>
-                      </div>
-                      {/* Delete Confirm */}
-                      {deleteConfirm === p.id && (
-                        <div className="mt-2 p-2 bg-red/10 border border-red/30 rounded-lg flex items-center justify-between">
-                          <span className="text-red text-[10px]">Eliminare questa policy?</span>
-                          <div className="flex gap-1">
-                            <button onClick={() => deletePolicy(p.id)} className="px-2 py-1 bg-red text-white text-[9px] font-space uppercase rounded font-bold">Si</button>
-                            <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-white/10 text-white/60 text-[9px] font-space uppercase rounded">No</button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="flex items-center gap-3">
+                <button onClick={() => setShowNewModal(true)} className="flex items-center gap-2 bg-cyan/10 text-cyan hover:bg-cyan/20 border border-cyan/30 rounded-lg px-5 py-2 text-xs font-semibold font-space transition shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+                  <span className="text-base">+</span> Nuova Policy
+                </button>
+                <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/10">
+                  <img src="/finomnia-logo.png" alt="METIS" className="w-7 h-7 rounded-lg shadow-[0_0_10px_rgba(0,229,255,0.15)]" />
+                  <span className="font-space text-sm font-bold tracking-widest text-white">METIS</span>
+                </div>
+              </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-8">
+              {/* KPI */}
+              <section className="grid grid-cols-4 gap-4 mb-6">
+                {[
+                  { label: "Policy Totali", value: policies.length, cls: "border-cyan/30 text-cyan bg-cyan/10" },
+                  { label: "Attive", value: policies.filter(p => p.status === "active").length, cls: "border-green/30 text-green bg-green/10" },
+                  { label: "Bozze", value: policies.filter(p => p.status === "draft").length, cls: "border-yellow/30 text-yellow bg-yellow/10" },
+                  { label: "Archiviate", value: policies.filter(p => p.status === "archived").length, cls: "border-white/20 text-white/40 bg-white/5" },
+                ].map((kpi, i) => (
+                  <div key={i} className={`glass-panel flex flex-col items-center justify-center p-4 border ${kpi.cls}`}>
+                    <span className="text-[10px] uppercase tracking-wider text-text-muted">{kpi.label}</span>
+                    <span className="text-2xl font-bold mt-1 font-space">{kpi.value}</span>
+                  </div>
+                ))}
+              </section>
+
+              {/* Policy Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {policies.map(p => renderPolicyCard(p, "large"))}
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          {/* ReactFlow Canvas */}
-          <FlowCanvas
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            setNodes={setNodes}
-            setEdges={setEdges}
-            onNodeSelect={onNodeSelect}
-          />
+        {/* ══════════════════════════════════════════════════════════════════
+            VIEW: EDITOR
+           ══════════════════════════════════════════════════════════════════ */}
+        {view === "editor" && currentPolicy && (
+          <>
+            <header className="h-[70px] border-b border-white/10 flex items-center justify-between px-8 bg-black/20 backdrop-blur-md z-10">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setView("list")} className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div>
+                  <h1 className="font-space text-lg text-white font-semibold">{currentPolicy.name}</h1>
+                  <div className="flex items-center gap-2 text-xs font-space tracking-widest mt-0.5">
+                    <span className={`px-2 py-[1px] rounded ${ss.bg} ${ss.border} ${ss.text} text-[9px] uppercase font-bold border`}>{ss.label}</span>
+                    <span className="text-white/30">&bull;</span>
+                    <span className="text-purple uppercase text-[10px]">v{currentPolicy.version}</span>
+                    <span className="text-white/30">&bull;</span>
+                    <span className="text-white/30 text-[10px]">{nodes.length} nodes &middot; {edges.length} edges</span>
+                  </div>
+                </div>
+              </div>
 
-          {/* Right Panel */}
-          {rightPanel === "simulator" ? (
-            <WhatIfSimulator nodes={nodes} edges={edges} />
-          ) : (
-            <PropertiesPanel
-              node={selectedNode}
-              onUpdate={onUpdateNode}
-              onDelete={onDeleteNode}
-            />
-          )}
-        </div>
+              <div className="flex items-center gap-2">
+                <div className="flex bg-black/40 border border-white/10 rounded-lg overflow-hidden">
+                  <button onClick={() => setRightPanel("simulator")} className={`px-3 py-2 text-[10px] font-space uppercase tracking-widest transition ${rightPanel === "simulator" ? "bg-cyan/10 text-cyan border-r border-cyan/30" : "text-white/40 hover:text-white/60 border-r border-white/10"}`}>
+                    Simulator
+                  </button>
+                  <button onClick={() => setRightPanel("properties")} className={`px-3 py-2 text-[10px] font-space uppercase tracking-widest transition ${rightPanel === "properties" ? "bg-purple/10 text-purple" : "text-white/40 hover:text-white/60"}`}>
+                    Properties
+                  </button>
+                </div>
+
+                <button onClick={savePolicy} className={`flex items-center gap-1.5 text-xs font-space px-4 py-2 rounded-lg transition ${saveFlash ? "bg-green/20 text-green border border-green/30" : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white"}`}>
+                  {saveFlash ? (
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg> Salvato</>
+                  ) : (
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salva</>
+                  )}
+                </button>
+
+                <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/10">
+                  <img src="/finomnia-logo.png" alt="METIS" className="w-7 h-7 rounded-lg shadow-[0_0_10px_rgba(0,229,255,0.15)]" />
+                  <span className="font-space text-sm font-bold tracking-widest text-white">METIS</span>
+                </div>
+              </div>
+            </header>
+
+            <div className="flex-1 flex relative overflow-hidden">
+              <FlowCanvas nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} setNodes={setNodes} setEdges={setEdges} onNodeSelect={onNodeSelect} />
+              {rightPanel === "simulator" ? (
+                <WhatIfSimulator nodes={nodes} edges={edges} />
+              ) : (
+                <PropertiesPanel node={selectedNode} onUpdate={onUpdateNode} onDelete={onDeleteNode} />
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* New Policy Modal */}
