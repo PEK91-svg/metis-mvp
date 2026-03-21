@@ -3,6 +3,22 @@ import { useState } from 'react';
 import { AuditEntry, AuditAction } from '@/lib/types';
 import { AUDIT_ACTION_CONFIG } from '@/lib/auditTrail';
 
+const ACTIVE_BADGE_CLASSES: Record<string, string> = {
+  cyan:   'bg-cyan/20 text-cyan border-cyan/30',
+  purple: 'bg-purple/20 text-purple border-purple/30',
+  green:  'bg-green/20 text-green border-green/30',
+  yellow: 'bg-yellow/20 text-yellow border-yellow/30',
+  red:    'bg-red/20 text-red border-red/30',
+};
+
+const TEXT_COLOR_CLASSES: Record<string, string> = {
+  cyan:   'text-cyan',
+  purple: 'text-purple',
+  green:  'text-green',
+  yellow: 'text-yellow',
+  red:    'text-red',
+};
+
 interface AuditLogPanelProps {
   entries: AuditEntry[];
   open: boolean;
@@ -44,7 +60,7 @@ export default function AuditLogPanel({ entries, open, onClose }: AuditLogPanelP
               <button
                 key={a}
                 onClick={() => setFilter(filter === a ? '' : a)}
-                className={`px-2 py-0.5 rounded text-[10px] transition ${filter === a ? `bg-${cfg.color}/20 text-${cfg.color} border border-${cfg.color}/30` : 'text-text-muted hover:text-white border border-transparent'}`}
+                className={`px-2 py-0.5 rounded text-[10px] transition border ${filter === a ? ACTIVE_BADGE_CLASSES[cfg.color] : 'text-text-muted hover:text-white border-transparent'}`}
               >
                 {cfg.icon} {cfg.label}
               </button>
@@ -66,7 +82,7 @@ export default function AuditLogPanel({ entries, open, onClose }: AuditLogPanelP
                 <span className="text-base mt-0.5">{cfg.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`text-xs font-semibold text-${cfg.color}`}>{cfg.label}</span>
+                    <span className={`text-xs font-semibold ${TEXT_COLOR_CLASSES[cfg.color]}`}>{cfg.label}</span>
                     {entry.dossierId && (
                       <span className="text-[9px] text-text-muted font-mono bg-black/30 px-1.5 py-0.5 rounded">{entry.dossierId}</span>
                     )}

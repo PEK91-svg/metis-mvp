@@ -111,6 +111,12 @@ export default function RuleEngine() {
   const [newPolicyName, setNewPolicyName] = useState("");
   const [newPolicyDesc, setNewPolicyDesc] = useState("");
   const [saveFlash, setSaveFlash] = useState(false);
+
+  useEffect(() => {
+    if (!saveFlash) return;
+    const t = setTimeout(() => setSaveFlash(false), 1500);
+    return () => clearTimeout(t);
+  }, [saveFlash]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(currentPolicy?.nodes || []);
@@ -140,7 +146,6 @@ export default function RuleEngine() {
     setPolicies(prev => prev.map(p => p.id === updated.id ? updated : p));
     setCurrentPolicy(updated);
     setSaveFlash(true);
-    setTimeout(() => setSaveFlash(false), 1500);
   }, [currentPolicy, nodes, edges]);
 
   // Create new policy
@@ -223,13 +228,18 @@ export default function RuleEngine() {
 
   const ss = currentPolicy ? STATUS_STYLE[currentPolicy.status] : STATUS_STYLE.draft;
 
-  // ── Helper: render a policy card (shared between list and drawer) ──
+  const policyCounts = {
+    active: policies.filter(p => p.status === "active").length,
+    draft: policies.filter(p => p.status === "draft").length,
+    archived: policies.filter(p => p.status === "archived").length,
+  };
+
   const renderPolicyCard = (p: Policy, size: "large" | "compact" = "compact") => {
     const ps = STATUS_STYLE[p.status];
     const isCurrent = currentPolicy?.id === p.id;
     const isLarge = size === "large";
     return (
-      <div key={p.id} className={`rounded-xl border p-${isLarge ? "5" : "3"} transition ${isCurrent && view === "editor" ? "border-cyan/40 bg-cyan/5" : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]"}`}>
+      <div key={p.id} className={`rounded-xl border transition ${isLarge ? "p-5" : "p-3"} ${isCurrent && view === "editor" ? "border-cyan/40 bg-cyan/5" : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]"}`}>
         <div className="flex items-center justify-between mb-2">
           <button onClick={() => loadPolicy(p)} className="text-left flex-1">
             <div className={`text-white ${isLarge ? "text-base" : "text-sm"} font-medium hover:text-cyan transition`}>{p.name}</div>
@@ -298,7 +308,7 @@ export default function RuleEngine() {
                 <div className="flex items-center gap-2 text-xs font-space tracking-widest mt-0.5">
                   <span className="text-purple uppercase text-[10px]">{policies.length} policy salvate</span>
                   <span className="text-white/30">&bull;</span>
-                  <span className="text-green text-[10px]">{policies.filter(p => p.status === "active").length} attive</span>
+                  <span className="text-green text-[10px]">{policyCounts.active} attive</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -317,9 +327,9 @@ export default function RuleEngine() {
               <section className="grid grid-cols-4 gap-4 mb-6">
                 {[
                   { label: "Policy Totali", value: policies.length, cls: "border-cyan/30 text-cyan bg-cyan/10" },
-                  { label: "Attive", value: policies.filter(p => p.status === "active").length, cls: "border-green/30 text-green bg-green/10" },
-                  { label: "Bozze", value: policies.filter(p => p.status === "draft").length, cls: "border-yellow/30 text-yellow bg-yellow/10" },
-                  { label: "Archiviate", value: policies.filter(p => p.status === "archived").length, cls: "border-white/20 text-white/40 bg-white/5" },
+                  { label: "Attive", value: policyCounts.active, cls: "border-green/30 text-green bg-green/10" },
+                  { label: "Bozze", value: policyCounts.draft, cls: "border-yellow/30 text-yellow bg-yellow/10" },
+                  { label: "Archiviate", value: policyCounts.archived, cls: "border-white/20 text-white/40 bg-white/5" },
                 ].map((kpi, i) => (
                   <div key={i} className={`glass-panel flex flex-col items-center justify-center p-4 border ${kpi.cls}`}>
                     <span className="text-[10px] uppercase tracking-wider text-text-muted">{kpi.label}</span>

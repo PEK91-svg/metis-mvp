@@ -69,11 +69,6 @@ export function getAuditLog(dossierId?: string): AuditEntry[] {
   return [...auditLog];
 }
 
-/** Get audit entries for display (formatted) */
-export function getFormattedAuditLog(dossierId?: string): AuditEntry[] {
-  return getAuditLog(dossierId);
-}
-
 /** Clear audit log (admin only) */
 export function clearAuditLog(): void {
   auditLog = [];

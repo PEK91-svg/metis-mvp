@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -7,12 +7,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate authentication
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setLoading(false);
       router.push("/home");
     }, 1500);
