@@ -1,0 +1,28 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Node
+metis-app/node_modules/
+metis-app/.next/
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+next.log
+
+# Skills (local only)
+.agents/
+.agent/
+skills-lock.json
+
+# Generated/temp
+extracted_text.txt
+document_pdf.pdf

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>METIS | Agentic Glass-Box Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-void: #090D14;
+    --panel-slate: rgba(14, 21, 33, 0.65);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --border-glass-hover: rgba(0, 229, 255, 0.3);
+    --cyan: #00E5FF;
+    --cyan-dim: rgba(0, 229, 255, 0.15);
+    --purple: #7B2CBF;
+    --purple-dim: rgba(123, 44, 191, 0.2);
+    --green: #00FF66;
+    --red: #FF0055;
+    --yellow: #FACC15;
+    --text-main: #F1F5F9;
+    --text-muted: #94A3B8;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background-color: var(--bg-void);
+    background-image: 
+      radial-gradient(circle at 10% 20%, var(--purple-dim), transparent 30%),
+      radial-gradient(circle at 90% 80%, var(--cyan-dim), transparent 30%);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+  }
+
+  /* Utility Classes */
+  .glass {
+    background: var(--panel-slate);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  .font-display { font-family: var(--font-display); }
+
+  /* Sidebar */
+  .sidebar {
+    width: 70px;
+    height: 100%;
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+    background: rgba(9, 13, 20, 0.8);
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--font-display);
+    color: var(--cyan);
+    font-weight: 700;
+    font-size: 1.6rem;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    letter-spacing: 2px;
+  }
+
+  /* Main Area */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  header h1 span { color: var(--text-muted); font-size: 1rem; margin-left:12px; font-weight: 400;}
+  
+  .badge-agentic {
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px var(--purple-dim);
+    animation: pulse 2s infinite;
+  }
+
+  /* 3-Column Workspace */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1.1fr 1.3fr 1fr;
+    gap: 1.5rem;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border-glass);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cyan);
+    font-weight: 600;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .panel-body {
+    padding: 1.2rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  /* Scrollbar reset */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+  /* --- Col 1: Sources --- */
+  .doc-card {
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+  }
+  .doc-card:hover { border-color: var(--border-glass-hover); }
+  .doc-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff;}
+  .doc-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+  .xai-highlight {
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: default;
+    border-bottom: 1px dashed var(--cyan);
+  }
+
+  /* --- Col 2: Agentic Output --- */
+  .agent-block {
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  .agent-block:nth-child(1) { animation-delay: 0.1s; }
+  .agent-block:nth-child(2) { animation-delay: 0.4s; }
+  .agent-block:nth-child(3) { animation-delay: 0.7s; }
+  
+  .agent-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+  }
+  .agent-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--purple);
+    box-shadow: 0 0 8px var(--purple);
+  }
+  .agent-dot.math { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .agent-dot.compliance { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+  
+  .agent-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .agent-content {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-glass);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 2px solid var(--purple);
+    line-height: 1.6;
+  }
+  .agent-content p { margin-bottom: 0.5rem; }
+  .agent-content p:last-child { margin-bottom: 0; }
+  .agent-content.math { border-left-color: var(--cyan); }
+  .agent-content.compliance { border-left-color: var(--yellow); }
+
+  /* XAI Triggers in TEXT */
+  .xai-link {
+    color: var(--cyan);
+    text-decoration: none;
+    cursor: crosshair;
+    border-bottom: 1px dotted var(--cyan);
+    transition: 0.2s;
+  }
+  .xai-link:hover { background: var(--cyan-dim); }
+
+  /* --- Col 3: Matrices & KPIs --- */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .kpi-card {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+  }
+  .kpi-card.positive::before { background: var(--green); }
+  .kpi-card.warning::before { background: var(--yellow); }
+  .kpi-card.danger::before { background: var(--red); }
+  
+  .kpi-val { font-size: 2.2rem; margin: 0.5rem 0; color: #fff;}
+  .kpi-val.green { color: var(--green); }
+  .kpi-val.yellow { color: var(--yellow); }
+  .kpi-sub { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;}
+
+  /* 2x2 SWOT Matrix */
+  .matrix-wrapper { margin-bottom: 1.5rem; }
+  .matrix-title { font-size: 0.9rem; margin-bottom: 0.8rem; color: #fff; }
+  
+  .swot-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 140px 140px;
+    gap: 4px;
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    background: var(--bg-void);
+    overflow: hidden;
+  }
+  .quad {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .q-title {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+  .quad ul { list-style: none; font-size: 0.75rem; color: #e2e8f0; }
+  .quad li { margin-bottom: 4px; padding-left: 10px; position: relative; }
+  .quad li::before { content: '•'; position: absolute; left: 0; opacity: 0.5; }
+  
+  .s { background: rgba(0, 255, 102, 0.05); }
+  .s .q-title { color: var(--green); }
+  .w { background: rgba(250, 204, 21, 0.05); }
+  .w .q-title { color: var(--yellow); }
+  .o { background: rgba(0, 229, 255, 0.05); }
+  .o .q-title { color: var(--cyan); }
+  .t { background: rgba(255, 0, 85, 0.05); }
+  .t .q-title { color: var(--red); }
+
+  /* Risk Bar */
+  .risk-bar-container {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .risk-meter {
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    margin: 10px 0;
+    overflow: hidden;
+  }
+  .risk-fill {
+    height: 100%;
+    width: 65%;
+    background: linear-gradient(90deg, var(--green), var(--yellow));
+  }
+  .risk-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); }
+
+  /* Animations */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(123, 44, 191, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(123, 44, 191, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(123, 44, 191, 0); }
+  }
+</style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="logo">METIS</div>
+  </aside>
+
+  <main class="main-content">
+    <header>
+      <div style="display: flex; flex-direction: column;">
+        <h1 class="font-display">Dossier: ALFA ROMEO SRL <span>ID: PEF-2026-X892</span></h1>
+      </div>
+      <div class="badge-agentic">Swarm Active: 3 Sub-Agents</div>
+    </header>
+
+    <div class="workspace">
+      
+      <!-- COLUMN 1: Sources -->
+      <section class="panel glass">
+        <div class="panel-header">1. Raw Data Sources (OCR)</div>
+        <div class="panel-body">
+          <div class="doc-card">
+            <div class="doc-title font-display">PDF Centrale Rischi (Visura)</div>
+            <div class="doc-text">
+              Totale accordato operativo: € 1.250.000<br>
+              Utilizzato: € 980.000<br>
+              <span class="xai-highlight" id="src-scaduti">Scaduti e Sconfinamenti: € 45.200 (a 60 gg)</span><br>
+              Garanzie MCC: € 400.000
+            </div>
+          </div>
+          
+          <div class="doc-card">
+            <div class="doc-title font-display">Bilancio XBRL (2024)</div>
+            <div class="doc-text">
+              Ricavi: € 15.400.000<br>
+              <span class="xai-highlight" id="src-ebitda">EBITDA: € 1.850.000 (12%)</span><br>
+              Debiti v/Banche (BP): € 2.100.000<br>
+              Cassa: € 350.000
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 2: Agentic Output -->
+      <section class="panel glass">
+        <div class="panel-header">2. Narrative Generation (XAI)</div>
+        <div class="panel-body">
+          
+          <div class="agent-block">
+            <div class="agent-identity">
+              <div class="agent-dot"></div>
+              <div class="agent-name font-display">Agent_Writer • Sintesi Storica</div>
+            </div>
+            <div class="agent-content">
+              <p>L'azienda "Alfa Romeo SRL" presenta un fatturato in crescita, ma si evidenzia un <a href="#" class="xai-link">calo dell'EBITDA margin al 12%</a> rispetto agli esercizi passati.</p>
+              <p>Dal controllo documentale della visura di Banca d'Italia emergono tensioni di liquidità di breve termine correlate all'aumento del costo del circolante.</p>
+            </div>
+          </div>
+
+          <div class="agent-block">
+            <div class="agent-identity">
+              <div class="agent-dot compliance"></div>
+              <div class="agent-name font-display">Agent_Compliance • Anomalie CR</div>
+            </div>
+            <div class="agent-content compliance">
+              <p><strong>ATTENZIONE:</strong> Rilevato pattern irregolare negli andamentali. Troviamo <a href="#" class="xai-link">scaduti persistenti per € 45.200</a> sulle linee autoliquidanti da oltre 60 giorni. Si consiglia istruttoria approfondita.</p>
+            </div>
+          </div>
+
+          <div class="agent-block">
+            <div class="agent-identity">
+              <div class="agent-dot math"></div>
+              <div class="agent-name font-display">Agent_Math • Financial Forecast</div>
+            </div>
+            <div class="agent-content math">
+              <p>Calcolo Capacità Restitutiva Prospettica completata tramite stress-test dei tassi d'interesse a +1.5% e base storica.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- COLUMN 3: Indicators & Matrices -->
+      <section class="panel glass">
+        <div class="panel-header">3. Dashboards & Matrices</div>
+        <div class="panel-body">
+          
+          <!-- KPIs -->
+          <div class="kpi-grid">
+            <div class="kpi-card positive">
+              <div class="kpi-sub font-display">DSCR (Stress)</div>
+              <div class="kpi-val green font-display">1.45x</div>
+            </div>
+            <div class="kpi-card warning">
+              <div class="kpi-sub font-display">PD (Prob. Default)</div>
+              <div class="kpi-val yellow font-display">2.1%</div>
+            </div>
+          </div>
+
+          <!-- SWOT MATRIX -->
+          <div class="matrix-wrapper">
+            <div class="matrix-title font-display">Matrice SWOT (Generata)</div>
+            <div class="swot-matrix">
+              <div class="quad s">
+                <div class="q-title font-display">Strengths</div>
+                <ul>
+                  <li>Fatturato Storico Crescente</li>
+                  <li>Garanzie MCC attive</li>
+                </ul>
+              </div>
+              <div class="quad w">
+                <div class="q-title font-display">Weaknesses</div>
+                <ul>
+                  <li>Scaduti presenti in CR</li>
+                  <li>Margine EBITDA in calo</li>
+                </ul>
+              </div>
+              <div class="quad o">
+                <div class="q-title font-display">Opportunities</div>
+                <ul>
+                  <li>Settore ATECO in espansione</li>
+                  <li>Export Extra-UE scalabile</li>
+                </ul>
+              </div>
+              <div class="quad t">
+                <div class="q-title font-display">Threats</div>
+                <ul>
+                  <li>Costo del denaro (Tassi BCE)</li>
+                  <li>Competizione dumping prezzi</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk Meter -->
+          <div class="risk-bar-container">
+            <div class="matrix-title font-display" style="font-size:0.8rem; opacity: 0.8; margin-bottom: 2px;">Risk Rating Aggregato</div>
+            <div class="risk-meter">
+              <div class="risk-fill"></div>
+            </div>
+            <div class="risk-labels">
+              <span>Low (AAA)</span>
+              <span>Medium (BB)</span>
+              <span>High (C)</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // XAI Interactivity mockup
+    const links = document.querySelectorAll('.xai-link');
+    links.forEach(link => {
+      link.addEventListener('mouseover', (e) => {
+        // Highlight logic
+        const txt = e.target.innerText;
+        if(txt.includes('EBITDA')) {
+          document.getElementById('src-ebitda').style.background = 'var(--cyan)';
+          document.getElementById('src-ebitda').style.color = '#000';
+        } else if(txt.includes('scaduti')){
+          document.getElementById('src-scaduti').style.background = 'var(--yellow)';
+          document.getElementById('src-scaduti').style.color = '#000';
+        }
+      });
+      link.addEventListener('mouseout', (e) => {
+        document.getElementById('src-ebitda').style.background = '';
+        document.getElementById('src-ebitda').style.color = '';
+        document.getElementById('src-scaduti').style.background = '';
+        document.getElementById('src-scaduti').style.color = '';
+      });
+    });
+  </script>
+</body>
+</html>
