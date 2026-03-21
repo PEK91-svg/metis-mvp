@@ -492,6 +492,12 @@ export default function HomeDashboard() {
                   <span className="text-base">+</span> Nuova Pratica
                 </button>
               </Link>
+
+              {/* METIS Logo */}
+              <div className="flex items-center gap-2.5 ml-2 pl-4 border-l border-white/10">
+                <img src="/finomnia-logo.png" alt="METIS" className="w-8 h-8 rounded-lg shadow-[0_0_12px_rgba(0,229,255,0.15)]" />
+                <span className="font-space text-lg font-bold tracking-widest text-white">METIS</span>
+              </div>
             </div>
           </header>
 

@@ -1,11 +1,32 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
-export default function MetisApp() {
+// Mock company data for when navigating from pratica
+const COMPANY_DATA: Record<number, { name: string; dossier_id: string; piva: string; lat: number; lng: number; indirizzo: string }> = {
+  1:  { name: "Alpha S.p.A.",      dossier_id: "PEF-2025-A001", piva: "IT12345678901", lat: 45.4708, lng: 9.1911, indirizzo: "Via G. Verdi 42, Milano" },
+  5:  { name: "Epsilon S.r.l.",    dossier_id: "PEF-2025-E005", piva: "IT55443322110", lat: 44.4949, lng: 11.3426, indirizzo: "Via Rizzoli 8, Bologna" },
+  7:  { name: "Eta Holding",       dossier_id: "PEF-2025-H007", piva: "IT22334455667", lat: 45.4642, lng: 9.1900, indirizzo: "Corso Buenos Aires 15, Milano" },
+  11: { name: "Lambda Group",      dossier_id: "PEF-2025-L011", piva: "IT66778800112", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma" },
+  15: { name: "Omicron Digital",   dossier_id: "PEF-2025-O015", piva: "IT00112244556", lat: 43.7696, lng: 11.2558, indirizzo: "Via dei Calzaiuoli 5, Firenze" },
+};
+
+export default function MetisAppWrapper() {
+  return (
+    <Suspense fallback={<div className="flex h-screen w-screen bg-[var(--color-void)] items-center justify-center"><span className="text-white/30 text-sm">Caricamento...</span></div>}>
+      <MetisApp />
+    </Suspense>
+  );
+}
+
+function MetisApp() {
   const router = useRouter();
-  const [step, setStep] = useState<"upload" | "loading" | "dashboard">("upload");
+  const searchParams = useSearchParams();
+  const companyId = Number(searchParams.get("id") || "0");
+  const companyOverride = companyId ? COMPANY_DATA[companyId] : null;
+
+  const [step, setStep] = useState<"upload" | "loading" | "dashboard">(companyOverride ? "dashboard" : "upload");
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [apiData, setApiData] = useState<any>(null);
   const [loadingText, setLoadingText] = useState("Inizializzazione Swarm Multi-Agente...");
@@ -17,8 +38,8 @@ export default function MetisApp() {
 
   const exportPDF = () => {
     const d = apiData;
-    const company = d?.company_name || "ALFA ROMEO SRL";
-    const dossierId = d?.dossier_id || "PEF-2026-X892";
+    const company = companyOverride?.name || d?.company_name || "ALFA ROMEO SRL";
+    const dossierId = companyOverride?.dossier_id || d?.dossier_id || "PEF-2026-X892";
     const pd = d?.kpi?.pd || "2.1%";
     const altman = d?.risk_models?.altman?.score || "3.12";
     const altmanStatus = d?.risk_models?.altman?.status || "SAFE ZONE";
@@ -179,6 +200,13 @@ export default function MetisApp() {
   }
 
   const safeData = apiData?.kpi ? apiData : null;
+  // Use company override from pratica navigation
+  const displayName = companyOverride?.name || safeData?.company_name || "ALFA ROMEO SRL";
+  const displayDossier = companyOverride?.dossier_id || safeData?.dossier_id || "PEF-2026-X892";
+  const displayPiva = companyOverride?.piva || safeData?.company_info?.partita_iva || "IT12345678901";
+  const displayLat = companyOverride?.lat || safeData?.company_info?.lat || 45.4708;
+  const displayLng = companyOverride?.lng || safeData?.company_info?.lng || 9.1911;
+  const displayIndirizzo = companyOverride?.indirizzo || safeData?.company_info?.indirizzo || "Via G. Verdi 42, Milano";
 
   return (
     <main className="flex h-screen w-screen overflow-hidden relative text-[13px] tracking-wide animate-[fadeUp_0.5s_ease-out_forwards]">
@@ -200,7 +228,7 @@ export default function MetisApp() {
             </button>
             <div className="flex flex-col">
             <h1 className="font-space text-2xl font-semibold text-white">
-              Dossier: {safeData?.company_name || "ALFA ROMEO SRL"} <span className="text-text-muted text-base ml-3 font-normal">ID: {safeData?.dossier_id || "PEF-2026-X892"}</span>
+              Dossier: {displayName} <span className="text-text-muted text-base ml-3 font-normal">ID: {displayDossier}</span>
             </h1>
           </div>
           </div>
@@ -237,7 +265,7 @@ export default function MetisApp() {
               {/* Company Location + Struttura Societaria */}
               <div className="border border-glass-border rounded-lg mb-4 bg-black/30 overflow-hidden">
                 <iframe 
-                  src={`https://www.google.com/maps?q=${safeData?.company_info?.lat || 45.4708},${safeData?.company_info?.lng || 9.1911}&z=15&output=embed`}
+                  src={`https://www.google.com/maps?q=${displayLat},${displayLng}&z=15&output=embed`}
                   className="w-full h-[140px] border-0 opacity-80"
                   loading="lazy"
                   allowFullScreen
@@ -252,9 +280,9 @@ export default function MetisApp() {
 
                   {selectedModel === '_addr' && (
                     <div className="text-[11px] text-text-muted space-y-1.5 animate-[fadeUp_0.2s_ease-out]">
-                      <div className="flex justify-between"><span className="text-text-muted">Sede Legale</span><span className="text-white font-medium">{safeData?.company_info?.indirizzo || 'Via G. Verdi 42, Milano'}</span></div>
+                      <div className="flex justify-between"><span className="text-text-muted">Sede Legale</span><span className="text-white font-medium">{displayIndirizzo}</span></div>
                       <div className="flex justify-between"><span>Forma Giuridica</span><span className="text-white">{safeData?.company_info?.forma_giuridica || 'SRL'}</span></div>
-                      <div className="flex justify-between"><span>P.IVA</span><span className="text-white font-mono text-[10px]">{safeData?.company_info?.partita_iva || 'IT12345678901'}</span></div>
+                      <div className="flex justify-between"><span>P.IVA</span><span className="text-white font-mono text-[10px]">{displayPiva}</span></div>
                       <div className="flex justify-between"><span>PEC</span><span className="text-cyan text-[10px]">{safeData?.company_info?.pec || ''}</span></div>
                       <div className="flex justify-between"><span>REA</span><span className="text-white">{safeData?.company_info?.rea || ''}</span></div>
                       <div className="flex justify-between"><span>Capitale Sociale</span><span className="text-white font-semibold">{safeData?.company_info?.capitale_sociale || ''}</span></div>

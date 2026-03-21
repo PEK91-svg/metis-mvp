@@ -175,7 +175,7 @@ function PraticaPage() {
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-text-muted font-space">Operatore: <strong className="text-white">{company.operator}</strong></span>
             {isElaborata && (
-              <Link href="/dossier">
+              <Link href={`/dossier?id=${company.id}`}>
                 <button className="flex items-center gap-2 bg-cyan/10 text-cyan hover:bg-cyan/20 border border-cyan/30 rounded-lg px-4 py-2 text-xs font-semibold font-space transition">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
                   Apri Dashboard Analisi

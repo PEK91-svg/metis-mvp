@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Node, Edge } from "reactflow";
 import {
   RuleNodeData,
@@ -289,10 +289,10 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
 
         {/* Processing Metrics */}
         <div className="grid grid-cols-2 gap-3">
-          <MiniMetric label="Avg Process Time" value={`${challenger.avgProcessingTime}s`} icon="⚡" />
-          <MiniMetric label="False Positive Rate" value={`${challenger.falsePositiveRate}%`} icon="🎯" />
-          <MiniMetric label="Manual Review" value={`${challenger.manualReview}`} icon="👁" />
-          <MiniMetric label="Total Processed" value={`${(challenger.totalApplications / 1000).toFixed(0)}K`} icon="📊" />
+          <MiniMetric label="Avg Process Time" value={`${challenger.avgProcessingTime}s`} icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>} />
+          <MiniMetric label="False Positive Rate" value={`${challenger.falsePositiveRate}%`} icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>} />
+          <MiniMetric label="Manual Review" value={`${challenger.manualReview}`} icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>} />
+          <MiniMetric label="Total Processed" value={`${(challenger.totalApplications / 1000).toFixed(0)}K`} icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>} />
         </div>
 
         {/* Distribution bar */}
@@ -369,12 +369,12 @@ function MetricCard({
   );
 }
 
-function MiniMetric({ label, value, icon }: { label: string; value: string; icon: string }) {
+function MiniMetric({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
     <div className="border border-white/10 rounded-lg p-3 bg-white/5">
       <div className="text-[9px] text-[var(--color-text-muted)] font-space tracking-widest uppercase mb-1">{label}</div>
       <div className="flex items-center gap-1.5">
-        <span className="text-[13px]">{icon}</span>
+        <span>{icon}</span>
         <span className="font-space text-base font-bold text-white">{value}</span>
       </div>
     </div>
