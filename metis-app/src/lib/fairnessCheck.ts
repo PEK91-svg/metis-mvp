@@ -280,33 +280,22 @@ export function runFairnessCheck(
     ...checkNonDiscrimination(),
   ];
 
-  const summary = {
-    passed: allChecks.filter(c => c.status === 'PASS').length,
-    failed: allChecks.filter(c => c.status === 'FAIL').length,
-    warnings: allChecks.filter(c => c.status === 'WARNING').length,
-    notApplicable: allChecks.filter(c => c.status === 'N/A').length,
-  };
+  const { summary, score, recommendations } = allChecks.reduce<{
+    summary: { passed: number; failed: number; warnings: number; notApplicable: number };
+    scorable: number; totalPoints: number; score: number;
+    recommendations: string[];
+  }>(
+    (acc, c) => {
+      if (c.status === 'PASS') { acc.summary.passed++; acc.scorable++; acc.totalPoints += 100; }
+      else if (c.status === 'FAIL') { acc.summary.failed++; acc.scorable++; acc.recommendations.push(`[CRITICO] ${c.label}: ${c.detail}`); }
+      else if (c.status === 'WARNING') { acc.summary.warnings++; acc.scorable++; acc.totalPoints += 50; acc.recommendations.push(`[ATTENZIONE] ${c.label}: ${c.detail}`); }
+      else { acc.summary.notApplicable++; }
+      acc.score = acc.scorable > 0 ? Math.round(acc.totalPoints / acc.scorable) : 0;
+      return acc;
+    },
+    { summary: { passed: 0, failed: 0, warnings: 0, notApplicable: 0 }, scorable: 0, totalPoints: 0, score: 0, recommendations: [] }
+  );
 
-  // Score: PASS=100, WARNING=50, FAIL=0, N/A=excluded
-  const scorable = allChecks.filter(c => c.status !== 'N/A');
-  const totalPoints = scorable.reduce((acc, c) => {
-    if (c.status === 'PASS') return acc + 100;
-    if (c.status === 'WARNING') return acc + 50;
-    return acc;
-  }, 0);
-  const score = scorable.length > 0 ? Math.round(totalPoints / scorable.length) : 0;
-
-  // Recommendations
-  const recommendations: string[] = [];
-  const failedChecks = allChecks.filter(c => c.status === 'FAIL');
-  const warningChecks = allChecks.filter(c => c.status === 'WARNING');
-
-  for (const fc of failedChecks) {
-    recommendations.push(`[CRITICO] ${fc.label}: ${fc.detail}`);
-  }
-  for (const wc of warningChecks) {
-    recommendations.push(`[ATTENZIONE] ${wc.label}: ${wc.detail}`);
-  }
   if (recommendations.length === 0) {
     recommendations.push('Nessuna azione correttiva necessaria. Il sistema è conforme ai requisiti EU AI Act applicabili.');
   }

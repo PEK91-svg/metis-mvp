@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Node, Edge } from "reactflow";
 import {
   RuleNodeData,
@@ -168,25 +168,31 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
   const [simRunning, setSimRunning] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [animatedResult, setAnimatedResult] = useState<SimulationResult>(CHAMPION);
+  const animTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (animTimerRef.current) clearInterval(animTimerRef.current);
+    };
+  }, []);
 
   const runSim = useCallback(() => {
+    if (animTimerRef.current) clearInterval(animTimerRef.current);
     setSimRunning(true);
     const target = runSimulation(nodes, edges);
     setResult(target);
 
-    // Animate from current to target
     const steps = 20;
     const duration = 1500;
     const interval = duration / steps;
     let step = 0;
 
-    const timer = setInterval(() => {
+    animTimerRef.current = setInterval(() => {
       step++;
       const progress = step / steps;
-      // Ease-out
       const ease = 1 - Math.pow(1 - progress, 3);
 
-      setAnimatedResult((prev) => ({
+      setAnimatedResult(() => ({
         approvalRate: Math.round((CHAMPION.approvalRate + (target.approvalRate - CHAMPION.approvalRate) * ease) * 10) / 10,
         defaultRate: Math.round((CHAMPION.defaultRate + (target.defaultRate - CHAMPION.defaultRate) * ease) * 100) / 100,
         fairLendingScore: Math.round(CHAMPION.fairLendingScore + (target.fairLendingScore - CHAMPION.fairLendingScore) * ease),
@@ -199,7 +205,8 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
       }));
 
       if (step >= steps) {
-        clearInterval(timer);
+        clearInterval(animTimerRef.current!);
+        animTimerRef.current = null;
         setSimRunning(false);
         setAnimatedResult(target);
       }

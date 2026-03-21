@@ -83,7 +83,7 @@ function generateBenchmarkNarrative(b: ParsedBilancio, bench: BenchmarkCompariso
 function generateCrossCheck(b: ParsedBilancio): NarrativeModule {
   // Simulate cross-check between bilancio and CR data
   const debitiVsBanche = b.debitiVersoBanche;
-  const estimatedCR = debitiVsBanche * (1 + (Math.random() * 0.2 - 0.05)); // ±5-15% variance
+  const estimatedCR = debitiVsBanche * 1.05; // fixed +5% variance vs CR (deterministic, EU AI Act)
   const mismatch = Math.abs(debitiVsBanche - estimatedCR) / Math.max(debitiVsBanche, 1) * 100;
   const alert = mismatch > 15;
 
