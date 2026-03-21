@@ -14,12 +14,12 @@ export default function LoginPage() {
     // Simulate authentication
     setTimeout(() => {
       setLoading(false);
-      router.push("/");
+      router.push("/home");
     }, 1500);
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen w-screen bg-[var(--color-void)] relative overflow-hidden font-inter text-text-main">
+    <main className="flex items-center justify-center flex-1 w-full bg-[var(--color-void)] relative overflow-hidden font-inter text-text-main">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(0,229,255,0.1),_transparent_50%)] pointer-events-none"></div>

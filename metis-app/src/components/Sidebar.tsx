@@ -1,8 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
 const NAV = [
+  {
+    href: "/home",
+    title: "Home",
+    activeColor: "cyan",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4H9v4a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9z"></path></svg>,
+  },
   {
     href: "/",
     title: "Dossier Dashboard",
@@ -23,17 +28,18 @@ const NAV = [
   },
 ];
 
+
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="w-[70px] h-full border-r border-white/10 flex flex-col items-center justify-between py-6 z-40 bg-[rgba(9,13,20,0.85)] backdrop-blur-xl shrink-0">
       <div className="flex flex-col gap-5 w-full px-2 items-center">
-        <Link href="/" className="mb-4 block hover:scale-110 transition-transform">
+        <Link href="/home" className="mb-4 block hover:scale-110 transition-transform">
           <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-10 h-10 rounded-lg shadow-[0_0_15px_rgba(0,229,255,0.2)]" />
         </Link>
 
-        {NAV.map((item) => {
+        {NAV.map((item: {href:string; title:string; activeColor:string; icon:any}) => {
           const isActive = pathname === item.href;
           const colorMap: Record<string, string> = {
             cyan: "bg-cyan/10 text-cyan shadow-[0_0_15px_rgba(0,229,255,0.15)] ring-1 ring-cyan/50",
