@@ -5,7 +5,6 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { loadPratiche } from '@/lib/storage';
 import type { Pratica } from '@/lib/types';
-import DashboardGrid from '@/components/dashboard/DashboardGrid';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Status = 'APPROVATA' | 'IN ANALISI' | 'DA REVISIONARE' | 'SOSPESA' | 'RIFIUTATA';
@@ -298,7 +297,7 @@ function SortIndicator({ sortKey, currentKey, dir }: { sortKey: SortKey; current
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
-export default function HomeDashboard() {
+export default function PortafoglioDashboard() {
   const router = useRouter();
   
   // Filters
@@ -390,20 +389,6 @@ export default function HomeDashboard() {
   const totalPages = Math.ceil(sorted.length / perPage);
   const paginated = sorted.slice((page - 1) * perPage, page * perPage);
 
-  // Dynamic KPIs
-  const kpis = useMemo(() => {
-    const total = companies.length;
-    const inAnalysis = companies.filter(c => c.status === 'IN ANALISI').length;
-    const approved = companies.filter(c => c.status === 'APPROVATA').length;
-    const rejected = companies.filter(c => c.status === 'RIFIUTATA').length;
-    const highRisk = companies.filter(c => c.risk === 'ALTO' || c.risk === 'CRITICO').length;
-    const avgPD = total > 0 ? companies.reduce((s, c) => s + c.pd, 0) / total : 0;
-    const avgAltman = total > 0 ? companies.reduce((s, c) => s + c.altman, 0) / total : 0;
-    const totalRevenue = companies.reduce((s, c) => s + c.revenue, 0);
-
-    return { total, inAnalysis, approved, rejected, highRisk, avgPD, avgAltman, totalRevenue };
-  }, [companies]);
-
   // Handlers
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -474,13 +459,280 @@ export default function HomeDashboard() {
             </div>
           </header>
 
-          {/* Header */}
+          {/* Toggle Search Bar Button (Visible when hidden) */}
           <div className="flex justify-between items-end mb-4 z-20 relative">
-            <h1 className="text-2xl font-space font-bold text-white tracking-widest uppercase">Command Center</h1>
+            <h1 className="text-2xl font-space font-bold text-white tracking-widest uppercase">Portafoglio Creditizio</h1>
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:border-cyan/50 text-white transition-all shadow-lg"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <span className="font-space text-xs font-semibold uppercase tracking-widest">{showAdvancedFilters ? "Nascondi Toolbar" : "Toolbar di Ricerca"}</span>
+            </button>
           </div>
 
-          {/* Dynamic Drag and Drop Dashboard */}
-          <DashboardGrid data={kpis} />
+          {/* Collapsible Search + Filters Bar */}
+          <div className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative z-30 ${showAdvancedFilters ? 'grid-rows-[1fr] opacity-100 mb-6' : 'grid-rows-[0fr] opacity-0 mb-0'}`}>
+            <div className="overflow-hidden">
+              <div className="glass-panel p-3 flex flex-col gap-4 border border-white/10 shadow-2xl bg-black/40 backdrop-blur-xl rounded-xl">
+                
+                {/* Main Row */}
+                <div className="flex items-center justify-between gap-4">
+                  {/* Search Input with Autocomplete */}
+                  <div className="relative w-80 group">
+                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Cerca p.iva, azienda..."
+                      value={search}
+                      onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition font-space"
+                    />
+                    
+                    {/* Autocomplete Dropdown */}
+                    {search.length > 0 && !companies.some(c => c.name.toLowerCase() === search.toLowerCase()) && (
+                      <div className="absolute top-full left-0 mt-2 w-full bg-[#0A0F14] border border-white/10 rounded-lg shadow-2xl max-h-60 overflow-y-auto hidden group-focus-within:block z-50">
+                        {companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(c => (
+                          <div 
+                            key={c.id}
+                            onMouseDown={() => router.push(`/pratica?id=${c.id}`)}
+                            className="px-4 py-3 border-b border-white/5 hover:bg-cyan/10 cursor-pointer flex justify-between items-center transition"
+                          >
+                            <span className="text-sm font-space text-white">{c.name}</span>
+                            <span className="text-[10px] font-space text-text-muted">{c.piva}</span>
+                          </div>
+                        ))}
+                        {companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+                          <div className="px-4 py-3 text-xs text-text-muted font-space italic">Nessun risultato trovato</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Filters */}
+                  <div className="flex items-center gap-3 flex-1 flex-wrap">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                      className="bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan/50 transition font-space appearance-none pr-8 cursor-pointer relative"
+                      style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300E5FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')", backgroundPosition: "right 8px center", backgroundRepeat: "no-repeat", backgroundSize: "16px" }}
+                    >
+                      <option value="">Tutti gli stati</option>
+                      {(Object.keys(STATUS_CONFIG) as Status[]).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    
+                    <select
+                      value={riskFilter}
+                      onChange={(e) => { setRiskFilter(e.target.value); setPage(1); }}
+                      className="bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan/50 transition font-space appearance-none pr-8 cursor-pointer"
+                      style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300E5FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')", backgroundPosition: "right 8px center", backgroundRepeat: "no-repeat", backgroundSize: "16px" }}
+                    >
+                      <option value="">Tutti i rischi</option>
+                      {(Object.keys(RISK_CONFIG) as RiskLevel[]).map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+
+                    <button
+                      onClick={clearFilters}
+                      className="text-[11px] font-space text-text-muted hover:text-red hover:bg-red/10 px-3 py-2 rounded-lg transition ml-auto border border-transparent hover:border-red/30 tracking-widest font-semibold uppercase"
+                    >
+                      Reset
+                    </button>
+                    {(search || statusFilter || riskFilter || operatorFilter || dateFrom || dateTo || pdMin || pdMax) && (
+                      <span className="text-[10px] text-cyan font-space uppercase tracking-widest">Filtri Attivi</span>
+                    )}
+                  </div>
+
+                  {/* Results Count & Export */}
+                  <div className="flex items-center gap-4 shrink-0 border-l border-white/10 pl-4">
+                    <div className="bg-black/30 border border-white/10 rounded-lg px-4 py-2">
+                       <span className="font-space text-lg text-cyan font-bold">{filtered.length}</span>
+                       <span className="text-[11px] text-text-muted ml-2 font-space uppercase tracking-widest">di {companies.length} pratiche</span>
+                    </div>
+                    <button
+                      onClick={exportCSV}
+                      className="w-10 h-10 rounded-lg bg-black/30 border border-white/10 hover:bg-cyan/10 hover:border-cyan/30 text-white/50 hover:text-cyan flex items-center justify-center transition"
+                      title="Esporta CSV"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Advanced Row (Always visible when main toolbar is open) */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div>
+                      <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">Operatore</label>
+                      <select
+                        value={operatorFilter}
+                        onChange={(e) => { setOperatorFilter(e.target.value); setPage(1); }}
+                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan/50 transition font-space"
+                      >
+                        <option value="">Tutti</option>
+                        {OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">Data da</label>
+                      <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan/50 transition font-space [color-scheme:dark]" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">Data a</label>
+                      <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan/50 transition font-space [color-scheme:dark]" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">PD min (%)</label>
+                      <input type="number" step="0.1" value={pdMin} onChange={(e) => { setPdMin(e.target.value); setPage(1); }}
+                        placeholder="0.0"
+                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition font-space" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">PD max (%)</label>
+                      <input type="number" step="0.1" value={pdMax} onChange={(e) => { setPdMax(e.target.value); setPage(1); }}
+                        placeholder="100.0"
+                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition font-space" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="flex-1 overflow-x-auto bg-[#0A0F14] border border-white/10 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] mt-4">
+            <table className="min-w-full table-auto">
+              <thead>
+                <tr className="bg-white/5 border-b border-white/10">
+                  {([
+                    { key: 'name' as SortKey, label: 'Azienda', w: '' },
+                    { key: 'pd' as SortKey, label: 'PD', w: 'w-20' },
+                    { key: 'altman' as SortKey, label: 'Altman Z', w: 'w-20' },
+                    { key: 'risk' as SortKey, label: 'Rischio', w: 'w-24' },
+                    { key: 'status' as SortKey, label: 'Stato', w: 'w-32' },
+                    { key: 'revenue' as SortKey, label: 'Fatturato', w: 'w-28' },
+                    { key: 'updated' as SortKey, label: 'Aggiornato', w: 'w-28' },
+                  ]).map(col => (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className={`px-6 py-4 text-left text-[11px] text-[#00E5FF] uppercase tracking-wider cursor-pointer hover:text-white transition select-none font-[var(--font-space)] ${col.w}`}
+                    >
+                      {col.label}
+                      <SortIndicator sortKey={col.key} currentKey={sortKey} dir={sortDir} />
+                    </th>
+                  ))}
+                  <th className="px-6 py-4 text-left text-[11px] text-[#00E5FF] uppercase tracking-wider font-[var(--font-space)] w-20">Operatore</th>
+                  <th className="px-6 py-4 w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-12 text-center text-sm text-text-muted">
+                      Nessuna pratica trovata con i filtri selezionati.
+                    </td>
+                  </tr>
+                ) : paginated.map((c, idx) => {
+                  const stCfg = STATUS_CONFIG[c.status];
+                  const rCfg = RISK_CONFIG[c.risk];
+                  return (
+                    <tr
+                      key={c.id}
+                      className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-black/20' : ''} hover:bg-white/5 transition group`}
+                    >
+                      <td className="px-6 py-4">
+                        <Link href={`/pratica?id=${c.id}`} className="text-[#00E5FF] hover:text-white transition text-sm font-semibold tracking-wide">
+                          {c.name}
+                        </Link>
+                        <div className="text-[11px] text-white/40 mt-1">{c.piva} · {c.sector}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-sm font-[var(--font-space)] ${c.pd > 5 ? 'text-red-400' : c.pd > 3 ? 'text-yellow-400' : 'text-white'}`}>
+                          {c.pd.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-sm font-[var(--font-space)] ${c.altman < 1.8 ? 'text-red-400' : c.altman < 2.7 ? 'text-yellow-400' : 'text-white'}`}>
+                          {c.altman.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-semibold uppercase tracking-wider border ${rCfg.border} ${rCfg.bg} ${rCfg.text}`}>
+                          {c.risk}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold uppercase tracking-wider border ${stCfg.border} ${stCfg.bg} ${stCfg.text}`}>
+                          <span>{stCfg.icon}</span> {c.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/70 font-[var(--font-space)]">{formatCurrency(c.revenue)}</td>
+                      <td className="px-6 py-4 text-xs text-white/50">{formatDate(c.updated)}</td>
+                      <td className="px-6 py-4 text-xs text-white/70">{c.operator}</td>
+                      <td className="px-6 py-4">
+                        <QuickActions company={c} onAction={handleAction} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 bg-[#0A0F14] border border-white/10 rounded-2xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-white/50">Righe per pagina:</span>
+                <select
+                  value={perPage}
+                  onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+                  className="bg-black/40 border border-white/10 rounded-lg py-1.5 px-3 text-sm text-white focus:outline-none focus:border-[#00E5FF]/50 appearance-none pr-8 cursor-pointer"
+                  style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300E5FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')", backgroundPosition: "right 6px center", backgroundRepeat: "no-repeat", backgroundSize: "12px" }}
+                >
+                  {[5, 10, 25].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-sm text-white/40 hover:text-white hover:border-white/30 hover:bg-white/5 disabled:opacity-20 disabled:pointer-events-none transition-all"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-10 h-10 rounded-xl border flex items-center justify-center text-sm font-medium transition-all ${
+                      p === page
+                        ? 'border-[#00E5FF]/50 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
+                        : 'border-white/5 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-sm text-white/40 hover:text-white hover:border-white/30 hover:bg-white/5 disabled:opacity-20 disabled:pointer-events-none transition-all"
+                >
+                  ›
+                </button>
+              </div>
+
+              <div className="text-sm font-[var(--font-space)] bg-black/40 border border-white/5 px-4 py-2 rounded-xl text-white/50">
+                Pagina <span className="text-[#00E5FF]">{page}</span> di {totalPages}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
