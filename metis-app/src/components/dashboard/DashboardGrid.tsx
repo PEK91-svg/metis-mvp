@@ -102,9 +102,11 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
   }, []);
 
   useEffect(() => {
-    if (mounted) {
+    if (!mounted) return;
+    const timer = setTimeout(() => {
       localStorage.setItem("metis-dashboard-layout-v2", JSON.stringify(widgets));
-    }
+    }, 500);
+    return () => clearTimeout(timer);
   }, [widgets, mounted]);
 
   const sensors = useSensors(

@@ -3,9 +3,10 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { STATUS_CONFIG } from "@/lib/companyConfig";
+import type { Status } from "@/lib/companyConfig";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-type Status = "APPROVATA" | "IN ANALISI" | "DA REVISIONARE" | "SOSPESA" | "RIFIUTATA";
 type DocStatus = "uploaded" | "missing" | "error";
 
 interface RequiredDoc {
@@ -41,32 +42,32 @@ const REQUIRED_DOCS: RequiredDoc[] = [
 ];
 
 const MOCK_COMPANIES: Record<number, CompanyData> = {
-  1:  { id: 1,  name: "Alpha S.p.A.",       piva: "IT12345678901", status: "APPROVATA",      sector: "Manifatturiero", revenue: 15400000, pd: 2.1,  altman: 3.12, risk: "BASSO",   operator: "M. Rossi",
+  1:  { id: 1,  name: "Alpha S.p.A.",       piva: "IT00000000001", status: "APPROVATA",      sector: "Manifatturiero", revenue: 15400000, pd: 2.1,  altman: 3.12, risk: "BASSO",   operator: "M. Rossi",
         documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-20", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_alpha.pdf` })) },
-  2:  { id: 2,  name: "Beta Ltd.",          piva: "IT98765432109", status: "IN ANALISI",     sector: "Servizi",        revenue: 8200000,  pd: 3.5,  altman: 2.85, risk: "MEDIO",   operator: "L. Bianchi",
+  2:  { id: 2,  name: "Beta Ltd.",          piva: "IT00000000002", status: "IN ANALISI",     sector: "Servizi",        revenue: 8200000,  pd: 3.5,  altman: 2.85, risk: "MEDIO",   operator: "L. Bianchi",
         documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 4 ? "uploaded" : "missing") as DocStatus, ...(i < 4 ? { uploadedAt: "2025-02-15", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_beta.pdf` } : {}) })) },
-  3:  { id: 3,  name: "Gamma SRL",          piva: "IT11223344556", status: "DA REVISIONARE", sector: "Tech",           revenue: 22100000, pd: 1.8,  altman: 3.45, risk: "BASSO",   operator: "G. Verdi",
+  3:  { id: 3,  name: "Gamma SRL",          piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech",           revenue: 22100000, pd: 1.8,  altman: 3.45, risk: "BASSO",   operator: "G. Verdi",
         documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 3 ? "uploaded" : (i === 3 ? "error" : "missing")) as DocStatus, ...(i < 3 ? { uploadedAt: "2025-01-28", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_gamma.pdf` } : {}) })) },
-  4:  { id: 4,  name: "Delta Corp.",        piva: "IT99887766554", status: "SOSPESA",        sector: "Edilizia",       revenue: 4500000,  pd: 5.2,  altman: 1.95, risk: "ALTO",    operator: "A. Neri",
+  4:  { id: 4,  name: "Delta Corp.",        piva: "IT00000000004", status: "SOSPESA",        sector: "Edilizia",       revenue: 4500000,  pd: 5.2,  altman: 1.95, risk: "ALTO",    operator: "A. Neri",
         documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 2 ? "uploaded" : "missing") as DocStatus, ...(i < 2 ? { uploadedAt: "2025-02-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_delta.pdf` } : {}) })) },
-  5:  { id: 5,  name: "Epsilon S.r.l.",     piva: "IT55443322110", status: "APPROVATA",      sector: "Alimentare",     revenue: 31000000, pd: 0.9,  altman: 4.10, risk: "BASSO",   operator: "M. Rossi",
+  5:  { id: 5,  name: "Epsilon S.r.l.",     piva: "IT00000000005", status: "APPROVATA",      sector: "Alimentare",     revenue: 31000000, pd: 0.9,  altman: 4.10, risk: "BASSO",   operator: "M. Rossi",
         documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_epsilon.pdf` })) },
   // Resto: documenti parziali o mancanti
   ...Object.fromEntries([6,7,8,9,10,11,12,13,14,15,16,17,18].map(id => {
     const names: Record<number, [string, string, Status, string]> = {
-      6:  ["Zeta Industries",   "IT66778899001", "RIFIUTATA",      "Manifatturiero"],
-      7:  ["Eta Holding",       "IT22334455667", "APPROVATA",      "Servizi"],
-      8:  ["Theta Finance",     "IT33445566778", "IN ANALISI",     "Finanza"],
-      9:  ["Iota Tech",         "IT44556677889", "DA REVISIONARE", "Tech"],
-      10: ["Kappa Logistics",   "IT55667788990", "SOSPESA",        "Trasporti"],
-      11: ["Lambda Group",      "IT66778800112", "APPROVATA",      "Alimentare"],
-      12: ["Mu Pharma",         "IT77889911223", "IN ANALISI",     "Pharma"],
-      13: ["Nu Energy",         "IT88990022334", "RIFIUTATA",      "Energia"],
-      14: ["Xi Construction",   "IT99001133445", "DA REVISIONARE", "Edilizia"],
-      15: ["Omicron Digital",   "IT00112244556", "APPROVATA",      "Tech"],
-      16: ["Pi Consulting",     "IT11223355667", "IN ANALISI",     "Servizi"],
-      17: ["Rho Automotive",    "IT22334466778", "SOSPESA",        "Automotive"],
-      18: ["Sigma Textiles",    "IT33445577889", "DA REVISIONARE", "Manifatturiero"],
+      6:  ["Zeta Industries",   "IT00000000006", "RIFIUTATA",      "Manifatturiero"],
+      7:  ["Eta Holding",       "IT00000000007", "APPROVATA",      "Servizi"],
+      8:  ["Theta Finance",     "IT00000000008", "IN ANALISI",     "Finanza"],
+      9:  ["Iota Tech",         "IT00000000009", "DA REVISIONARE", "Tech"],
+      10: ["Kappa Logistics",   "IT00000000010", "SOSPESA",        "Trasporti"],
+      11: ["Lambda Group",      "IT00000000011", "APPROVATA",      "Alimentare"],
+      12: ["Mu Pharma",         "IT00000000012", "IN ANALISI",     "Pharma"],
+      13: ["Nu Energy",         "IT00000000013", "RIFIUTATA",      "Energia"],
+      14: ["Xi Construction",   "IT00000000014", "DA REVISIONARE", "Edilizia"],
+      15: ["Omicron Digital",   "IT00000000015", "APPROVATA",      "Tech"],
+      16: ["Pi Consulting",     "IT00000000016", "IN ANALISI",     "Servizi"],
+      17: ["Rho Automotive",    "IT00000000017", "SOSPESA",        "Automotive"],
+      18: ["Sigma Textiles",    "IT00000000018", "DA REVISIONARE", "Manifatturiero"],
     };
     const [name, piva, status, sector] = names[id];
     const isComplete = ["APPROVATA"].includes(status);
@@ -83,14 +84,6 @@ const MOCK_COMPANIES: Record<number, CompanyData> = {
 };
 
 // ─── Config ─────────────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<Status, { icon: string; border: string; bg: string; text: string }> = {
-  APPROVATA:       { icon: "✓", border: "border-green/50",  bg: "bg-green/10",  text: "text-green" },
-  "IN ANALISI":    { icon: "◎", border: "border-cyan/50",   bg: "bg-cyan/10",   text: "text-cyan" },
-  "DA REVISIONARE":{ icon: "⚠", border: "border-yellow/50", bg: "bg-yellow/10", text: "text-yellow" },
-  SOSPESA:         { icon: "⏸", border: "border-purple/50", bg: "bg-purple/10", text: "text-purple" },
-  RIFIUTATA:       { icon: "✕", border: "border-red/50",    bg: "bg-red/10",    text: "text-red" },
-};
-
 const DOC_STATUS_CONFIG: Record<DocStatus, { icon: string; text: string; bg: string; border: string }> = {
   uploaded: { icon: "✓", text: "text-green",  bg: "bg-green/10",  border: "border-green/30" },
   missing:  { icon: "○", text: "text-white/30", bg: "bg-white/5",  border: "border-white/10" },

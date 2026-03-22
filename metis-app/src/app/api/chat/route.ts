@@ -50,6 +50,15 @@ export async function POST(req: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ reply: "Configurazione mancante: GEMINI_API_KEY non impostata." }, { status: 503 });
   }
+
+  // Basic API secret check — requires METIS_API_SECRET env var when set
+  const apiSecret = process.env.METIS_API_SECRET;
+  if (apiSecret) {
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader !== `Bearer ${apiSecret}`) {
+      return NextResponse.json({ reply: "Non autorizzato." }, { status: 401 });
+    }
+  }
   try {
     let body: unknown;
     try {

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -48,10 +48,26 @@ export default function CopilotPage() {
     }
   };
 
-  const formatMessage = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]">$1</strong>')
-      .replace(/\n/g, '<br/>');
+  // Renders markdown-like text as safe React elements (no dangerouslySetInnerHTML)
+  const formatMessage = (text: string): React.ReactNode[] => {
+    return text.split('\n').flatMap((line, lineIdx, lines) => {
+      const parts: React.ReactNode[] = [];
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      let last = 0;
+      let match;
+      while ((match = boldRegex.exec(line)) !== null) {
+        if (match.index > last) parts.push(line.slice(last, match.index));
+        parts.push(
+          <strong key={`b-${lineIdx}-${match.index}`} className="text-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]">
+            {match[1]}
+          </strong>
+        );
+        last = match.index + match[0].length;
+      }
+      if (last < line.length) parts.push(line.slice(last));
+      if (lineIdx < lines.length - 1) parts.push(<br key={`br-${lineIdx}`} />);
+      return parts;
+    });
   };
 
   return (
@@ -131,7 +147,7 @@ export default function CopilotPage() {
                         ? "bg-[rgba(14,21,33,0.4)] backdrop-blur-md border border-white/5 text-[#F1F5F9] hover:border-cyan/20 cursor-default"
                         : "bg-cyan/5 border border-cyan/20 text-white"
                     }`}>
-                      <div dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }} />
+                      <div>{formatMessage(msg.content)}</div>
                       
                       {msg.role === "assistant" && (
                          <div className="absolute top-0 left-0 w-1 h-full bg-cyan/40 rounded-l-2xl" />

@@ -1,6 +1,7 @@
 "use client";
+import type { DashboardData } from "@/components/dashboard/DashboardGrid";
 
-export function PipelineChartWidget({ data }: { data: any[] }) {
+export function PipelineChartWidget({ data: _data }: { data: DashboardData | null }) {
   const bars = [
     { label: "Approved", values: [40, 55, 45, 70, 60, 75, 65, 85], color: "#00E5FF" },
     { label: "Pending",  values: [20, 28, 22, 35, 30, 38, 28, 42], color: "#a78bfa" },

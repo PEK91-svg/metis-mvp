@@ -1,6 +1,7 @@
 "use client";
+import type { DashboardData } from "@/components/dashboard/DashboardGrid";
 
-export function KpiWidget({ data }: { data: any }) {
+export function KpiWidget({ data }: { data: DashboardData | null }) {
   const avgPd = data?.avgPd ?? 4.2;
   const pdMin = data?.pdMin ?? 1.2;
   const pdMax = data?.pdMax ?? 8.5;
