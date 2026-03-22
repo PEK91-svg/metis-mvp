@@ -9,6 +9,16 @@ type Message = {
   actions?: Array<{ action: string; url: string; label: string; id?: number }>;
 };
 
+// Context injected by the Dossier page when navigating to Copilot
+export interface DossierContext {
+  companyName: string;
+  altmanZ?: number;
+  pd?: string;
+  dscr?: string;
+  riskLabel?: string;
+  sector?: string;
+}
+
 const QUICK_ACTIONS = [
   { label: "Pratiche ad alto rischio", prompt: "Quali pratiche hanno rischio ALTO o CRITICO?" },
   { label: "KPI portafoglio", prompt: "Dammi le KPI aggregate del portafoglio" },
@@ -20,10 +30,22 @@ const QUICK_ACTIONS = [
 
 export default function CopilotPage() {
   const router = useRouter();
+
+  // Read dossier context from sessionStorage (set by dossier page when navigating here)
+  const [dossierCtx] = useState<DossierContext | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem("metis_dossier_ctx");
+      return raw ? JSON.parse(raw) as DossierContext : null;
+    } catch { return null; }
+  });
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Benvenuto. Sono **METIS**, il tuo assistente agentico per il credit underwriting.\n\nHo accesso diretto al portafoglio in tempo reale: posso cercare pratiche, analizzare rischi, produrre KPI aggregate e navigare la piattaforma per te.\n\nCosa vuoi analizzare?",
+      content: dossierCtx
+        ? `Benvenuto. Sono **METIS**.\n\nHo caricato il dossier di **${dossierCtx.companyName}** — ecco cosa so al momento:\n• Altman Z-Score: **${dossierCtx.altmanZ ?? 'N/A'}**\n• PD: **${dossierCtx.pd ?? 'N/A'}**\n• DSCR: **${dossierCtx.dscr ?? 'N/A'}**\n• Giudizio: **${dossierCtx.riskLabel ?? 'N/A'}**\n\nPosso analizzare ulteriormente il rischio, confrontare con il settore ${dossierCtx.sector ?? ''} o suggerire azioni. Cosa vuoi approfondire?`
+        : "Benvenuto. Sono **METIS**, il tuo assistente agentico per il credit underwriting.\n\nHo accesso diretto al portafoglio in tempo reale: posso cercare pratiche, analizzare rischi, produrre KPI aggregate e navigare la piattaforma per te.\n\nCosa vuoi analizzare?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -48,7 +70,7 @@ export default function CopilotPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, dossierContext: dossierCtx }),
       });
       const data = await res.json();
       setMessages([...newMessages, {

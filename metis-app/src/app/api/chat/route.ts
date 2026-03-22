@@ -203,6 +203,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Build context-aware system prompt
+    const dossierCtx = (body as Record<string, unknown>)?.dossierContext as Record<string, string | number> | null | undefined;
+    const dossierBlock = dossierCtx
+      ? `\n\n---\n## DOSSIER ATTIVO\nSta analizzando l'azienda **${dossierCtx.companyName}** (settore: ${dossierCtx.sector ?? 'N/A'}).\n- Altman Z-Score: ${dossierCtx.altmanZ ?? 'N/A'}\n- PD (Prob. Default): ${dossierCtx.pd ?? 'N/A'}\n- DSCR Prospettico: ${dossierCtx.dscr ?? 'N/A'}\n- Giudizio Sintetico: **${dossierCtx.riskLabel ?? 'N/A'}**\n\nQuando rispondi, fai SEMPRE riferimento a questi dati specifici invece di dati generici. Usa il nome dell'azienda. Fornisci analisi contestualizzate al suo profilo di rischio.\n---`
+      : "";
+    const effectiveSystemPrompt = SYSTEM_PROMPT + dossierBlock;
+
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       // @ts-expect-error — tools type accepted at runtime
@@ -217,7 +224,7 @@ export async function POST(req: NextRequest) {
     const chat = model.startChat({
       history: [
         { role: "user", parts: [{ text: "Inizializza. Chi sei e cosa puoi fare?" }] },
-        { role: "model", parts: [{ text: SYSTEM_PROMPT + "\n\nSono METIS, il motore agentico predittivo e analitico della piattaforma. Posso cercare pratiche, analizzare rischi, recuperare KPI di portafoglio e navigare nella piattaforma. Dimmi come posso aiutarti." }] },
+        { role: "model", parts: [{ text: effectiveSystemPrompt + "\n\nSono METIS, il motore agentico predittivo e analitico della piattaforma. Posso cercare pratiche, analizzare rischi, recuperare KPI di portafoglio e navigare nella piattaforma. Dimmi come posso aiutarti." }] },
         ...history,
       ],
     });
@@ -236,7 +243,8 @@ export async function POST(req: NextRequest) {
       if (fnCalls.length === 0) break;
 
       // Execute all function calls in this turn
-      const fnResults = fnCalls.map((p: { functionCall: { name: string; args: Record<string, unknown> } }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fnResults = (fnCalls as any[]).map((p: { functionCall: { name: string; args: Record<string, unknown> } }) => {
         const result = executeTool(p.functionCall.name, p.functionCall.args || {});
 
         // Collect navigation actions for the frontend

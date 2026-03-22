@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { Node } from "reactflow";
+import { DATA_CONNECTORS } from "@/lib/connectors";
 import {
   RuleNodeData,
   NODE_META,
@@ -190,28 +191,17 @@ function SliderField({
 
 // ---- Type-specific editors ----
 
-const DATA_CONNECTORS = [
-  { 
-    id: 'Bankitalia', label: 'C.R. Bankitalia', latency: '2.4s', status: 'live', 
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="20" width="20" height="2"/><path d="M12 2L2 7h20L12 2z"/><rect x="4" y="9" width="2" height="9"/><rect x="10" y="9" width="2" height="9"/><rect x="18" y="9" width="2" height="9"/></svg>
-  },
-  { 
-    id: 'XBRL', label: 'Bilancio XBRL (Europa)', latency: '1.1s', status: 'live', 
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> 
-  },
-  { 
-    id: 'Cerved', label: 'Cerved Group APIs', latency: '-', status: 'config', 
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> 
-  },
-  { 
-    id: 'NLP', label: 'Web NLP / Nowcasting', latency: '3.2s', status: 'live', 
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> 
-  },
-  { 
-    id: 'ESG', label: 'ESG Provider Level 2', latency: '-', status: 'inactive', 
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> 
-  },
-];
+// DATA_CONNECTORS is imported from @/lib/connectors (shared with Data Hub)
+
+// Local SVG icons keyed by connector id
+function ConnectorIcon({ id, size = 18 }: { id: string; size?: number }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (id === "Bankitalia") return <svg {...p}><rect x="2" y="20" width="20" height="2"/><path d="M12 2L2 7h20L12 2z"/><rect x="4" y="9" width="2" height="9"/><rect x="10" y="9" width="2" height="9"/><rect x="18" y="9" width="2" height="9"/></svg>;
+  if (id === "XBRL")       return <svg {...p}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>;
+  if (id === "Cerved")     return <svg {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>;
+  if (id === "NLP")        return <svg {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+  return <svg {...p}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>;
+}
 
 function DataIngestionEditor({ config, onChange }: { config: DataIngestionConfig; onChange: (p: Record<string, unknown>) => void }) {
   const toggleSource = (conn: typeof DATA_CONNECTORS[0], currentSources: string[]) => {
@@ -237,8 +227,8 @@ function DataIngestionEditor({ config, onChange }: { config: DataIngestionConfig
                 className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-all ${isActive ? 'bg-cyan/10 border-cyan/30 shadow-[0_0_15px_rgba(0,229,255,0.05)] hover:border-cyan/50' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${isActive ? 'bg-cyan/20 border border-cyan/30 shadow-[0_0_10px_rgba(0,229,255,0.2)]' : 'bg-black/40 grayscale opacity-60 border border-white/10'}`}>
-                    {conn.icon}
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isActive ? 'bg-cyan/20 border border-cyan/30 text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]' : 'bg-black/40 opacity-40 border border-white/10 text-white/40'}`}>
+                    <ConnectorIcon id={conn.id} />
                   </div>
                   <div>
                     <div className={`text-[11px] font-space font-bold ${isActive ? 'text-white' : 'text-white/60'}`}>
