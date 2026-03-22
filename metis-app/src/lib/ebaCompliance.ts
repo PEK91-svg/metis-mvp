@@ -4,6 +4,7 @@
 // Sezioni: Governance · Merito Creditizio · Sostenibilità · Monitoraggio
 
 import { ParsedBilancio, RiskModelResults } from './types';
+import { createIdGenerator } from './idGenerator';
 
 export type EBAStatus = 'CONFORME' | 'PARZIALMENTE CONFORME' | 'NON CONFORME' | 'DA VERIFICARE';
 
@@ -29,13 +30,18 @@ export interface EBAResult {
   sommario: string;
 }
 
-// ── Helper ────────────────────────────────────────────────────────────────────
-let idCounter = 0;
-function genId(sezione: string): string {
-  return `EBA-${sezione}-${(++idCounter).toString().padStart(2, '0')}`;
-}
+// ── Soglie EBA/GL/2020/06 — §5.2.6 ──────────────────────────────────────────
+// Riferimento: EBA/GL/2020/06, Sezione 5.2.6 "Capital structure and leverage"
+const EBA_LEVERAGE = {
+  CONFORME: 3.0,           // leverage ≤ 3.0x → CONFORME
+  PARZIALMENTE: 5.0,       // 3.0x < leverage ≤ 5.0x → PARZIALMENTE CONFORME
+  // leverage > 5.0x → NON CONFORME
+} as const;
 
+// ── Helper ────────────────────────────────────────────────────────────────────
+// genId è passato come parametro per isolare ogni chiamata (thread-safety)
 function item(
+  genId: (sezione: string) => string,
   sezione: string,
   paragrafo: string,
   titolo: string,
@@ -48,9 +54,10 @@ function item(
 }
 
 // ── Sezione 4: Governance e cultura del rischio ───────────────────────────────
-function checkGovernance(): EBACheckItem[] {
+function checkGovernance(genId: (s: string) => string): EBACheckItem[] {
   return [
     item(
+      genId,
       'GOV',
       '§ 4.3.1 EBA/GL/2020/06',
       'Politiche e procedure creditizie documentate',
@@ -60,6 +67,7 @@ function checkGovernance(): EBACheckItem[] {
       'Rule Engine attivo con policy documentate e audit trail'
     ),
     item(
+      genId,
       'GOV',
       '§ 4.3.4 EBA/GL/2020/06',
       'Separazione ruoli deliberanti',
@@ -69,6 +77,7 @@ function checkGovernance(): EBACheckItem[] {
       'DeliberaModal con obbligo di esito e motivazione — operatore identificato'
     ),
     item(
+      genId,
       'GOV',
       '§ 4.3.6 EBA/GL/2020/06',
       'Formazione del personale creditizio',
@@ -81,13 +90,14 @@ function checkGovernance(): EBACheckItem[] {
 }
 
 // ── Sezione 5: Origination — Merito creditizio ────────────────────────────────
-function checkCreditworthiness(b: ParsedBilancio, models: RiskModelResults): EBACheckItem[] {
+function checkCreditworthiness(b: ParsedBilancio, models: RiskModelResults, genId: (s: string) => string): EBACheckItem[] {
   const dscr = models.dscr.base;
   const leverage = b.totaleDebiti / Math.max(b.patrimonioNetto, 1);
   const hasMultipleModels = true; // Sistema usa 4 modelli
 
   return [
     item(
+      genId,
       'CRW',
       '§ 5.2.1 EBA/GL/2020/06',
       'Valutazione capacità di rimborso (affordability)',
@@ -99,6 +109,7 @@ function checkCreditworthiness(b: ParsedBilancio, models: RiskModelResults): EBA
       `DSCR calcolato su EBITDA e debt service annuale — scenario base`
     ),
     item(
+      genId,
       'CRW',
       '§ 5.2.3 EBA/GL/2020/06',
       'Analisi multi-dimensionale del rischio',
@@ -108,6 +119,7 @@ function checkCreditworthiness(b: ParsedBilancio, models: RiskModelResults): EBA
       '4 modelli deterministici — Altman, Ohlson, Zmijewski, DSCR'
     ),
     item(
+      genId,
       'CRW',
       '§ 5.2.4 EBA/GL/2020/06',
       'Utilizzo di dati finanziari aggiornati',
@@ -119,17 +131,19 @@ function checkCreditworthiness(b: ParsedBilancio, models: RiskModelResults): EBA
       `Data chiusura: ${b.dataChiusura || 'N/D'}`
     ),
     item(
+      genId,
       'CRW',
       '§ 5.2.6 EBA/GL/2020/06',
       'Analisi struttura del capitale e leverage',
       'Deve essere verificato che il leverage non superi livelli insostenibili',
-      leverage <= 3.0 ? 'CONFORME' : leverage <= 5.0 ? 'PARZIALMENTE CONFORME' : 'NON CONFORME',
-      leverage <= 3.0
-        ? `Leverage ${Math.round(leverage * 100) / 100}x: struttura del capitale adeguata secondo le soglie EBA.`
-        : `Leverage ${Math.round(leverage * 100) / 100}x: ${leverage > 5.0 ? 'struttura del capitale non sostenibile per EBA — riduzione del debito raccomandata' : 'struttura nella fascia di attenzione EBA'}.`,
-      `Leverage = Totale Debiti / Patrimonio Netto`
+      leverage <= EBA_LEVERAGE.CONFORME ? 'CONFORME' : leverage <= EBA_LEVERAGE.PARZIALMENTE ? 'PARZIALMENTE CONFORME' : 'NON CONFORME',
+      leverage <= EBA_LEVERAGE.CONFORME
+        ? `Leverage ${Math.round(leverage * 100) / 100}x: struttura del capitale adeguata secondo le soglie EBA (≤${EBA_LEVERAGE.CONFORME}x).`
+        : `Leverage ${Math.round(leverage * 100) / 100}x: ${leverage > EBA_LEVERAGE.PARZIALMENTE ? 'struttura del capitale non sostenibile per EBA — riduzione del debito raccomandata' : 'struttura nella fascia di attenzione EBA'}.`,
+      `Leverage = Totale Debiti / Patrimonio Netto — soglia conforme: ≤${EBA_LEVERAGE.CONFORME}x`
     ),
     item(
+      genId,
       'CRW',
       '§ 5.2.8 EBA/GL/2020/06',
       'Analisi flussi di cassa prospettici',
@@ -142,9 +156,10 @@ function checkCreditworthiness(b: ParsedBilancio, models: RiskModelResults): EBA
 }
 
 // ── Sezione 6: Pricing e Garanzie ─────────────────────────────────────────────
-function checkPricingGaranzie(b: ParsedBilancio): EBACheckItem[] {
+function checkPricingGaranzie(b: ParsedBilancio, genId: (s: string) => string): EBACheckItem[] {
   return [
     item(
+      genId,
       'PRI',
       '§ 6.1.2 EBA/GL/2020/06',
       'Pricing risk-based',
@@ -154,6 +169,7 @@ function checkPricingGaranzie(b: ParsedBilancio): EBACheckItem[] {
       'PD e risk profile disponibili — pricing da applicare dall\'area commercial'
     ),
     item(
+      genId,
       'PRI',
       '§ 6.3.1 EBA/GL/2020/06',
       'Valutazione e ammissibilità delle garanzie',
@@ -166,13 +182,14 @@ function checkPricingGaranzie(b: ParsedBilancio): EBACheckItem[] {
 }
 
 // ── Sezione 8: Monitoraggio continuativo ──────────────────────────────────────
-function checkMonitoraggio(models: RiskModelResults): EBACheckItem[] {
+function checkMonitoraggio(models: RiskModelResults, genId: (s: string) => string): EBACheckItem[] {
   const hasAnomalyDetection = true; // Sistema ha anomaly detector
   const hasCRPattern = true;        // Sistema monitora pattern CR 12M
   const hasAuditTrail = true;       // Sistema ha audit trail completo
 
   return [
     item(
+      genId,
       'MON',
       '§ 8.1.1 EBA/GL/2020/06',
       'Sistema di early warning (EWS)',
@@ -182,6 +199,7 @@ function checkMonitoraggio(models: RiskModelResults): EBACheckItem[] {
       'AnomalyDetector con 9 regole EWS attive — severità classificata'
     ),
     item(
+      genId,
       'MON',
       '§ 8.2.3 EBA/GL/2020/06',
       'Monitoraggio andamentale Centrale Rischi',
@@ -191,6 +209,7 @@ function checkMonitoraggio(models: RiskModelResults): EBACheckItem[] {
       'CR Pattern 12M con sparkline e threshold automatici'
     ),
     item(
+      genId,
       'MON',
       '§ 8.3.1 EBA/GL/2020/06',
       'Revisione periodica del merito creditizio',
@@ -200,6 +219,7 @@ function checkMonitoraggio(models: RiskModelResults): EBACheckItem[] {
       'Rielaborazione manuale disponibile — schedulazione automatica da implementare'
     ),
     item(
+      genId,
       'MON',
       '§ 8.4.2 EBA/GL/2020/06',
       'Audit trail e documentazione delle decisioni',
@@ -209,6 +229,7 @@ function checkMonitoraggio(models: RiskModelResults): EBACheckItem[] {
       'AuditTrail: 14 tipi di azione — ID univoco, timestamp, operatore, motivazione delibera'
     ),
     item(
+      genId,
       'MON',
       '§ 8.5.1 EBA/GL/2020/06',
       'Classificazione esposizioni deteriorate (Stage IFRS 9)',
@@ -227,13 +248,18 @@ export function runEBACheck(
   bilancio: ParsedBilancio,
   models: RiskModelResults
 ): EBAResult {
-  idCounter = 0;
+  // Generatore isolato: ogni sezione produce ID univoci per questa run
+  const _counter: Record<string, number> = {};
+  const genId = (sezione: string): string => {
+    _counter[sezione] = (_counter[sezione] ?? 0) + 1;
+    return `EBA-${sezione}-${_counter[sezione].toString().padStart(2, '0')}`;
+  };
 
   const items: EBACheckItem[] = [
-    ...checkGovernance(),
-    ...checkCreditworthiness(bilancio, models),
-    ...checkPricingGaranzie(bilancio),
-    ...checkMonitoraggio(models),
+    ...checkGovernance(genId),
+    ...checkCreditworthiness(bilancio, models, genId),
+    ...checkPricingGaranzie(bilancio, genId),
+    ...checkMonitoraggio(models, genId),
   ];
 
   const conformiCount = items.filter(i => i.status === 'CONFORME').length;

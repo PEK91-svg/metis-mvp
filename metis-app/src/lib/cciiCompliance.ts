@@ -3,6 +3,7 @@
 // Riferimenti: Art. 3, Art. 12, Art. 13 D.Lgs. 14/2019 e Principi CNDCEC (2022).
 
 import { ParsedBilancio, RiskModelResults } from './types';
+import { createIdGenerator } from './idGenerator';
 
 export type CCIIStatus = 'PASS' | 'WARNING' | 'ALERT' | 'N/A';
 
@@ -30,18 +31,24 @@ export interface CCIIResult {
   note: string;
 }
 
-// ── Helper ────────────────────────────────────────────────────────────────────
-let idCounter = 0;
-function genId(): string { return `CCII-${(++idCounter).toString().padStart(3, '0')}`; }
+// ── Soglie normative ──────────────────────────────────────────────────────────
+const SOGLIE = {
+  ONERI_FINANZIARI_PCT: 4.0,        // % oneri/ricavi — soglia CNDCEC (Art. 13)
+  LEVERAGE_ALERT_FACTOR: 1.25,      // leverage > soglia * 1.25 = ALERT
+  LEVERAGE_BASE: 4.0,               // leverage > 4x = WARNING (Art. 3 CCII)
+  CASH_FLOW_RATIO_PCT: 8.0,         // FCO/debiti < 8% = ALERT CNDCEC
+  CASH_FLOW_RATIO_HALF: 0.5,        // moltiplicatore sotto-soglia per ALERT
+} as const;
 
 // ── Calcolo indicatori ────────────────────────────────────────────────────────
+// genId è passato come argomento per isolare ogni run (thread-safety)
 
 /**
  * CCII-01 — Patrimonio Netto
  * Art. 2 co. 1 lett. a) e Art. 3 D.Lgs. 14/2019
  * Patrimonio netto negativo o inferiore al minimo legale = segnale di allerta immediato
  */
-function checkPatrimonioNetto(b: ParsedBilancio): CCIIIndicator {
+function checkPatrimonioNetto(b: ParsedBilancio, genId: () => string): CCIIIndicator {
   const pn = b.patrimonioNetto;
   let status: CCIIStatus;
   let dettaglio: string;
@@ -77,7 +84,7 @@ function checkPatrimonioNetto(b: ParsedBilancio): CCIIIndicator {
  * Art. 13 D.Lgs. 14/2019 e Elaborazione CNDCEC (2022)
  * Il DSCR a 6 mesi è il primo indicatore della lista CNDCEC
  */
-function checkDSCRProspettico(models: RiskModelResults): CCIIIndicator {
+function checkDSCRProspettico(models: RiskModelResults, genId: () => string): CCIIIndicator {
   const dscr6m = models.dscr.stress; // proxy conservativo per 6 mesi
   let status: CCIIStatus;
   let dettaglio: string;
@@ -113,11 +120,11 @@ function checkDSCRProspettico(models: RiskModelResults): CCIIIndicator {
  * Art. 13 D.Lgs. 14/2019 — Indici CNDCEC settoriali
  * Soglia: >5% per manifatturiero, >3% per servizi (valore sintetico: 4%)
  */
-function checkOneriFinanziari(b: ParsedBilancio): CCIIIndicator {
+function checkOneriFinanziari(b: ParsedBilancio, genId: () => string): CCIIIndicator {
   const ricavi = b.ricavi || 1;
   const ratio = (b.oneriFinanziari / ricavi) * 100;
   const ratioRounded = Math.round(ratio * 100) / 100;
-  const soglia = 4.0;
+  const soglia = SOGLIE.ONERI_FINANZIARI_PCT;
   let status: CCIIStatus;
   let dettaglio: string;
 
@@ -152,7 +159,7 @@ function checkOneriFinanziari(b: ParsedBilancio): CCIIIndicator {
  * Art. 3 co. 3 D.Lgs. 14/2019 — Adeguati assetti: sostenibilità breve termine
  * Soglia: <1.0 = allerta, 1.0–1.2 = attenzione
  */
-function checkLiquidita(b: ParsedBilancio): CCIIIndicator {
+function checkLiquidita(b: ParsedBilancio, genId: () => string): CCIIIndicator {
   const ac = b.attivoCorrenti || 0;
   const pc = b.passivoCorrenti || 1;
   const ratio = Math.round((ac / pc) * 100) / 100;
@@ -190,16 +197,16 @@ function checkLiquidita(b: ParsedBilancio): CCIIIndicator {
  * Art. 3 co. 3 D.Lgs. 14/2019 — struttura finanziaria
  * Soglia: leverage >4x segnale di struttura insostenibile
  */
-function checkLeverage(b: ParsedBilancio): CCIIIndicator {
+function checkLeverage(b: ParsedBilancio, genId: () => string): CCIIIndicator {
   const pn = Math.max(b.patrimonioNetto, 1);
   const leverage = Math.round((b.totaleDebiti / pn) * 100) / 100;
-  const soglia = 4.0;
+  const soglia = SOGLIE.LEVERAGE_BASE;
   let status: CCIIStatus;
   let dettaglio: string;
 
-  if (leverage > soglia * 1.25) {
+  if (leverage > soglia * SOGLIE.LEVERAGE_ALERT_FACTOR) {
     status = 'ALERT';
-    dettaglio = `Leverage ${leverage}x: la struttura debitoria è critica (>${soglia * 1.25}x). Dipendenza dal debito esterno insostenibile ai sensi degli adeguati assetti Art. 3 CCII.`;
+    dettaglio = `Leverage ${leverage}x: la struttura debitoria è critica (>${soglia * SOGLIE.LEVERAGE_ALERT_FACTOR}x). Dipendenza dal debito esterno insostenibile ai sensi degli adeguati assetti Art. 3 CCII.`;
   } else if (leverage > soglia) {
     status = 'WARNING';
     dettaglio = `Leverage ${leverage}x supera la soglia di attenzione (${soglia}x). Struttura finanziaria tesa — valutare piano di riduzione del debito.`;
@@ -228,15 +235,18 @@ function checkLeverage(b: ParsedBilancio): CCIIIndicator {
  * Art. 13 D.Lgs. 14/2019 — Indicatori CNDCEC: Cash Flow Ratio
  * Soglia: <8% = allerta secondo CNDCEC
  */
-function checkCashFlowRatio(b: ParsedBilancio): CCIIIndicator {
-  const fco = b.ebitda - b.imposte; // proxy FCO: EBITDA - tasse
+function checkCashFlowRatio(b: ParsedBilancio, genId: () => string): CCIIIndicator {
+  // FCO proxy (metodo indiretto semplificato): NI + ammortamenti
+  // Più preciso di EBITDA - imposte perché include l'effetto degli oneri finanziari
+  // e del carico fiscale effettivo. ΔWC non disponibile (richiederebbe bilancio comparato).
+  const fco = b.utileNetto + b.ammortamenti;
   const td = b.totaleDebiti || 1;
   const ratio = Math.round((fco / td) * 10000) / 100;
-  const soglia = 8.0;
+  const soglia = SOGLIE.CASH_FLOW_RATIO_PCT;
   let status: CCIIStatus;
   let dettaglio: string;
 
-  if (ratio < soglia * 0.5) {
+  if (ratio < soglia * SOGLIE.CASH_FLOW_RATIO_HALF) {
     status = 'ALERT';
     dettaglio = `Cash Flow / Debiti = ${ratio}% (soglia CNDCEC: ${soglia}%). Capacità di rimborso del debito con il flusso operativo del tutto insufficiente.`;
   } else if (ratio < soglia) {
@@ -258,7 +268,7 @@ function checkCashFlowRatio(b: ParsedBilancio): CCIIIndicator {
     unita: '%',
     status,
     dettaglio,
-    fonte: 'Conto Economico (EBITDA − imposte) / Stato Patrimoniale',
+    fonte: 'Conto Economico (NI + Ammortamenti) / Stato Patrimoniale — metodo indiretto semplificato',
   };
 }
 
@@ -267,7 +277,7 @@ function checkCashFlowRatio(b: ParsedBilancio): CCIIIndicator {
  * Art. 3 co. 2 e Art. 12 D.Lgs. 14/2019
  * Combinazione Z-Score + DSCR per valutare il going concern
  */
-function checkGoingConcern(models: RiskModelResults): CCIIIndicator {
+function checkGoingConcern(models: RiskModelResults, genId: () => string): CCIIIndicator {
   const zScore = models.altman.score;
   const dscrBase = models.dscr.base;
   const inDistress = models.altman.status === 'DISTRESS ZONE';
@@ -307,16 +317,17 @@ export function runCCIICheck(
   bilancio: ParsedBilancio,
   models: RiskModelResults
 ): CCIIResult {
-  idCounter = 0;
+  // Generatore isolato: ogni chiamata ha il proprio contatore → no collisioni
+  const genId = createIdGenerator('CCII');
 
   const indicators: CCIIIndicator[] = [
-    checkPatrimonioNetto(bilancio),
-    checkDSCRProspettico(models),
-    checkOneriFinanziari(bilancio),
-    checkLiquidita(bilancio),
-    checkLeverage(bilancio),
-    checkCashFlowRatio(bilancio),
-    checkGoingConcern(models),
+    checkPatrimonioNetto(bilancio, genId),
+    checkDSCRProspettico(models, genId),
+    checkOneriFinanziari(bilancio, genId),
+    checkLiquidita(bilancio, genId),
+    checkLeverage(bilancio, genId),
+    checkCashFlowRatio(bilancio, genId),
+    checkGoingConcern(models, genId),
   ];
 
   const alertCount = indicators.filter(i => i.status === 'ALERT').length;

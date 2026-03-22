@@ -3,19 +3,11 @@
 // Panel UI per la visualizzazione degli indicatori CCII con semaforo normativo.
 
 import { useState } from "react";
-import { CCIIResult, CCIIIndicator, CCIIStatus } from "@/lib/cciiCompliance";
+import { CCIIResult, CCIIIndicator } from "@/lib/cciiCompliance";
+import { getCCIIStatusStyle } from "@/lib/statusConfig";
 
 interface CCIIPanelProps {
   result: CCIIResult;
-}
-
-function statusConfig(s: CCIIStatus) {
-  switch (s) {
-    case 'PASS':    return { color: 'text-green',  bg: 'bg-green/10',  border: 'border-green/30',  dot: 'bg-green shadow-[0_0_6px_var(--color-green)]',  label: 'PASS' };
-    case 'WARNING': return { color: 'text-yellow', bg: 'bg-yellow/10', border: 'border-yellow/30', dot: 'bg-yellow shadow-[0_0_6px_var(--color-yellow)]', label: 'ATTENZIONE' };
-    case 'ALERT':   return { color: 'text-red',    bg: 'bg-red/10',    border: 'border-red/30',    dot: 'bg-red shadow-[0_0_6px_var(--color-red)] animate-pulse', label: 'ALLERTA' };
-    default:        return { color: 'text-text-muted', bg: 'bg-white/5', border: 'border-glass-border', dot: 'bg-white/30', label: 'N/A' };
-  }
 }
 
 function overallConfig(s: CCIIResult['overallStatus']) {
@@ -28,7 +20,7 @@ function overallConfig(s: CCIIResult['overallStatus']) {
 
 function IndicatorRow({ ind }: { ind: CCIIIndicator }) {
   const [open, setOpen] = useState(false);
-  const cfg = statusConfig(ind.status);
+  const cfg = getCCIIStatusStyle(ind.status);
 
   return (
     <div className={`border rounded-lg overflow-hidden transition-all ${open ? cfg.border : 'border-glass-border'}`}>
