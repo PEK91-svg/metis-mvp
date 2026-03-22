@@ -246,10 +246,10 @@ function MetisApp() {
 
   if (step === "upload") {
     return (
-      <main className="flex h-screen w-screen overflow-hidden font-space">
+      <div className="flex h-screen w-screen overflow-hidden font-space">
         <Sidebar />
 
-        <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-[var(--color-void)]">
+        <main className="flex-1 flex items-center justify-center relative overflow-hidden bg-[var(--color-void)]">
 
         {/* Ambient Background */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(0,229,255,0.1),_transparent_50%)] pointer-events-none"></div>
@@ -338,23 +338,26 @@ function MetisApp() {
             </div>
           </div>
         </div>
-        </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
   if (step === "loading") {
     return (
-      <main className="flex flex-col items-center justify-center h-screen w-screen overflow-hidden">
-        <div className="w-20 h-20 border-[3px] border-cyan border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_30px_var(--color-cyan)]"></div>
-        <p className="font-space text-lg text-cyan tracking-widest animate-pulse">{loadingText}</p>
-        <div className="w-64 h-1 bg-white/10 mt-6 rounded-full overflow-hidden">
-          <div className="h-full bg-purple animate-[progress_3.5s_ease-out_forwards]"></div>
-        </div>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes progress { from { width: 0%; } to { width: 100%; } }
-        `}} />
-      </main>
+      <div className="flex h-screen w-screen overflow-hidden font-space">
+        <Sidebar />
+        <main className="flex-1 flex flex-col items-center justify-center overflow-hidden bg-[var(--color-void)]">
+          <div className="w-20 h-20 border-[3px] border-cyan border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_30px_var(--color-cyan)]"></div>
+          <p className="font-space text-lg text-cyan tracking-widest animate-pulse">{loadingText}</p>
+          <div className="w-64 h-1 bg-white/10 mt-6 rounded-full overflow-hidden">
+            <div className="h-full bg-purple animate-[progress_3.5s_ease-out_forwards]"></div>
+          </div>
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes progress { from { width: 0%; } to { width: 100%; } }
+          `}} />
+        </main>
+      </div>
     );
   }
 
