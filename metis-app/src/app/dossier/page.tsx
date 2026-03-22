@@ -11,6 +11,11 @@ import { runEBACheck } from "@/lib/ebaCompliance";
 import { getBenchmarkMetadata, refreshBenchmarks } from "@/lib/atecoBenchmarks";
 import { calculateAllModels } from "@/lib/riskModels";
 import FifaRiskRadar from "@/components/FifaRiskRadar";
+import ProductSimulator from "@/components/ProductSimulator";
+import ClusterPerformance from "@/components/ClusterPerformance";
+import GameTheoryPanel from "@/components/GameTheoryPanel";
+import DocumentSynthesis from "@/components/DocumentSynthesis";
+import PolicyAdherencePanel from "@/components/PolicyAdherencePanel";
 
 // Mock company data for when navigating from pratica
 const COMPANY_DATA: Record<number, { name: string; dossier_id: string; piva: string; lat: number; lng: number; indirizzo: string }> = {
@@ -42,7 +47,7 @@ function MetisApp() {
   const [selectedModel, setSelectedModel] = useState<string>("altman");
   const [expandedCol, setExpandedCol] = useState<number | null>(null);
   const [showDelibera, setShowDelibera] = useState(false);
-  const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba'>('ccii');
+  const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba' | 'policy' | 'cluster'>('ccii');
   const [benchmarkMeta, setBenchmarkMeta] = useState(getBenchmarkMetadata());
   const [benchmarkRefreshing, setBenchmarkRefreshing] = useState(false);
   const [benchmarkRefreshMsg, setBenchmarkRefreshMsg] = useState('');
@@ -373,7 +378,7 @@ function MetisApp() {
   // ── CCII / EBA / CR computations ─────────────────────────────────────────────
   // useMemo evita il ricalcolo ad ogni re-render — si ricalcola solo quando
   // cambiano displayName, displayPiva o safeData (che dipendono da apiData).
-  const { mockModelsData, cciiResult, ebaResult } = useMemo(() => {
+  const { mockBilancioData, mockModelsData, cciiResult, ebaResult } = useMemo(() => {
     const bilancio = {
       companyName: displayName, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || 'G46',
       dataChiusura: '31/12/2023',
@@ -392,6 +397,7 @@ function MetisApp() {
     };
     const models = calculateAllModels(bilancio as any);
     return {
+      mockBilancioData: bilancio,
       mockModelsData: models,
       cciiResult: runCCIICheck(bilancio as any, models),
       ebaResult: runEBACheck(bilancio as any, models),
@@ -517,6 +523,13 @@ function MetisApp() {
                 </ErrorBoundary>
               </div>
 
+              {/* Lettura Allegati Documentali */}
+              <div className="border border-glass-border rounded-lg p-4 mb-4 bg-black/30 transition hover:border-glass-hover">
+                <ErrorBoundary label="Document Synthesis">
+                  <DocumentSynthesis />
+                </ErrorBoundary>
+              </div>
+
               <div className="border border-glass-border rounded-lg p-5 mb-4 bg-black/30 transition hover:border-glass-hover">
                 <div className="font-space text-sm font-semibold mb-3 text-white">Lettura Sensori IA</div>
                 <div className="text-[13px] text-text-muted leading-relaxed">
@@ -610,6 +623,20 @@ function MetisApp() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Simulatore Prodotti PEF */}
+              <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '1.0s' }}>
+                <ErrorBoundary label="Simulatore Prodotti">
+                  <ProductSimulator bilancioData={mockBilancioData} />
+                </ErrorBoundary>
+              </div>
+
+              {/* Teoria dei Giochi */}
+              <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '1.3s' }}>
+                <ErrorBoundary label="Game Theory">
+                  <GameTheoryPanel bilancioData={mockBilancioData} modelsData={mockModelsData} />
+                </ErrorBoundary>
               </div>
 
             </div>
@@ -828,7 +855,27 @@ function MetisApp() {
                         : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    EBA/GL/2020/06
+                    EBA
+                  </button>
+                  <button
+                    onClick={() => setComplianceTab('policy')}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
+                      complianceTab === 'policy'
+                        ? 'border-b-green text-green bg-green/5'
+                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Policy
+                  </button>
+                  <button
+                    onClick={() => setComplianceTab('cluster')}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
+                      complianceTab === 'cluster'
+                        ? 'border-b-yellow text-yellow bg-yellow/5'
+                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Cluster
                   </button>
                 </div>
 
@@ -845,6 +892,20 @@ function MetisApp() {
                     <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
                       <ErrorBoundary label="EBA Panel">
                         <EBAPanel result={ebaResult} />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                  {complianceTab === 'policy' && (
+                    <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
+                      <ErrorBoundary label="Policy Adherence">
+                        <PolicyAdherencePanel bilancioData={mockBilancioData} modelsData={mockModelsData} />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                  {complianceTab === 'cluster' && (
+                    <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
+                      <ErrorBoundary label="Cluster Performance">
+                        <ClusterPerformance bilancioData={mockBilancioData} modelsData={mockModelsData} pd={2.1} />
                       </ErrorBoundary>
                     </div>
                   )}
