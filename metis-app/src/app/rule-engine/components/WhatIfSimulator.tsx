@@ -170,11 +170,20 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
   const [animatedResult, setAnimatedResult] = useState<SimulationResult>(CHAMPION);
   const animTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [deployStep, setDeployStep] = useState<"idle" | "requesting" | "audit" | "signed" | "deployed">("idle");
+
   useEffect(() => {
     return () => {
       if (animTimerRef.current) clearInterval(animTimerRef.current);
     };
   }, []);
+
+  // Deploy simulation sequence
+  useEffect(() => {
+    if (deployStep === "requesting") {
+      setTimeout(() => setDeployStep("audit"), 800);
+    }
+  }, [deployStep]);
 
   const runSim = useCallback(() => {
     if (animTimerRef.current) clearInterval(animTimerRef.current);
@@ -209,6 +218,7 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
         animTimerRef.current = null;
         setSimRunning(false);
         setAnimatedResult(target);
+        setDeployStep("idle"); // reset deploy step if we re-run
       }
     }, interval);
   }, [nodes, edges]);
@@ -325,17 +335,116 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
       {/* Deploy button */}
       <div className="p-5 border-t border-white/10 bg-black/40">
         <button
-          className={`w-full py-3 rounded-lg font-space font-bold uppercase tracking-widest text-[11px] transition-all shadow-xl
-            ${hasRun && challenger.approvalRate > CHAMPION.approvalRate && challenger.defaultRate <= CHAMPION.defaultRate
-              ? 'bg-gradient-to-r from-green to-[rgba(0,255,102,0.6)] text-black shadow-[0_0_20px_rgba(0,255,102,0.4)]'
+          onClick={() => setDeployStep("requesting")}
+          className={`w-full py-3 rounded-lg font-space font-bold uppercase tracking-widest text-[11px] transition-all flex items-center justify-center gap-2 shadow-xl
+            ${deployStep === "deployed" 
+              ? 'bg-white/10 text-white/50 border border-white/20 cursor-default' 
+              : hasRun && challenger.approvalRate > CHAMPION.approvalRate && challenger.defaultRate <= CHAMPION.defaultRate
+              ? 'bg-gradient-to-r from-green to-[rgba(0,255,102,0.6)] text-black shadow-[0_0_20px_rgba(0,255,102,0.4)] hover:shadow-[0_0_30px_rgba(0,255,102,0.6)] hover:scale-[1.02]'
               : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/10'}`}
-          disabled={!hasRun || challenger.approvalRate <= CHAMPION.approvalRate || challenger.defaultRate > CHAMPION.defaultRate}
+          disabled={deployStep === "deployed" || !hasRun || challenger.approvalRate <= CHAMPION.approvalRate || challenger.defaultRate > CHAMPION.defaultRate}
         >
-          Deploy to Production
+          {deployStep === "deployed" ? (
+             <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg> POLICY DEPLOYED</>
+          ) : 'Deploy to Production'}
         </button>
       </div>
+
+      {/* Deploy Maker-Checker Modal Overlay */}
+      {deployStep !== "idle" && deployStep !== "deployed" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <div className="w-[480px] bg-[rgba(14,21,33,0.95)] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,255,102,0.1)] p-8 relative overflow-hidden">
+            {/* Background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green/5 rounded-full blur-3xl" />
+            
+            <div className="text-center mb-6 relative z-10">
+              <div className="w-16 h-16 mx-auto bg-green/10 border border-green/30 rounded-2xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(0,255,102,0.2)]">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <h2 className="font-space text-lg font-bold text-white mb-1">Governance Sign-off</h2>
+              <p className="text-[11px] text-white/50">Richiesta approvazione Maker-Checker (CRO Livello 2)</p>
+            </div>
+
+            <div className="space-y-3 mb-8 relative z-10">
+              <AuditItem 
+                label="Simulazione Finanziaria" 
+                value="Challenger Win (+5.3% Appr.)" 
+                status="done" 
+              />
+              <AuditItem 
+                label="EU AI Act Fair Lending" 
+                value="99/100 (Bias mitigation active)" 
+                status="done" 
+              />
+              <AuditItem 
+                label="Rischio Credito (PD)" 
+                value="Abbattuto dell'1.7%" 
+                status="done" 
+              />
+              <AuditItem 
+                label="Firma Digitale CRO" 
+                value={deployStep === "requesting" ? "In attesa..." : deployStep === "audit" ? "Richiesta inviata" : "Firmato da Gaetano Pecorella"} 
+                status={deployStep === "signed" ? "done" : "pending"} 
+                isLast
+              />
+            </div>
+
+            <div className="relative z-10">
+              {deployStep === "audit" && (
+                 <button 
+                  onClick={() => setDeployStep("signed")}
+                  className="w-full py-3 bg-white/5 border border-white/10 text-white font-space font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-white/10 hover:border-cyan/50 transition flex items-center justify-center gap-2"
+                 >
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                   MOCK SIGN (CRO)
+                 </button>
+              )}
+              {deployStep === "signed" && (
+                 <button 
+                  onClick={() => {
+                    setDeployStep("deployed");
+                  }}
+                  className="w-full py-3 bg-green text-black font-space font-bold text-xs uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(0,255,102,0.4)] transition hover:scale-105 flex items-center justify-center gap-2"
+                 >
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                   PUBLISH NOW
+                 </button>
+              )}
+            </div>
+            
+            {(deployStep === "requesting" || deployStep === "audit") && (
+              <button 
+                onClick={() => setDeployStep("idle")}
+                className="absolute top-4 right-4 text-white/30 hover:text-white transition"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function AuditItem({ label, value, status, isLast }: { label: string; value: string; status: 'pending' | 'done'; isLast?: boolean }) {
+  return (
+    <div className={`flex items-start gap-3 p-3 rounded-lg border ${status === 'done' ? 'bg-green/5 border-green/20' : 'bg-white/5 border-white/5'}`}>
+      <div className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center border ${status === 'done' ? 'bg-green text-black border-green shadow-[0_0_8px_rgba(0,255,102,0.5)]' : 'border-white/20'}`}>
+        {status === 'done' && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+      </div>
+      <div>
+        <div className={`text-[10px] uppercase font-space tracking-widest ${status === 'done' ? 'text-green/70' : 'text-white/40'}`}>
+          {label}
+        </div>
+        <div className={`text-xs ${status === 'done' ? 'text-white' : 'text-white/30'} mt-0.5`}>
+          {value}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ---- Sub-components ----

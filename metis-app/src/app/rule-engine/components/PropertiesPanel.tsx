@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { Node } from "reactflow";
 import {
   RuleNodeData,
@@ -342,90 +343,130 @@ function DecisionEditor({ config, onChange }: { config: DecisionConfig; onChange
   );
 }
 
+const RULE_METRICS = [
+  { id: 'ebitda_margin', label: 'EBITDA Margin (%)', group: 'Bilancio' },
+  { id: 'leverage', label: 'Debt / Equity', group: 'Bilancio' },
+  { id: 'dscr', label: 'DSCR (Prospettico)', group: 'Finanziario' },
+  { id: 'pd', label: 'Prob. Default (PD)', group: 'Modelli AI' },
+  { id: 'z_score', label: 'Altman Z-Score', group: 'Modelli AI' },
+  { id: 'sconfinamenti', label: 'Sconfinamenti (Giorni)', group: 'Centrale Rischi' },
+  { id: 'cr_uitl', label: ' CR Utilizzato (%)', group: 'Centrale Rischi' },
+  { id: 'esg_score', label: 'ESG Risk Score', group: 'Qualitativo' },
+];
+
 function CustomRuleEditor({ config, onChange }: { config: CustomRuleConfig; onChange: (p: Record<string, unknown>) => void }) {
-  const updateCondition = (index: number, field: string, value: string) => {
+  const updateCondition = (index: number, field: keyof CustomRuleConfig["conditions"][0], value: string) => {
     const newConditions = [...config.conditions];
     newConditions[index] = { ...newConditions[index], [field]: value };
-    // Rebuild expression
-    const expr = newConditions.map(c => `${c.field} ${c.op} ${c.value}`).join(` ${config.operator} `);
+    // Rebuild expression logically
+    const expr = newConditions.map(c => {
+      const metricLabel = RULE_METRICS.find(m => m.id === c.field)?.label || c.field;
+      return `[${metricLabel}] ${c.op} ${c.value}`;
+    }).join(` ${config.operator} `);
     onChange({ conditions: newConditions, expression: expr });
   };
 
   return (
-    <div className="space-y-3">
-      <FieldGroup label="Logical Operator">
-        <div className="flex gap-1">
+    <div className="space-y-4">
+      <FieldGroup label="Logical Operator (Global)">
+        <div className="flex bg-black/40 border border-white/10 rounded-lg overflow-hidden p-1">
           {(['AND', 'OR', 'NOT'] as const).map((op) => (
             <button
               key={op}
               onClick={() => {
-                const expr = config.conditions.map(c => `${c.field} ${c.op} ${c.value}`).join(` ${op} `);
+                const expr = config.conditions.map(c => `[${RULE_METRICS.find(m => m.id === c.field)?.label || c.field}] ${c.op} ${c.value}`).join(` ${op} `);
                 onChange({ operator: op, expression: expr });
               }}
-              className={`flex-1 py-1.5 rounded text-[10px] font-space uppercase tracking-widest transition ${config.operator === op ? 'bg-red/20 text-red border border-red/30' : 'bg-white/5 text-white/40 border border-white/10 hover:text-white/60'}`}
+              className={`flex-1 py-1.5 rounded-md text-[10px] font-space uppercase tracking-widest transition-all ${config.operator === op ? 'bg-red/20 text-red shadow-[0_0_10px_rgba(255,0,85,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
             >
               {op}
             </button>
           ))}
         </div>
       </FieldGroup>
-      <FieldGroup label="Conditions">
-        <div className="space-y-2">
+      
+      <FieldGroup label="Rule Conditions">
+        <div className="space-y-2.5">
           {config.conditions.map((c, i) => (
-            <div key={i} className="flex gap-1.5 items-center">
-              <input
-                type="text"
-                value={c.field}
-                onChange={(e) => updateCondition(i, 'field', e.target.value)}
-                placeholder="field"
-                className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mono focus:border-red/50 focus:outline-none transition"
-              />
-              <select
-                value={c.op}
-                onChange={(e) => updateCondition(i, 'op', e.target.value)}
-                className="bg-white/5 border border-white/10 rounded px-1 py-1 text-[10px] text-white font-mono focus:border-red/50 focus:outline-none transition"
-              >
-                <option value=">">&gt;</option>
-                <option value="<">&lt;</option>
-                <option value="==">==</option>
-                <option value="!=">!=</option>
-                <option value=">=">&gt;=</option>
-                <option value="<=">&lt;=</option>
-              </select>
-              <input
-                type="text"
-                value={c.value}
-                onChange={(e) => updateCondition(i, 'value', e.target.value)}
-                placeholder="value"
-                className="w-16 bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] text-white font-mono focus:border-red/50 focus:outline-none transition"
-              />
+            <div key={i} className="flex flex-col gap-1.5 bg-white/5 border border-white/10 rounded-lg p-2.5 relative group hover:border-red/30 transition">
               <button
                 onClick={() => {
                   const newConditions = config.conditions.filter((_, j) => j !== i);
-                  const expr = newConditions.map(c2 => `${c2.field} ${c2.op} ${c2.value}`).join(` ${config.operator} `);
+                  const expr = newConditions.map(c2 => `[${RULE_METRICS.find(m => m.id === c2.field)?.label || c2.field}] ${c2.op} ${c2.value}`).join(` ${config.operator} `);
                   onChange({ conditions: newConditions, expression: expr });
                 }}
-                className="text-red/50 hover:text-red text-[11px] transition"
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition shadow-[0_0_10px_rgba(255,0,85,0.4)]"
               >
                 ×
               </button>
+
+              <select
+                value={c.field}
+                onChange={(e) => updateCondition(i, 'field', e.target.value)}
+                className="w-full bg-black/40 border border-white/5 rounded px-2 py-1.5 text-[11px] text-cyan font-bold focus:border-cyan/50 focus:outline-none transition appearance-none"
+              >
+                <option value="score" disabled>Seleziona metrica...</option>
+                {RULE_METRICS.map(m => (
+                  <option key={m.id} value={m.id}>
+                    {m.group} • {m.label}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex gap-1.5">
+                <select
+                  value={c.op}
+                  onChange={(e) => updateCondition(i, 'op', e.target.value)}
+                  className="w-16 bg-black/40 border border-white/5 rounded px-2 py-1 text-[11px] text-yellow font-mono font-bold focus:border-yellow/50 focus:outline-none transition appearance-none text-center"
+                >
+                  <option value=">">&gt;</option>
+                  <option value="<">&lt;</option>
+                  <option value="==">==</option>
+                  <option value="!=">!=</option>
+                  <option value=">=">&gt;=</option>
+                  <option value="<=">&lt;=</option>
+                  <option value="CONTAINS">IN</option>
+                </select>
+                <input
+                  type="text"
+                  value={c.value}
+                  onChange={(e) => updateCondition(i, 'value', e.target.value)}
+                  placeholder="Valore soglia"
+                  className="flex-1 bg-black/40 border border-white/5 rounded px-2 py-1 text-[11px] text-white font-mono focus:border-purple/50 focus:outline-none transition"
+                />
+              </div>
             </div>
           ))}
+          
           <button
             onClick={() => {
-              const newConditions = [...config.conditions, { field: 'field', op: '>', value: '0' }];
-              const expr = newConditions.map(c => `${c.field} ${c.op} ${c.value}`).join(` ${config.operator} `);
+              const newConditions = [...config.conditions, { field: 'dscr', op: '<', value: '1.1' }];
+              const expr = newConditions.map(c => `[${RULE_METRICS.find(m => m.id === c.field)?.label || c.field}] ${c.op} ${c.value}`).join(` ${config.operator} `);
               onChange({ conditions: newConditions, expression: expr });
             }}
-            className="text-[10px] text-red/60 hover:text-red transition font-space"
+            className="w-full py-2 border border-dashed border-white/20 rounded-lg text-[10px] text-white/40 hover:text-white/80 hover:border-white/40 hover:bg-white/5 transition font-space uppercase tracking-widest flex items-center justify-center gap-1.5"
           >
-            + Add Condition
+            <span className="text-red font-bold text-lg leading-none mb-0.5">+</span> ADD CONDITION
           </button>
         </div>
       </FieldGroup>
-      <div className="bg-black/40 border border-white/5 rounded p-2 text-[9px] font-mono text-white/50">
-        {config.expression || '(empty)'}
-      </div>
+
+      <FieldGroup label="Generated Logic Payload">
+        <div className="bg-black/40 border border-white/5 rounded-lg p-3 text-[10px] font-mono leading-relaxed break-words shadow-inner">
+          {config.expression ? (
+            config.expression.split(` ${config.operator} `).map((part, i, arr) => (
+              <React.Fragment key={i}>
+                <span className="text-cyan">{part.split(' ')[0]}</span>
+                <span className="text-yellow font-bold mx-1">{part.split(' ')[1]}</span>
+                <span className="text-purple">{part.split(' ').slice(2).join(' ')}</span>
+                {i < arr.length - 1 && <span className="text-red font-bold mx-2">{config.operator}</span>}
+              </React.Fragment>
+            ))
+          ) : (
+            <span className="text-white/20">{'// Nessuna condizione definita'}</span>
+          )}
+        </div>
+      </FieldGroup>
     </div>
   );
 }

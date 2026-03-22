@@ -552,18 +552,29 @@ function MetisApp() {
               <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '0.1s' }}>
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <div className="w-2 h-2 rounded-full bg-purple shadow-[0_0_8px_var(--color-purple)]"></div>
-                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">{safeData ? safeData.xai_narrative[0].agent : 'Agent_Writer'} • Sintesi Storica</div>
+                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">{safeData ? safeData.xai_narrative[0].agent : 'Agent_Writer'} • {safeData ? safeData.xai_narrative[0].focus : 'Sintesi Societaria'}</div>
                 </div>
                 <div className="bg-white/5 border border-glass-border p-5 rounded-lg border-l-2 border-l-purple leading-relaxed">
                   {safeData ? (
-                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[0].html_text}} 
+                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[0].html_text}} />
+                  ) : (
+                    <p>La struttura societaria appare consolidata. Nessun evento pregiudizievole rilevato a carico degli esponenti storici.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '0.2s' }}>
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className="w-2 h-2 rounded-full bg-green shadow-[0_0_8px_var(--color-green)]"></div>
+                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">{safeData ? safeData.xai_narrative[1].agent : 'Agent_Writer'} • {safeData ? safeData.xai_narrative[1].focus : 'Sintesi Reddituale'}</div>
+                </div>
+                <div className="bg-[rgba(0,255,102,0.05)] border border-glass-border p-5 rounded-lg border-l-2 border-l-green leading-relaxed">
+                  {safeData ? (
+                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[1].html_text}} 
                         onMouseEnter={(e) => { if((e.target as any).tagName === "SPAN") setHoveredLink('ebitda') }} 
                         onMouseLeave={() => setHoveredLink(null)} />
                   ) : (
-                    <>
-                      <p className="mb-3">L'azienda presenta un fatturato in crescita, ma si evidenzia un <span onMouseEnter={() => setHoveredLink('ebitda')} onMouseLeave={() => setHoveredLink(null)} className="text-cyan cursor-crosshair border-b border-dotted border-cyan hover:bg-cyan-dim transition px-0.5 font-medium">calo dell'EBITDA margin</span> rispetto agli esercizi passati.</p>
-                      <p>Dal controllo documentale della visura emerge tensione di liquidità di breve termine.</p>
-                    </>
+                    <p>Si registra un fatturato in crescita, tuttavia emerge un <span onMouseEnter={() => setHoveredLink('ebitda')} onMouseLeave={() => setHoveredLink(null)} className="text-cyan cursor-crosshair border-b border-dotted border-cyan hover:bg-cyan-dim transition px-0.5 font-medium">calo dell'EBITDA margin al 12%</span> correlato all'incremento del costo delle materie prima.</p>
                   )}
                 </div>
               </div>
@@ -571,11 +582,11 @@ function MetisApp() {
               <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '0.4s' }}>
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <div className="w-2 h-2 rounded-full bg-yellow shadow-[0_0_8px_var(--color-yellow)]"></div>
-                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">{safeData ? safeData.xai_narrative[1].agent : 'Agent_Compliance'} • Anomalie CR</div>
+                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">{safeData ? safeData.xai_narrative[2].agent : 'Agent_Compliance'} • {safeData ? safeData.xai_narrative[2].focus : 'Sintesi di CR'}</div>
                 </div>
                 <div className="bg-[rgba(250,204,21,0.05)] border border-glass-border p-5 rounded-lg border-l-2 border-l-yellow leading-relaxed">
                   {safeData ? (
-                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[1].html_text}} 
+                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[2].html_text}} 
                         onMouseEnter={(e) => { if((e.target as any).tagName === "SPAN") setHoveredLink('scaduti') }} 
                         onMouseLeave={() => setHoveredLink(null)} />
                   ) : (
