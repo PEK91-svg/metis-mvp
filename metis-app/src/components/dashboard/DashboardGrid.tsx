@@ -23,9 +23,11 @@ import { PortfolioHealthWidget } from "./widgets/PortfolioHealthWidget";
 import RecommendationsWidget from "./widgets/RecommendationsWidget";
 import { PipelineChartWidget } from "./widgets/PipelineChartWidget";
 import { RiskChartWidget } from "./widgets/RiskChartWidget";
+import { SearchWidget } from "./widgets/SearchWidget";
+import { MetisChatWidget } from "./widgets/MetisChatWidget";
 import { Settings, Plus, Maximize2, X } from "lucide-react";
 
-export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK";
+export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK" | "SEARCH" | "METIS_CHAT";
 export type WidgetWidth = 1 | 2 | 3 | 4;
 export type WidgetHeight = 1 | 2 | 3;
 
@@ -63,14 +65,29 @@ const WIDGET_TITLES: Record<WidgetType, string> = {
   RECOMMENDATIONS: "AI Recommendations",
   PIPELINE: "Pipeline Flow",
   RISK: "Risk Analysis",
+  SEARCH: "Ricerca Pratiche",
+  METIS_CHAT: "Metis AI",
 };
 
+const WIDGET_DESCRIPTIONS: Record<WidgetType, string> = {
+  KPI: "Metriche chiave del portafoglio: probabilità di default media, Altman Z-Score medio, numero totale pratiche e distribuzione per stato. Aggiornato in tempo reale.",
+  HEALTH: "Score di salute del portafoglio sintetizzato da 100 punti. Include coverage ratio, esposizione, liquidità e concentrazione degli asset.",
+  RECOMMENDATIONS: "Suggerimenti prioritari generati dall'AI METIS basati su anomalie rilevate nel portafoglio: pratiche ad alto rischio, rating scaduti, opportunità di espansione.",
+  PIPELINE: "Visualizzazione del flusso delle pratiche attraverso gli stati: approvate, in analisi, rifiutate. Include distribuzione settimanale e trend.",
+  RISK: "Analisi radar multi-dimensionale del rischio di portafoglio. Combina PD, Altman Z-Score, EBA compliance, CCII e indici di liquidità.",
+  SEARCH: "Ricerca full-text su tutte le pratiche del portafoglio per nome azienda, PIVA, settore o stato. Permette di accedere rapidamente a pratica o dossier.",
+  METIS_CHAT: "Assistente AI conversazionale contestualizzato sul portafoglio. Risponde in italiano con analisi tecniche sui dati creditizi in tempo reale.",
+};
+
+
 const INITIAL_WIDGETS: DashboardWidget[] = [
-  { id: "1", type: "KPI", title: WIDGET_TITLES.KPI, w: 1, h: 2 },
-  { id: "2", type: "HEALTH", title: WIDGET_TITLES.HEALTH, w: 1, h: 2 },
-  { id: "3", type: "RECOMMENDATIONS", title: WIDGET_TITLES.RECOMMENDATIONS, w: 1, h: 2 },
-  { id: "4", type: "PIPELINE", title: WIDGET_TITLES.PIPELINE, w: 2, h: 2 },
-  { id: "5", type: "RISK", title: WIDGET_TITLES.RISK, w: 1, h: 2 },
+  { id: "1", type: "KPI",           title: WIDGET_TITLES.KPI,            w: 1, h: 2 },
+  { id: "2", type: "HEALTH",        title: WIDGET_TITLES.HEALTH,         w: 1, h: 2 },
+  { id: "3", type: "RECOMMENDATIONS",title: WIDGET_TITLES.RECOMMENDATIONS,w: 1, h: 2 },
+  { id: "4", type: "PIPELINE",      title: WIDGET_TITLES.PIPELINE,       w: 2, h: 2 },
+  { id: "5", type: "RISK",          title: WIDGET_TITLES.RISK,           w: 1, h: 2 },
+  { id: "6", type: "SEARCH",        title: WIDGET_TITLES.SEARCH,         w: 1, h: 2 },
+  { id: "7", type: "METIS_CHAT",    title: WIDGET_TITLES.METIS_CHAT,     w: 1, h: 2 },
 ];
 
 interface DashboardGridProps {
@@ -130,8 +147,6 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
   };
 
   const addWidget = (type: WidgetType) => {
-    // Usa un counter incrementale per evitare collisioni anche se addWidget
-    // viene chiamata più volte nello stesso millisecondo
     widgetIdCounter.current += 1;
     const newWidget: DashboardWidget = {
       id: `w-${widgetIdCounter.current}`,
@@ -154,14 +169,14 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
         </h2>
         <div className="flex gap-2">
           {isEditMode && (
-            <div className="flex gap-2 mr-4 animate-[fadeIn_0.2s_ease-out]">
-              {["KPI", "HEALTH", "RECOMMENDATIONS", "PIPELINE", "RISK"].map((t) => (
+            <div className="flex gap-2 mr-4 animate-[fadeIn_0.2s_ease-out] flex-wrap">
+              {(["KPI", "HEALTH", "RECOMMENDATIONS", "PIPELINE", "RISK", "SEARCH", "METIS_CHAT"] as WidgetType[]).map((t) => (
                 <button
                   key={t}
-                  onClick={() => addWidget(t as WidgetType)}
+                  onClick={() => addWidget(t)}
                   className="flex items-center gap-1 text-[10px] uppercase text-cyan bg-[#0A0F14] px-3 py-1.5 rounded-full border border-white/10 hover:border-cyan transition-colors font-space tracking-widest"
                 >
-                  <Plus size={12} /> {t}
+                  <Plus size={12} /> {t === "METIS_CHAT" ? "Metis AI" : t === "SEARCH" ? "Ricerca" : t}
                 </button>
               ))}
             </div>
@@ -191,12 +206,14 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
               
               const renderContent = () => {
                 switch (w.type) {
-                  case "KPI": return <KpiWidget data={data} />;
-                  case "HEALTH": return <PortfolioHealthWidget />;
+                  case "KPI":             return <KpiWidget data={data} />;
+                  case "HEALTH":          return <PortfolioHealthWidget />;
                   case "RECOMMENDATIONS": return <RecommendationsWidget />;
-                  case "PIPELINE": return <PipelineChartWidget data={data} />;
-                  case "RISK": return <RiskChartWidget data={data} />;
-                  default: return null;
+                  case "PIPELINE":        return <PipelineChartWidget data={data} />;
+                  case "RISK":            return <RiskChartWidget data={data} />;
+                  case "SEARCH":          return <SearchWidget />;
+                  case "METIS_CHAT":      return <MetisChatWidget />;
+                  default:               return null;
                 }
               };
 
@@ -205,6 +222,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
                   key={w.id}
                   id={w.id}
                   title={w.title}
+                  description={WIDGET_DESCRIPTIONS[w.type]}
                   isEditMode={isEditMode}
                   onRemove={removeWidget}
                   onMaximize={() => setMaximizedWidget(w.id)}

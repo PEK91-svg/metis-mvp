@@ -2,11 +2,12 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, X, Maximize2 } from "lucide-react";
+import { GripVertical, X, Maximize2, Info } from "lucide-react";
 
 interface WidgetContainerProps {
   id: string;
   title: string;
+  description?: string;
   children: React.ReactNode;
   isEditMode?: boolean;
   onRemove?: (id: string) => void;
@@ -18,6 +19,7 @@ interface WidgetContainerProps {
 export default function WidgetContainer({
   id,
   title,
+  description,
   children,
   isEditMode,
   onRemove,
@@ -70,6 +72,20 @@ export default function WidgetContainer({
       <div className="flex items-center justify-between px-5 pt-5 pb-2">
         <h3 className="text-white font-space font-bold text-base tracking-widest uppercase">{title}</h3>
         <div className="flex items-center gap-3">
+          {/* Description tooltip */}
+          {description && !isEditMode && (
+            <div className="relative group/info">
+              <button className="text-white/20 hover:text-cyan transition-colors p-1">
+                <Info size={13} />
+              </button>
+              <div className="absolute right-0 top-7 z-50 w-64 opacity-0 group-hover/info:opacity-100 pointer-events-none transition-all duration-200 translate-y-1 group-hover/info:translate-y-0">
+                <div className="bg-[#0A0F14] border border-cyan/20 rounded-xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+                  <p className="text-[11px] text-white/70 leading-relaxed font-inter">{description}</p>
+                </div>
+                <div className="absolute -top-1.5 right-2 w-3 h-3 bg-[#0A0F14] border-l border-t border-cyan/20 rotate-45" />
+              </div>
+            </div>
+          )}
           {!isEditMode && onMaximize && (
             <button onClick={onMaximize} className="text-white/30 hover:text-cyan transition-colors p-1" title="Espandi">
               <Maximize2 size={14} />
@@ -91,3 +107,4 @@ export default function WidgetContainer({
     </div>
   );
 }
+

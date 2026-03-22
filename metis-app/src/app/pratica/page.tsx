@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
@@ -29,6 +29,9 @@ interface CompanyData {
   risk: string;
   operator: string;
   documents: RequiredDoc[];
+  lat?: number;
+  lng?: number;
+  indirizzo?: string;
 }
 
 // ─── Mock ───────────────────────────────────────────────────────────────────
@@ -42,15 +45,15 @@ const REQUIRED_DOCS: RequiredDoc[] = [
 ];
 
 const MOCK_COMPANIES: Record<number, CompanyData> = {
-  1:  { id: 1,  name: "Alpha S.p.A.",       piva: "IT00000000001", status: "APPROVATA",      sector: "Manifatturiero", revenue: 15400000, pd: 2.1,  altman: 3.12, risk: "BASSO",   operator: "M. Rossi",
+  1:  { id: 1,  name: "Alpha S.p.A.",       piva: "IT00000000001", status: "APPROVATA",      sector: "Manifatturiero", revenue: 15400000, pd: 2.1,  altman: 3.12, risk: "BASSO",   operator: "M. Rossi",   lat: 45.4718, lng: 9.1895, indirizzo: "Via Montenapoleone 3, Milano",
         documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-20", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_alpha.pdf` })) },
-  2:  { id: 2,  name: "Beta Ltd.",          piva: "IT00000000002", status: "IN ANALISI",     sector: "Servizi",        revenue: 8200000,  pd: 3.5,  altman: 2.85, risk: "MEDIO",   operator: "L. Bianchi",
+  2:  { id: 2,  name: "Beta Ltd.",          piva: "IT00000000002", status: "IN ANALISI",     sector: "Servizi",        revenue: 8200000,  pd: 3.5,  altman: 2.85, risk: "MEDIO",   operator: "L. Bianchi", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma",
         documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 4 ? "uploaded" : "missing") as DocStatus, ...(i < 4 ? { uploadedAt: "2025-02-15", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_beta.pdf` } : {}) })) },
-  3:  { id: 3,  name: "Gamma SRL",          piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech",           revenue: 22100000, pd: 1.8,  altman: 3.45, risk: "BASSO",   operator: "G. Verdi",
+  3:  { id: 3,  name: "Gamma SRL",          piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech",           revenue: 22100000, pd: 1.8,  altman: 3.45, risk: "BASSO",   operator: "G. Verdi",   lat: 45.0703, lng: 7.6869, indirizzo: "Corso Vittorio Emanuele II 15, Torino",
         documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 3 ? "uploaded" : (i === 3 ? "error" : "missing")) as DocStatus, ...(i < 3 ? { uploadedAt: "2025-01-28", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_gamma.pdf` } : {}) })) },
-  4:  { id: 4,  name: "Delta Corp.",        piva: "IT00000000004", status: "SOSPESA",        sector: "Edilizia",       revenue: 4500000,  pd: 5.2,  altman: 1.95, risk: "ALTO",    operator: "A. Neri",
+  4:  { id: 4,  name: "Delta Corp.",        piva: "IT00000000004", status: "SOSPESA",        sector: "Edilizia",       revenue: 4500000,  pd: 5.2,  altman: 1.95, risk: "ALTO",    operator: "A. Neri",    lat: 40.8518, lng: 14.2681, indirizzo: "Via Toledo 44, Napoli",
         documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 2 ? "uploaded" : "missing") as DocStatus, ...(i < 2 ? { uploadedAt: "2025-02-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_delta.pdf` } : {}) })) },
-  5:  { id: 5,  name: "Epsilon S.r.l.",     piva: "IT00000000005", status: "APPROVATA",      sector: "Alimentare",     revenue: 31000000, pd: 0.9,  altman: 4.10, risk: "BASSO",   operator: "M. Rossi",
+  5:  { id: 5,  name: "Epsilon S.r.l.",     piva: "IT00000000005", status: "APPROVATA",      sector: "Alimentare",     revenue: 31000000, pd: 0.9,  altman: 4.10, risk: "BASSO",   operator: "M. Rossi",   lat: 44.4949, lng: 11.3426, indirizzo: "Via Rizzoli 8, Bologna",
         documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_epsilon.pdf` })) },
   // Resto: documenti parziali o mancanti
   ...Object.fromEntries([6,7,8,9,10,11,12,13,14,15,16,17,18].map(id => {
@@ -89,6 +92,110 @@ const DOC_STATUS_CONFIG: Record<DocStatus, { icon: string; text: string; bg: str
   missing:  { icon: "○", text: "text-white/30", bg: "bg-white/5",  border: "border-white/10" },
   error:    { icon: "!", text: "text-red",    bg: "bg-red/10",    border: "border-red/30" },
 };
+
+// ─── Metis AI Panel ─────────────────────────────────────────────────────────
+type AiMessage = { role: "user" | "assistant"; content: string };
+
+function MetisAiPanel({ company, uploadedCount, totalDocs }: {
+  company: CompanyData;
+  uploadedCount: number;
+  totalDocs: number;
+}) {
+  const contextMsg = `[CONTESTO PRATICA ATTIVA]\nAzienda: ${company.name} (PIVA: ${company.piva})\nSettore: ${company.sector} | Status: ${company.status}\nFatturato: €${(company.revenue / 1_000_000).toFixed(1)}M | PD: ${company.pd}% | Altman Z-Score: ${company.altman}\nRischio: ${company.risk} | Operatore: ${company.operator}\nDocumenti: ${uploadedCount}/${totalDocs} caricati\n\nSono in grado di analizzare questa pratica in dettaglio. Come posso aiutarti?`;
+
+  const [msgs, setMsgs] = useState<AiMessage[]>([
+    { role: "assistant", content: contextMsg },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, loading]);
+
+  const send = useCallback(async (text: string) => {
+    if (!text.trim() || loading) return;
+    const userMsg: AiMessage = { role: "user", content: text };
+    const next = [...msgs, userMsg];
+    setMsgs(next);
+    setInput("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: next }),
+      });
+      const data = await res.json();
+      setMsgs([...next, { role: "assistant", content: data.reply }]);
+    } catch {
+      setMsgs([...next, { role: "assistant", content: "Errore di comunicazione con Metis. Riprova." }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [msgs, loading]);
+
+  return (
+    <div className="glass-panel border border-cyan/20 p-4 flex flex-col gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg overflow-hidden shadow-[0_0_10px_rgba(0,229,255,0.3)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/metis-icon.png" alt="Metis AI" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-[10px] font-space font-bold text-cyan uppercase tracking-widest">Metis AI</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_#00FF66] animate-pulse" />
+        </div>
+        <Link href="/copilot" className="text-[8px] font-space uppercase tracking-widest text-text-muted hover:text-cyan border border-white/10 hover:border-cyan/30 px-2 py-0.5 rounded transition">
+          Apri completo →
+        </Link>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto max-h-[220px] space-y-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]">
+        {msgs.map((m, i) => (
+          <div key={i} className={`text-[11px] leading-relaxed px-3 py-2 rounded-lg ${
+            m.role === "assistant"
+              ? "bg-black/30 border border-white/5 text-white/80 border-l-2 border-l-cyan/40"
+              : "bg-cyan/5 border border-cyan/20 text-white ml-4"
+          }`}>
+            {m.content}
+          </div>
+        ))}
+        {loading && (
+          <div className="flex items-center gap-2 px-3 py-2">
+            <div className="flex gap-1">
+              {[0,1,2].map(i => <div key={i} className="w-1 h-1 rounded-full bg-cyan/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+            </div>
+            <span className="text-[9px] font-space text-cyan/50 uppercase tracking-widest">Metis sta elaborando...</span>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-center gap-2">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Chiedi a Metis sulla pratica..."
+          className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white placeholder:text-white/20 outline-none focus:border-cyan/30 transition"
+        />
+        <button
+          type="submit"
+          disabled={loading || !input.trim()}
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0 ${
+            input.trim() ? "bg-cyan/20 text-cyan border border-cyan/40 hover:bg-cyan/30" : "bg-white/5 text-white/20 border border-white/5"
+          }`}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </form>
+    </div>
+  );
+}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 export default function PraticaPageWrapper() {
@@ -318,6 +425,32 @@ function PraticaPage() {
 
             {/* Right Column — Info */}
             <div className="space-y-4">
+              {/* Location Map Card */}
+              {(company.lat && company.lng) && (
+                <div className="glass-panel border border-white/10 overflow-hidden">
+                  <iframe
+                    src={`https://www.google.com/maps?q=${company.lat},${company.lng}&z=15&output=embed`}
+                    className="w-full h-[130px] border-0 opacity-80"
+                    loading="lazy"
+                    allowFullScreen
+                  />
+                  <div className="p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan shrink-0">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <span className="text-[10px] text-text-muted font-space uppercase tracking-widest">Sede Legale</span>
+                    </div>
+                    <div className="text-[11px] text-white leading-relaxed">{company.indirizzo || "Indirizzo non disponibile"}</div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-[10px] text-text-muted font-mono">{company.piva}</span>
+                      <span className="text-white/20">·</span>
+                      <span className="text-[10px] text-text-muted">{company.sector}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Company Info Card */}
               <div className="glass-panel border border-white/10 p-5">
                 <h3 className="text-[10px] text-text-muted font-space uppercase tracking-widest mb-3">Anagrafica Azienda</h3>
@@ -363,6 +496,9 @@ function PraticaPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Metis AI Panel */}
+              <MetisAiPanel company={company} uploadedCount={uploadedCount} totalDocs={docs.length} />
             </div>
           </div>
         </div>

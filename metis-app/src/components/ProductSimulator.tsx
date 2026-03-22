@@ -5,6 +5,7 @@
 import { useState, useMemo } from "react";
 import type { ParsedBilancio } from "@/lib/types";
 import { simulaProdotti, type SimulationResult } from "@/lib/productSimulator";
+import { RefreshCcw, FileSignature, Home, Receipt, Key, Calculator } from "lucide-react";
 
 interface ProductSimulatorProps {
   bilancioData: ParsedBilancio;
@@ -36,18 +37,18 @@ function riskBadgeClasses(label: SimulationResult["rischioLabel"]): string {
   }
 }
 
-function productIcon(tipo: SimulationResult["tipo"]): string {
+function productIcon(tipo: SimulationResult["tipo"]) {
   switch (tipo) {
     case "REVOLVING":
-      return "🔄";
+      return <RefreshCcw className="w-4 h-4 text-cyan" />;
     case "CHIROGRAFARIO":
-      return "📝";
+      return <FileSignature className="w-4 h-4 text-emerald-400" />;
     case "IPOTECARIO":
-      return "🏠";
+      return <Home className="w-4 h-4 text-purple" />;
     case "SBF":
-      return "📄";
+      return <Receipt className="w-4 h-4 text-blue-400" />;
     case "LEASING":
-      return "🔑";
+      return <Key className="w-4 h-4 text-amber-400" />;
   }
 }
 
@@ -72,8 +73,8 @@ export default function ProductSimulator({ bilancioData }: ProductSimulatorProps
     <div className="glass-panel p-6 space-y-6">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-cyan/10 border border-cyan/30 flex items-center justify-center text-lg">
-          📊
+        <div className="w-9 h-9 rounded-lg bg-cyan/10 border border-cyan/30 flex items-center justify-center">
+          <Calculator className="w-5 h-5 text-cyan" />
         </div>
         <div>
           <h2 className="text-base font-semibold text-white tracking-tight">
@@ -156,14 +157,16 @@ export default function ProductSimulator({ bilancioData }: ProductSimulatorProps
           >
             {/* Badge raccomandato */}
             {r.raccomandato && (
-              <div className="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full bg-cyan/20 border border-cyan/40 text-[9px] font-space font-bold text-cyan uppercase tracking-wider">
+              <div className="absolute -top-3 left-4 px-3 py-1 rounded-full bg-[#0B1015] border border-cyan/50 text-[9px] font-space font-bold text-cyan uppercase tracking-widest z-10 shadow-[0_0_10px_rgba(0,255,255,0.15)] flex items-center justify-center leading-none">
                 Raccomandato
               </div>
             )}
 
             {/* Header card */}
             <div className="flex items-center gap-2.5 mb-3 mt-1">
-              <span className="text-xl">{productIcon(r.tipo)}</span>
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-black/30 border border-glass-border shrink-0">
+                {productIcon(r.tipo)}
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-semibold text-white truncate">
                   {r.label}

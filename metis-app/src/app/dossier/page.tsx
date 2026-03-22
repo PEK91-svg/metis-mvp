@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import CCIIPanel from "@/components/CCIIPanel";
@@ -51,6 +51,16 @@ function MetisApp() {
   const [benchmarkMeta, setBenchmarkMeta] = useState(getBenchmarkMetadata());
   const [benchmarkRefreshing, setBenchmarkRefreshing] = useState(false);
   const [benchmarkRefreshMsg, setBenchmarkRefreshMsg] = useState('');
+
+  // ── Sentiment Gemini (M2 — Web Reputation) ───────────────────────────────
+  type SentimentData = {
+    score: number;
+    label: string;
+    summary: string;
+    sources: Array<{ title: string; url: string; snippet: string }>;
+  };
+  const [sentiment, setSentiment] = useState<SentimentData | null>(null);
+  const [sentimentLoading, setSentimentLoading] = useState(false);
 
   // Stato di caricamento consolidato — sostituisce loadingText + backendError separati
   type LoadOp =
@@ -404,6 +414,22 @@ function MetisApp() {
     };
   }, [displayName, displayPiva, safeData]);
 
+  // Fetch Gemini sentiment when company name is available
+  useEffect(() => {
+    if (!displayName || sentimentLoading || sentiment) return;
+    setSentimentLoading(true);
+    fetch("/api/sentiment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ companyName: displayName, piva: displayPiva }),
+    })
+      .then(r => r.json())
+      .then(data => setSentiment(data))
+      .catch(() => setSentiment(null))
+      .finally(() => setSentimentLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayName]);
+
   const crData = useMemo(
     () => buildCRAdapterData(displayPiva, safeData as any),
     [displayPiva, safeData]
@@ -419,25 +445,33 @@ function MetisApp() {
   };
 
   return (
-    <main className="flex h-screen w-screen overflow-hidden relative text-[13px] tracking-wide animate-[fadeUp_0.5s_ease-out_forwards]">
+    <main className="flex h-screen w-screen overflow-hidden relative text-[13px] tracking-wide bg-[#050505] animate-[fadeUp_0.5s_ease-out_forwards]">
+      {/* Sci-Fi Background Layer */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,229,255,0.08),_transparent_50%),radial-gradient(ellipse_at_bottom_left,_rgba(123,44,191,0.08),_transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 pointer-events-none mix-blend-overlay" />
+      
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col p-6 gap-6 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col p-6 h-full overflow-hidden relative z-10">
         {backendError && loadOp.phase === 'error' && (
-          <div className="flex items-center gap-2 bg-yellow/10 border border-yellow/30 text-yellow text-xs font-space px-4 py-2 rounded-lg">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            {loadOp.message}
+          <div className="flex items-center gap-3 bg-red/10 border-l-4 border-red text-red text-xs font-space px-4 py-3 mb-6 shadow-[0_0_15px_rgba(255,0,0,0.15)]">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span className="font-bold tracking-wide uppercase">{loadOp.message}</span>
           </div>
         )}
-        <header className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-            <h1 className="font-space text-2xl font-semibold text-white">
-              Dossier: {displayName} <span className="text-text-muted text-base ml-3 font-normal">ID: {displayDossier}</span>
+        
+        <header className="flex justify-between items-end border-b border-glass-border pb-5 mb-5 shrink-0">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-cyan shadow-[0_0_10px_var(--color-cyan)] animate-pulse" />
+              <div className="font-space text-[9px] text-cyan uppercase tracking-[0.3em] font-bold opacity-80">Metis Core // Active Session</div>
+            </div>
+            <h1 className="font-space text-4xl font-bold tracking-tighter text-white flex items-baseline gap-4">
+              {displayName} 
+              <span className="text-cyan/40 text-sm font-mono tracking-widest font-normal">ID_{String(displayDossier).padStart(4, '0')}</span>
             </h1>
-          </div>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -453,12 +487,14 @@ function MetisApp() {
           </div>
         </header>
 
-        <div className={`grid ${expandedCol !== null ? 'grid-cols-1' : 'grid-cols-[1.1fr_1.3fr_1fr]'} gap-6 h-full min-h-0 transition-all duration-300`}>
+        <div className={`grid ${expandedCol !== null ? 'grid-cols-1' : 'grid-cols-12'} gap-6 h-full min-h-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]`}>
           
-          {/* Column 1: Sources */}
-          <section className={`glass-panel flex flex-col overflow-hidden ${expandedCol !== null && expandedCol !== 1 ? 'hidden' : ''}`}>
-            <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl flex justify-between items-center">
-              <span>1. Raw Data Sources (OCR)</span>
+          {/* Column 1: Sources (col-span-3) */}
+          <section className={`flex flex-col overflow-hidden transition-all duration-300 ${expandedCol !== null && expandedCol !== 1 ? 'hidden' : expandedCol === 1 ? 'col-span-12' : 'col-span-3'}`}>
+            <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-cyan font-bold">01</span> // RAW DATA STREAM
+              </div>
               <button onClick={() => setExpandedCol(expandedCol === 1 ? null : 1)} className="text-text-muted hover:text-cyan transition p-1 rounded hover:bg-white/5" title={expandedCol === 1 ? 'Riduci' : 'Espandi'}>
                 {expandedCol === 1 ? (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 10l5 5m0 0v-4m0 4h-4" /></svg>
@@ -469,53 +505,6 @@ function MetisApp() {
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
 
-              {/* Company Location + Struttura Societaria */}
-              <div className="border border-glass-border rounded-lg mb-4 bg-black/30 overflow-hidden">
-                <iframe 
-                  src={`https://www.google.com/maps?q=${displayLat},${displayLng}&z=15&output=embed`}
-                  className="w-full h-[140px] border-0 opacity-80"
-                  loading="lazy"
-                  allowFullScreen
-                ></iframe>
-                <div className="p-4">
-                  <div className="flex gap-1 mb-3 bg-black/40 p-0.5 rounded">
-                    <button onClick={() => setSelectedModel(selectedModel === '_addr' ? 'altman' : '_addr')}
-                      className={`flex-1 py-1 rounded text-[10px] font-space font-semibold tracking-wider transition ${selectedModel === '_addr' ? 'bg-cyan/20 text-cyan' : 'text-text-muted hover:text-white'}`}>Indirizzo</button>
-                    <button onClick={() => setSelectedModel(selectedModel === '_corp' ? 'altman' : '_corp')}
-                      className={`flex-1 py-1 rounded text-[10px] font-space font-semibold tracking-wider transition ${selectedModel === '_corp' ? 'bg-cyan/20 text-cyan' : 'text-text-muted hover:text-white'}`}>Struttura Societaria</button>
-                  </div>
-
-                  {selectedModel === '_addr' && (
-                    <div className="text-[11px] text-text-muted space-y-1.5 animate-[fadeUp_0.2s_ease-out]">
-                      <div className="flex justify-between"><span className="text-text-muted">Sede Legale</span><span className="text-white font-medium">{displayIndirizzo}</span></div>
-                      <div className="flex justify-between"><span>Forma Giuridica</span><span className="text-white">{safeData?.company_info?.forma_giuridica || 'SRL'}</span></div>
-                      <div className="flex justify-between"><span>P.IVA</span><span className="text-white font-mono text-[10px]">{displayPiva}</span></div>
-                      <div className="flex justify-between"><span>PEC</span><span className="text-cyan text-[10px]">{safeData?.company_info?.pec || ''}</span></div>
-                      <div className="flex justify-between"><span>REA</span><span className="text-white">{safeData?.company_info?.rea || ''}</span></div>
-                      <div className="flex justify-between"><span>Capitale Sociale</span><span className="text-white font-semibold">{safeData?.company_info?.capitale_sociale || ''}</span></div>
-                      <div className="flex justify-between"><span>Costituzione</span><span className="text-white">{safeData?.company_info?.data_costituzione || ''}</span></div>
-                    </div>
-                  )}
-
-                  {selectedModel === '_corp' && (
-                    <div className="space-y-2 animate-[fadeUp_0.2s_ease-out]">
-                      {(safeData?.company_info?.struttura_societaria || [{nome:'Mario Rossi',ruolo:'Amm. Unico',quota:'60%'}]).map((s: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between bg-black/20 rounded p-2 border border-glass-border">
-                          <div>
-                            <div className="text-[11px] text-white font-semibold">{s.nome}</div>
-                            <div className="text-[9px] text-text-muted">{s.ruolo}</div>
-                          </div>
-                          <span className="font-space text-sm text-cyan font-bold">{s.quota}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {selectedModel !== '_addr' && selectedModel !== '_corp' && (
-                    <div className="text-[10px] text-text-muted text-center py-1">Clicca su un tab per i dettagli</div>
-                  )}
-                </div>
-              </div>
               {/* Centrale Rischi Adapter */}
               <div className="border border-glass-border rounded-lg p-4 mb-4 bg-black/30 transition hover:border-glass-hover">
                 <ErrorBoundary label="Centrale Rischi">
@@ -544,10 +533,12 @@ function MetisApp() {
             </div>
           </section>
 
-          {/* Column 2: Agentic Output */}
-          <section className={`glass-panel flex flex-col overflow-hidden ${expandedCol !== null && expandedCol !== 2 ? 'hidden' : ''}`}>
-             <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl flex justify-between items-center">
-              <span>2. Narrative Generation (XAI)</span>
+          {/* Column 2: Agentic Output (col-span-5) */}
+          <section className={`flex flex-col overflow-hidden transition-all duration-300 ${expandedCol !== null && expandedCol !== 2 ? 'hidden' : expandedCol === 2 ? 'col-span-12' : 'col-span-5'}`}>
+             <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-purple font-bold">02</span> // METIS XAI SYNTHESIS
+              </div>
               <button onClick={() => setExpandedCol(expandedCol === 2 ? null : 2)} className="text-text-muted hover:text-cyan transition p-1 rounded hover:bg-white/5" title={expandedCol === 2 ? 'Riduci' : 'Espandi'}>
                 {expandedCol === 2 ? (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 10l5 5m0 0v-4m0 4h-4" /></svg>
@@ -596,26 +587,48 @@ function MetisApp() {
               <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '0.7s' }}>
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <div className="w-2 h-2 rounded-full bg-cyan shadow-[0_0_8px_var(--color-cyan)]"></div>
-                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">Agent_News • Web Reputation (Live Crawl)</div>
+                  <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">Agent_News • Web Reputation (Gemini AI)</div>
                 </div>
                 <div className={`bg-[rgba(0,229,255,0.05)] border border-glass-border p-5 rounded-lg border-l-2 ${
-                  safeData?.sentiment?.label === "ALLERTA NEGATIVA" ? 'border-l-red' : 
-                  safeData?.sentiment?.label === "MISTO" ? 'border-l-yellow' : 'border-l-cyan'
+                  (sentiment?.label ?? safeData?.sentiment?.label) === "ALLERTA NEGATIVA" ? 'border-l-red' :
+                  (sentiment?.label ?? safeData?.sentiment?.label) === "MISTO" ? 'border-l-yellow' : 'border-l-cyan'
                 } leading-relaxed`}>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="font-space font-semibold text-white">Sentiment NLP Scoring</span>
-                    <span className={`px-2 py-0.5 rounded text-xs border tracking-wider font-semibold ${
-                      safeData?.sentiment?.label === "ALLERTA NEGATIVA" ? 'bg-red/10 border-red/50 text-red' : 
-                      safeData?.sentiment?.label === "MISTO" ? 'bg-yellow/10 border-yellow/50 text-yellow' :
-                      'bg-cyan/10 border-cyan/50 text-cyan'
-                    }`}>{safeData?.sentiment?.score || 50}/100 {safeData?.sentiment?.label || 'NEUTRO'}</span>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="font-space font-bold tracking-wide text-white">Sentiment Scoring</span>
+                    {sentimentLoading ? (
+                      <span className="flex items-center gap-1.5 text-[9px] text-cyan/60 font-space uppercase tracking-widest border border-cyan/20 px-2 py-0.5 rounded">
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-ping" />
+                        Fetching...
+                      </span>
+                    ) : (
+                      <span className={`px-2.5 py-1 rounded text-[10px] border tracking-widest uppercase font-bold ${
+                        (sentiment?.label ?? safeData?.sentiment?.label) === "ALLERTA NEGATIVA" ? 'bg-red/10 border-red text-red shadow-[0_0_10px_rgba(255,0,0,0.2)]' :
+                        (sentiment?.label ?? safeData?.sentiment?.label) === "MISTO" ? 'bg-yellow/10 border-yellow text-yellow shadow-[0_0_10px_rgba(250,204,21,0.2)]' :
+                        'bg-cyan/10 border-cyan text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]'
+                      }`}>
+                        {sentiment?.score ?? safeData?.sentiment?.score ?? 50}/100 — {sentiment?.label ?? safeData?.sentiment?.label ?? 'NEUTRO'}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[12px] text-text-muted mb-3">{safeData?.sentiment?.summary || "Crawling in corso..."}</p>
-                  {safeData?.sentiment?.sources && safeData.sentiment.sources.length > 0 && (
+                  {sentimentLoading ? (
+                    <div className="space-y-2">
+                      <div className="h-3 bg-white/5 rounded animate-pulse w-full" />
+                      <div className="h-3 bg-white/5 rounded animate-pulse w-4/5" />
+                    </div>
+                  ) : (
+                    <p className="text-[12px] text-text-muted mb-3">
+                      {sentiment?.summary ?? safeData?.sentiment?.summary ?? "Analisi reputazionale in corso..."}
+                    </p>
+                  )}
+                  {!sentimentLoading && (sentiment?.sources ?? safeData?.sentiment?.sources)?.length > 0 && (
                     <div className="mt-3 border-t border-glass-border pt-3 space-y-2">
-                      <div className="text-[10px] text-text-muted uppercase tracking-wider font-space mb-1">Fonti Web Rilevate</div>
-                      {safeData.sentiment.sources.map((src: any, i: number) => (
-                        <a key={i} href={src.url} target="_blank" rel="noopener noreferrer" className="block bg-black/20 rounded p-2 hover:bg-cyan-dim/30 transition border border-transparent hover:border-cyan/20 cursor-pointer">
+                      <div className="text-[10px] text-text-muted uppercase tracking-wider font-space mb-1 flex items-center gap-2">
+                        <span>Fonti Web Rilevate</span>
+                        <span className="border border-cyan/20 text-cyan/60 px-1.5 py-0.5 rounded text-[8px]">powered by Gemini</span>
+                      </div>
+                      {(sentiment?.sources ?? safeData?.sentiment?.sources ?? []).map((src: { title: string; url: string; snippet: string }, i: number) => (
+                        <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
+                          className="block bg-black/20 rounded p-2 hover:bg-cyan-dim/30 transition border border-transparent hover:border-cyan/20 cursor-pointer">
                           <div className="text-[11px] text-cyan font-medium truncate">{src.title}</div>
                           <div className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{src.snippet}</div>
                         </a>
@@ -642,10 +655,12 @@ function MetisApp() {
             </div>
           </section>
 
-          {/* Column 3: Matrices & KPIs */}
-          <section className={`glass-panel flex flex-col overflow-hidden ${expandedCol !== null && expandedCol !== 3 ? 'hidden' : ''}`}>
-             <div className="p-4 border-b border-glass-border text-xs uppercase tracking-wider text-cyan font-semibold bg-black/20 rounded-t-xl flex justify-between items-center">
-              <span>3. Dashboards &amp; Matrices</span>
+          {/* Column 3: Matrices & KPIs (col-span-4) */}
+          <section className={`flex flex-col overflow-hidden transition-all duration-300 ${expandedCol !== null && expandedCol !== 3 ? 'hidden' : expandedCol === 3 ? 'col-span-12' : 'col-span-4'}`}>
+             <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-yellow font-bold">03</span> // ANALYTICAL MODULES
+              </div>
               <button onClick={() => setExpandedCol(expandedCol === 3 ? null : 3)} className="text-text-muted hover:text-cyan transition p-1 rounded hover:bg-white/5" title={expandedCol === 3 ? 'Riduci' : 'Espandi'}>
                 {expandedCol === 3 ? (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 10l5 5m0 0v-4m0 4h-4" /></svg>
