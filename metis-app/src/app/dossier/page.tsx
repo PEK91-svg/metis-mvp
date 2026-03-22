@@ -11,6 +11,11 @@ import { runEBACheck } from "@/lib/ebaCompliance";
 import { getBenchmarkMetadata, refreshBenchmarks } from "@/lib/atecoBenchmarks";
 import { calculateAllModels } from "@/lib/riskModels";
 import FifaRiskRadar from "@/components/FifaRiskRadar";
+import ProductSimulator from "@/components/ProductSimulator";
+import ClusterPerformance from "@/components/ClusterPerformance";
+import GameTheoryPanel from "@/components/GameTheoryPanel";
+import DocumentSynthesis from "@/components/DocumentSynthesis";
+import PolicyAdherencePanel from "@/components/PolicyAdherencePanel";
 
 // Mock company data for when navigating from pratica
 const COMPANY_DATA: Record<number, { name: string; dossier_id: string; piva: string; lat: number; lng: number; indirizzo: string }> = {
@@ -42,7 +47,7 @@ function MetisApp() {
   const [selectedModel, setSelectedModel] = useState<string>("altman");
   const [expandedCol, setExpandedCol] = useState<number | null>(null);
   const [showDelibera, setShowDelibera] = useState(false);
-  const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba'>('ccii');
+  const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba' | 'policy' | 'cluster'>('ccii');
   const [benchmarkMeta, setBenchmarkMeta] = useState(getBenchmarkMetadata());
   const [benchmarkRefreshing, setBenchmarkRefreshing] = useState(false);
   const [benchmarkRefreshMsg, setBenchmarkRefreshMsg] = useState('');
@@ -246,21 +251,15 @@ function MetisApp() {
 
   if (step === "upload") {
     return (
-      <main className="flex items-center justify-center flex-1 w-full h-screen bg-[var(--color-void)] relative overflow-hidden font-space">
-        
+      <div className="flex h-screen w-screen overflow-hidden font-space">
+        <Sidebar />
+
+        <main className="flex-1 flex items-center justify-center relative overflow-hidden bg-[var(--color-void)]">
+
         {/* Ambient Background */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(0,229,255,0.1),_transparent_50%)] pointer-events-none"></div>
         <div className="absolute top-[20%] left-[15%] w-64 h-64 bg-purple/20 rounded-full blur-[100px] animate-pulse"></div>
         <div className="absolute bottom-[20%] right-[15%] w-80 h-80 bg-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-        {/* Back Button */}
-        <button 
-          onClick={() => router.push("/home")}
-          className="absolute top-8 left-8 z-20 group flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/70 hover:text-white backdrop-blur-md transition shadow-lg"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
-          <span className="text-sm font-space font-medium tracking-wide">Torna Indietro</span>
-        </button>
 
         {/* Two-Panel Card */}
         <div className="relative z-10 flex flex-col md:flex-row max-w-[1000px] w-full mx-6 rounded-2xl overflow-hidden glass-panel border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
@@ -344,22 +343,26 @@ function MetisApp() {
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
   if (step === "loading") {
     return (
-      <main className="flex flex-col items-center justify-center h-screen w-screen overflow-hidden">
-        <div className="w-20 h-20 border-[3px] border-cyan border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_30px_var(--color-cyan)]"></div>
-        <p className="font-space text-lg text-cyan tracking-widest animate-pulse">{loadingText}</p>
-        <div className="w-64 h-1 bg-white/10 mt-6 rounded-full overflow-hidden">
-          <div className="h-full bg-purple animate-[progress_3.5s_ease-out_forwards]"></div>
-        </div>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes progress { from { width: 0%; } to { width: 100%; } }
-        `}} />
-      </main>
+      <div className="flex h-screen w-screen overflow-hidden font-space">
+        <Sidebar />
+        <main className="flex-1 flex flex-col items-center justify-center overflow-hidden bg-[var(--color-void)]">
+          <div className="w-20 h-20 border-[3px] border-cyan border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_30px_var(--color-cyan)]"></div>
+          <p className="font-space text-lg text-cyan tracking-widest animate-pulse">{loadingText}</p>
+          <div className="w-64 h-1 bg-white/10 mt-6 rounded-full overflow-hidden">
+            <div className="h-full bg-purple animate-[progress_3.5s_ease-out_forwards]"></div>
+          </div>
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes progress { from { width: 0%; } to { width: 100%; } }
+          `}} />
+        </main>
+      </div>
     );
   }
 
@@ -375,7 +378,7 @@ function MetisApp() {
   // ── CCII / EBA / CR computations ─────────────────────────────────────────────
   // useMemo evita il ricalcolo ad ogni re-render — si ricalcola solo quando
   // cambiano displayName, displayPiva o safeData (che dipendono da apiData).
-  const { mockModelsData, cciiResult, ebaResult } = useMemo(() => {
+  const { mockBilancioData, mockModelsData, cciiResult, ebaResult } = useMemo(() => {
     const bilancio = {
       companyName: displayName, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || 'G46',
       dataChiusura: '31/12/2023',
@@ -394,6 +397,7 @@ function MetisApp() {
     };
     const models = calculateAllModels(bilancio as any);
     return {
+      mockBilancioData: bilancio,
       mockModelsData: models,
       cciiResult: runCCIICheck(bilancio as any, models),
       ebaResult: runEBACheck(bilancio as any, models),
@@ -429,10 +433,6 @@ function MetisApp() {
         )}
         <header className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.push("/home")} className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/60 hover:text-white transition shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
-              <span className="text-xs font-space font-medium tracking-wide">Indietro</span>
-            </button>
             <div className="flex flex-col">
             <h1 className="font-space text-2xl font-semibold text-white">
               Dossier: {displayName} <span className="text-text-muted text-base ml-3 font-normal">ID: {displayDossier}</span>
@@ -520,6 +520,13 @@ function MetisApp() {
               <div className="border border-glass-border rounded-lg p-4 mb-4 bg-black/30 transition hover:border-glass-hover">
                 <ErrorBoundary label="Centrale Rischi">
                   <CentraleRischiAdapter data={crData} />
+                </ErrorBoundary>
+              </div>
+
+              {/* Lettura Allegati Documentali */}
+              <div className="border border-glass-border rounded-lg p-4 mb-4 bg-black/30 transition hover:border-glass-hover">
+                <ErrorBoundary label="Document Synthesis">
+                  <DocumentSynthesis />
                 </ErrorBoundary>
               </div>
 
@@ -616,6 +623,20 @@ function MetisApp() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Simulatore Prodotti PEF */}
+              <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '1.0s' }}>
+                <ErrorBoundary label="Simulatore Prodotti">
+                  <ProductSimulator bilancioData={mockBilancioData} />
+                </ErrorBoundary>
+              </div>
+
+              {/* Teoria dei Giochi */}
+              <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '1.3s' }}>
+                <ErrorBoundary label="Game Theory">
+                  <GameTheoryPanel bilancioData={mockBilancioData} modelsData={mockModelsData} />
+                </ErrorBoundary>
               </div>
 
             </div>
@@ -834,7 +855,27 @@ function MetisApp() {
                         : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    EBA/GL/2020/06
+                    EBA
+                  </button>
+                  <button
+                    onClick={() => setComplianceTab('policy')}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
+                      complianceTab === 'policy'
+                        ? 'border-b-green text-green bg-green/5'
+                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Policy
+                  </button>
+                  <button
+                    onClick={() => setComplianceTab('cluster')}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
+                      complianceTab === 'cluster'
+                        ? 'border-b-yellow text-yellow bg-yellow/5'
+                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Cluster
                   </button>
                 </div>
 
@@ -851,6 +892,20 @@ function MetisApp() {
                     <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
                       <ErrorBoundary label="EBA Panel">
                         <EBAPanel result={ebaResult} />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                  {complianceTab === 'policy' && (
+                    <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
+                      <ErrorBoundary label="Policy Adherence">
+                        <PolicyAdherencePanel bilancioData={mockBilancioData} modelsData={mockModelsData} />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                  {complianceTab === 'cluster' && (
+                    <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
+                      <ErrorBoundary label="Cluster Performance">
+                        <ClusterPerformance bilancioData={mockBilancioData} modelsData={mockModelsData} pd={2.1} />
                       </ErrorBoundary>
                     </div>
                   )}
