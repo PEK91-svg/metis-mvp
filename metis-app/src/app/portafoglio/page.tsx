@@ -112,7 +112,7 @@ function StatusDistributionChart({ companies }: { companies: Company[] }) {
   };
 
   return (
-    <div className="glass-panel p-4">
+    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden group hover:border-cyan/30 transition-all duration-300">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Stati</h3>
       <div className="flex gap-1 h-3 rounded-full overflow-hidden bg-black/30 mb-3">
         {bars.filter(b => b.count > 0).map(b => (
@@ -142,7 +142,7 @@ function RiskDistributionChart({ companies }: { companies: Company[] }) {
   };
 
   return (
-    <div className="glass-panel p-4">
+    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden group hover:border-yellow/30 transition-all duration-300">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Rischio</h3>
       <div className="grid grid-cols-4 gap-2">
         {(Object.keys(counts) as RiskLevel[]).map(r => {
@@ -180,7 +180,7 @@ function PDTrendMiniChart({ companies }: { companies: Company[] }) {
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
   return (
-    <div className="glass-panel p-4">
+    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden group hover:border-cyan/30 transition-all duration-300">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">PD Distribution</h3>
       <svg viewBox="0 0 100 60" className="w-full h-20" preserveAspectRatio="none">
         <defs>
@@ -431,12 +431,12 @@ export default function PortafoglioDashboard() {
 
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden text-[13px] tracking-wide animate-[fadeUp_0.5s_ease-out_forwards] bg-[#050505] relative">
+      {/* Ambient background matching dossier */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,229,255,0.08),_transparent_50%),radial-gradient(ellipse_at_bottom_left,_rgba(123,44,191,0.08),_transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 pointer-events-none mix-blend-overlay" />
       <Sidebar />
-      <main className="flex-1 flex flex-col bg-[#0f1211] overflow-hidden relative">
-        {/* Ambient background matching prototype */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(27,41,33,0.5),_transparent_80%),radial-gradient(ellipse_at_bottom_right,_rgba(12,25,18,0.8),_transparent_80%)] pointer-events-none" />
-
+      <main className="flex-1 flex flex-col overflow-hidden relative z-10">
         <div className="relative flex-1 flex flex-col p-6 overflow-auto custom-scrollbar">
           {/* Header */}
           <header className="flex items-center justify-end mb-5">
@@ -460,8 +460,17 @@ export default function PortafoglioDashboard() {
           </header>
 
           {/* Toggle Search Bar Button (Visible when hidden) */}
-          <div className="flex justify-between items-end mb-4 z-20 relative">
-            <h1 className="text-2xl font-space font-bold text-white tracking-widest uppercase">Portafoglio Creditizio</h1>
+          <div className="flex justify-between items-end border-b border-glass-border pb-5 mb-5 shrink-0 z-20 relative">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-cyan shadow-[0_0_10px_var(--color-cyan)] animate-pulse" />
+                <div className="font-space text-[9px] text-cyan uppercase tracking-[0.3em] font-bold opacity-80">Metis Core // Active Session</div>
+              </div>
+              <h1 className="font-space text-3xl font-bold tracking-tighter text-white flex items-baseline gap-4">
+                Portafoglio Creditizio 
+                <span className="text-cyan/40 text-sm font-mono tracking-widest font-normal">VOL_{filtered.length}</span>
+              </h1>
+            </div>
             <button
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:border-cyan/50 text-white transition-all shadow-lg"
@@ -469,6 +478,19 @@ export default function PortafoglioDashboard() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
               <span className="font-space text-xs font-semibold uppercase tracking-widest">{showAdvancedFilters ? "Nascondi Toolbar" : "Toolbar di Ricerca"}</span>
             </button>
+          </div>
+
+          {/* Analytical Modules - Bento Box Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="animate-[fadeUp_0.5s_ease-out_forwards]" style={{ animationDelay: '0.1s' }}>
+              <StatusDistributionChart companies={filtered} />
+            </div>
+            <div className="animate-[fadeUp_0.5s_ease-out_forwards]" style={{ animationDelay: '0.3s' }}>
+              <RiskDistributionChart companies={filtered} />
+            </div>
+            <div className="animate-[fadeUp_0.5s_ease-out_forwards]" style={{ animationDelay: '0.5s' }}>
+              <PDTrendMiniChart companies={filtered} />
+            </div>
           </div>
 
           {/* Collapsible Search + Filters Bar */}
@@ -603,10 +625,10 @@ export default function PortafoglioDashboard() {
           </div>
 
           {/* Table */}
-          <div className="flex-1 overflow-x-auto bg-[#0A0F14] border border-white/10 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] mt-4">
+          <div className="flex-1 overflow-x-auto bg-black/40 border border-white/10 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] mt-4 animate-[fadeUp_0.5s_ease-out_forwards]" style={{ animationDelay: '0.7s' }}>
             <table className="min-w-full table-auto">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
+                <tr className="bg-black/60 border-b border-white/10">
                   {([
                     { key: 'name' as SortKey, label: 'Azienda', w: '' },
                     { key: 'pd' as SortKey, label: 'PD', w: 'w-20' },
