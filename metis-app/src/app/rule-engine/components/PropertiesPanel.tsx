@@ -190,41 +190,72 @@ function SliderField({
 
 // ---- Type-specific editors ----
 
+const DATA_CONNECTORS = [
+  { id: 'Bankitalia', label: 'C.R. Bankitalia', latency: '2.4s', status: 'live', icon: '🏛️' },
+  { id: 'XBRL', label: 'Bilancio XBRL (Europa)', latency: '1.1s', status: 'live', icon: '📊' },
+  { id: 'Cerved', label: 'Cerved Group APIs', latency: '-', status: 'config', icon: '🔍' },
+  { id: 'NLP', label: 'Web NLP / Nowcasting', latency: '3.2s', status: 'live', icon: '📰' },
+  { id: 'ESG', label: 'ESG Provider Level 2', latency: '-', status: 'inactive', icon: '🌱' },
+];
+
 function DataIngestionEditor({ config, onChange }: { config: DataIngestionConfig; onChange: (p: Record<string, unknown>) => void }) {
+  const toggleSource = (conn: typeof DATA_CONNECTORS[0], currentSources: string[]) => {
+    const isActive = currentSources.some(s => s.toLowerCase().includes(conn.id.toLowerCase()));
+    if (isActive) {
+      onChange({ sources: currentSources.filter(s => !s.toLowerCase().includes(conn.id.toLowerCase())) });
+    } else {
+      onChange({ sources: [...currentSources, conn.label] });
+    }
+  };
+
   return (
-    <div className="space-y-3">
-      <FieldGroup label="Data Sources">
-        <div className="space-y-1.5">
-          {config.sources.map((s, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={s}
-                onChange={(e) => {
-                  const newSources = [...config.sources];
-                  newSources[i] = e.target.value;
-                  onChange({ sources: newSources });
-                }}
-                className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-[11px] text-white focus:border-cyan/50 focus:outline-none transition"
-              />
-              <button
-                onClick={() => onChange({ sources: config.sources.filter((_, j) => j !== i) })}
-                className="text-red/50 hover:text-red text-[10px] transition"
+    <div className="space-y-4">
+      <FieldGroup label="Connector Catalog">
+        <div className="space-y-2">
+          {DATA_CONNECTORS.map(conn => {
+            const isActive = config.sources.some(s => s.toLowerCase().includes(conn.id.toLowerCase()));
+            
+            return (
+              <div 
+                key={conn.id} 
+                onClick={() => toggleSource(conn, config.sources)}
+                className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-all ${isActive ? 'bg-cyan/10 border-cyan/30 shadow-[0_0_15px_rgba(0,229,255,0.05)] hover:border-cyan/50' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'}`}
               >
-                ×
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={() => onChange({ sources: [...config.sources, 'New Source'] })}
-            className="text-[10px] text-cyan/60 hover:text-cyan transition font-space"
-          >
-            + Add Source
-          </button>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${isActive ? 'bg-cyan/20 border border-cyan/30 shadow-[0_0_10px_rgba(0,229,255,0.2)]' : 'bg-black/40 grayscale opacity-60 border border-white/10'}`}>
+                    {conn.icon}
+                  </div>
+                  <div>
+                    <div className={`text-[11px] font-space font-bold ${isActive ? 'text-white' : 'text-white/60'}`}>
+                      {conn.label}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`flex items-center gap-1 text-[8px] uppercase tracking-widest font-bold font-mono ${isActive ? (conn.status === 'live' ? 'text-green' : conn.status === 'config' ? 'text-yellow' : 'text-red') : 'text-white/30'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${isActive ? (conn.status === 'live' ? 'bg-green animate-pulse shadow-[0_0_5px_var(--color-green)]' : conn.status === 'config' ? 'bg-yellow shadow-[0_0_5px_var(--color-yellow)]' : 'bg-red shadow-[0_0_5px_var(--color-red)]') : 'bg-white/20'}`} />
+                        {isActive ? conn.status : 'disconnected'}
+                      </span>
+                      {isActive && conn.status === 'live' && (
+                        <>
+                          <span className="text-white/20">•</span>
+                          <span className="text-[9px] text-cyan font-mono">{conn.latency}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className={`w-9 h-5 rounded-full relative transition-colors border ${isActive ? 'bg-cyan/20 border-cyan/40' : 'bg-black/60 border-white/10'}`}>
+                  <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all ${isActive ? 'left-4.5 bg-cyan shadow-[0_0_8px_var(--color-cyan)]' : 'left-0.5 bg-white/30'}`} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </FieldGroup>
-      <SliderField label="Data Quality Threshold" value={config.dataQualityThreshold} min={0} max={100} step={1} unit="%" color="#00E5FF" onChange={(v) => onChange({ dataQualityThreshold: v })} />
-      <SliderField label="Refresh Interval" value={config.refreshInterval} min={5} max={1440} step={5} unit=" min" color="#00E5FF" onChange={(v) => onChange({ refreshInterval: v })} />
+
+      <div className="border-t border-white/10 pt-4 space-y-4">
+        <SliderField label="Data Quality Threshold" value={config.dataQualityThreshold} min={0} max={100} step={1} unit="%" color="#00E5FF" onChange={(v) => onChange({ dataQualityThreshold: v })} />
+        <SliderField label="Refresh Interval" value={config.refreshInterval} min={5} max={1440} step={5} unit=" min" color="#00E5FF" onChange={(v) => onChange({ refreshInterval: v })} />
+      </div>
     </div>
   );
 }
