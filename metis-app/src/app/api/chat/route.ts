@@ -29,16 +29,47 @@ Rifiutate: Zeta Industries, Nu Energy.
 Quando l'utente fa una domanda su una pratica, usa questi dati per contestualizzare o inventa dettagli coerenti basandoti sullo stato e sul settore. 
 Rispondi con autorevolezza, come se stessi leggendo dai database di Metis in tempo reale.`;
 
+// Tipo atteso per ogni messaggio della chat
+interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+}
+
+function isValidMessages(value: unknown): value is ChatMessage[] {
+  if (!Array.isArray(value) || value.length === 0) return false;
+  return value.every(
+    (m) =>
+      m !== null &&
+      typeof m === 'object' &&
+      ('role' in m) && (m.role === 'user' || m.role === 'model') &&
+      ('content' in m) && typeof m.content === 'string' && m.content.trim().length > 0
+  );
+}
+
 export async function POST(req: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ reply: "Configurazione mancante: GEMINI_API_KEY non impostata." }, { status: 503 });
   }
   try {
-    const { messages } = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ reply: "Richiesta non valida: body non è JSON." }, { status: 400 });
+    }
+
+    const messages = (body as Record<string, unknown>)?.messages;
+    if (!isValidMessages(messages)) {
+      return NextResponse.json(
+        { reply: "Richiesta non valida: `messages` deve essere un array non vuoto di {role, content}." },
+        { status: 400 }
+      );
+    }
+
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    
+
     // Build history from messages (all but last which is the new user message)
-    const history = messages.slice(0, -1).map((msg: {role: string; content: string}) => ({
+    const history = messages.slice(0, -1).map((msg) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.content }],
     }));
@@ -57,7 +88,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ reply: text });
   } catch (err) {
-    console.error("Gemini API error:", err);
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error("Gemini API error:", error.message);
     return NextResponse.json({ reply: "Mi dispiace, c'è stato un errore tecnico. Riprova tra un momento." }, { status: 500 });
   }
 }

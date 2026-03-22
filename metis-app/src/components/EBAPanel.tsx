@@ -3,7 +3,8 @@
 // Panel UI per la checklist di conformità EBA raggruppata per sezione.
 
 import { useState } from "react";
-import { EBAResult, EBACheckItem, EBAStatus } from "@/lib/ebaCompliance";
+import { EBAResult, EBACheckItem } from "@/lib/ebaCompliance";
+import { getEBAStatusStyle } from "@/lib/statusConfig";
 
 interface EBAPanelProps {
   result: EBAResult;
@@ -16,19 +17,6 @@ const SECTION_LABELS: Record<string, { label: string; icon: string }> = {
   MON: { label: 'Monitoraggio continuativo',              icon: '§ 8' },
 };
 
-function statusConfig(s: EBAStatus) {
-  switch (s) {
-    case 'CONFORME':
-      return { color: 'text-green',  bg: 'bg-green/10',  border: 'border-green/30',  dot: 'bg-green',  label: 'CONFORME' };
-    case 'PARZIALMENTE CONFORME':
-      return { color: 'text-yellow', bg: 'bg-yellow/10', border: 'border-yellow/30', dot: 'bg-yellow', label: 'PARZ. CONFORME' };
-    case 'NON CONFORME':
-      return { color: 'text-red',    bg: 'bg-red/10',    border: 'border-red/30',    dot: 'bg-red animate-pulse', label: 'NON CONFORME' };
-    default:
-      return { color: 'text-text-muted', bg: 'bg-white/5', border: 'border-glass-border', dot: 'bg-white/20', label: 'DA VERIFICARE' };
-  }
-}
-
 function overallConfig(s: EBAResult['overallStatus']) {
   switch (s) {
     case 'CONFORME':              return { color: 'text-green',  bg: 'bg-green/10',  border: 'border-green/40'  };
@@ -39,7 +27,7 @@ function overallConfig(s: EBAResult['overallStatus']) {
 
 function EBAItemRow({ item }: { item: EBACheckItem }) {
   const [open, setOpen] = useState(false);
-  const cfg = statusConfig(item.status);
+  const cfg = getEBAStatusStyle(item.status);
 
   return (
     <div className={`border rounded-lg overflow-hidden transition-all ${open ? cfg.border : 'border-glass-border'}`}>

@@ -1,10 +1,11 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import CCIIPanel from "@/components/CCIIPanel";
 import EBAPanel from "@/components/EBAPanel";
 import CentraleRischiAdapter, { buildCRAdapterData } from "@/components/CentraleRischiAdapter";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { runCCIICheck } from "@/lib/cciiCompliance";
 import { runEBACheck } from "@/lib/ebaCompliance";
 import { getBenchmarkMetadata, refreshBenchmarks } from "@/lib/atecoBenchmarks";
@@ -36,17 +37,25 @@ function MetisApp() {
 
   const [step, setStep] = useState<"upload" | "loading" | "dashboard">(companyOverride ? "dashboard" : "upload");
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [apiData, setApiData] = useState<any>(null);
-  const [loadingText, setLoadingText] = useState("Inizializzazione Swarm Multi-Agente...");
+  const [apiData, setApiData] = useState<Record<string, unknown> | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("altman");
   const [expandedCol, setExpandedCol] = useState<number | null>(null);
   const [showDelibera, setShowDelibera] = useState(false);
-  const [backendError, setBackendError] = useState(false);
   const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba'>('ccii');
   const [benchmarkMeta, setBenchmarkMeta] = useState(getBenchmarkMetadata());
   const [benchmarkRefreshing, setBenchmarkRefreshing] = useState(false);
   const [benchmarkRefreshMsg, setBenchmarkRefreshMsg] = useState('');
+
+  // Stato di caricamento consolidato — sostituisce loadingText + backendError separati
+  type LoadOp =
+    | { phase: 'idle' }
+    | { phase: 'running'; text: string }
+    | { phase: 'error'; message: string }
+    | { phase: 'done' };
+  const [loadOp, setLoadOp] = useState<LoadOp>({ phase: 'idle' });
+  const backendError = loadOp.phase === 'error';
+  const loadingText = loadOp.phase === 'running' ? loadOp.text : '';
 
   const exportPDF = () => {
     const d = apiData;
@@ -181,35 +190,56 @@ function MetisApp() {
     }
   };
 
+  const ALLOWED_MIME = [
+    'application/pdf',
+    'text/plain',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+  ];
+  const MAX_FILE_SIZE_MB = 20;
+
   const startAnalysis = async () => {
     if (!selectedFile) {
       alert("Per favore, trascina o clicca per selezionare un documento (es. Bilancio_DeltaMeccanica.txt) prima di avviare l'IA.");
       return;
     }
+
+    // Validazione file lato client
+    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      alert(`File troppo grande. Dimensione massima consentita: ${MAX_FILE_SIZE_MB} MB.`);
+      return;
+    }
+    if (ALLOWED_MIME.length > 0 && !ALLOWED_MIME.includes(selectedFile.type) && selectedFile.type !== '') {
+      alert(`Tipo di file non supportato (${selectedFile.type || 'sconosciuto'}). Usa PDF, TXT o XLSX.`);
+      return;
+    }
+
     setStep("loading");
-    
+    setLoadOp({ phase: 'running', text: 'Inizializzazione Swarm Multi-Agente...' });
+
     // Simulate loading text phases
-    setTimeout(() => setLoadingText("Agent_OCR: Estrazione dati da Bilancio XBRL..."), 800);
-    setTimeout(() => setLoadingText("Agent_Math: Calcolo Altman Z-Score e DSCR..."), 1400);
-    setTimeout(() => setLoadingText("Agent_Compliance: Validazione pattern Centrale Rischi..."), 2000);
-    setTimeout(() => setLoadingText("Agent_News: Crawling reputazionale NLP..."), 2500);
-    setTimeout(() => setLoadingText("Agent_Writer: Compilazione moduli Narrativi PEF..."), 3000);
+    setTimeout(() => setLoadOp({ phase: 'running', text: 'Agent_OCR: Estrazione dati da Bilancio XBRL...' }), 800);
+    setTimeout(() => setLoadOp({ phase: 'running', text: 'Agent_Math: Calcolo Altman Z-Score e DSCR...' }), 1400);
+    setTimeout(() => setLoadOp({ phase: 'running', text: 'Agent_Compliance: Validazione pattern Centrale Rischi...' }), 2000);
+    setTimeout(() => setLoadOp({ phase: 'running', text: 'Agent_News: Crawling reputazionale NLP...' }), 2500);
+    setTimeout(() => setLoadOp({ phase: 'running', text: 'Agent_Writer: Compilazione moduli Narrativi PEF...' }), 3000);
 
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
       // Call the FastAPI orchestrator running on port 8000
-      const res = await fetch("http://localhost:8000/api/v1/analyze-dossier", { 
+      const res = await fetch("http://localhost:8000/api/v1/analyze-dossier", {
         method: "POST",
         body: formData
       });
       const data = await res.json();
       setApiData(data);
-      setTimeout(() => setStep("dashboard"), 500); 
+      setLoadOp({ phase: 'done' });
+      setTimeout(() => setStep("dashboard"), 500);
     } catch (e) {
       console.error("Backend non raggiungibile. Fallback static mock.", e);
-      setBackendError(true);
+      setLoadOp({ phase: 'error', message: 'Backend non raggiungibile — dati dimostrativi in uso. Avvia il server FastAPI su porta 8000.' });
       setTimeout(() => setStep("dashboard"), 500);
     }
   };
@@ -342,27 +372,38 @@ function MetisApp() {
   const displayLng = companyOverride?.lng || safeData?.company_info?.lng || 9.1911;
   const displayIndirizzo = companyOverride?.indirizzo || safeData?.company_info?.indirizzo || "Via G. Verdi 42, Milano";
 
-  // ── CCII / EBA / CR computations (use real API data when available) ──────────
-  const mockBilancioData = {
-    companyName: displayName, partitaIva: displayPiva, settore: safeData?.benchmark?.settore_ateco || 'G46',
-    dataChiusura: '31/12/2023',
-    ricavi: 2450000, costiOperativi: 2000000, ebitda: 294000, ebitdaMargin: 12,
-    ammortamenti: 45000, ebit: 249000, oneriFinanziari: 68000,
-    risultatoLordo: 181000, imposte: 54000, utileNetto: 127000,
-    totaleAttivo: 1850000, attivoCorrenti: 920000, cassa: 85000,
-    crediti: 680000, rimanenze: 155000, attivoFisso: 930000,
-    totalePassivo: 1850000, passivoCorrenti: 780000,
-    debitiVersoBanche: 680000, debitiBreveTermine: 420000,
-    debitiLungoTermine: 260000, totaleDebiti: 1420000,
-    patrimonioNetto: 430000, capitaleSociale: 100000,
-    utiliPortati: 303000, capitaleDiLavoro: 140000,
-    utiliNonDistribuiti: 303000, fatturato: 2450000,
-    valoreAzioneMercato: 430000, debtService: 203000,
-  };
-  const mockModelsData = calculateAllModels(mockBilancioData as any);
-  const cciiResult = runCCIICheck(mockBilancioData as any, mockModelsData);
-  const ebaResult = runEBACheck(mockBilancioData as any, mockModelsData);
-  const crData = buildCRAdapterData(displayPiva, safeData);
+  // ── CCII / EBA / CR computations ─────────────────────────────────────────────
+  // useMemo evita il ricalcolo ad ogni re-render — si ricalcola solo quando
+  // cambiano displayName, displayPiva o safeData (che dipendono da apiData).
+  const { mockModelsData, cciiResult, ebaResult } = useMemo(() => {
+    const bilancio = {
+      companyName: displayName, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || 'G46',
+      dataChiusura: '31/12/2023',
+      ricavi: 2450000, costiOperativi: 2000000, ebitda: 294000, ebitdaMargin: 12,
+      ammortamenti: 45000, ebit: 249000, oneriFinanziari: 68000,
+      risultatoLordo: 181000, imposte: 54000, utileNetto: 127000,
+      totaleAttivo: 1850000, attivoCorrenti: 920000, cassa: 85000,
+      crediti: 680000, rimanenze: 155000, attivoFisso: 930000,
+      totalePassivo: 1850000, passivoCorrenti: 780000,
+      debitiVersoBanche: 680000, debitiBreveTermine: 420000,
+      debitiLungoTermine: 260000, totaleDebiti: 1420000,
+      patrimonioNetto: 430000, capitaleSociale: 100000,
+      utiliPortati: 303000, capitaleDiLavoro: 140000,
+      utiliNonDistribuiti: 303000, fatturato: 2450000,
+      valoreAzioneMercato: 430000, debtService: 203000,
+    };
+    const models = calculateAllModels(bilancio as any);
+    return {
+      mockModelsData: models,
+      cciiResult: runCCIICheck(bilancio as any, models),
+      ebaResult: runEBACheck(bilancio as any, models),
+    };
+  }, [displayName, displayPiva, safeData]);
+
+  const crData = useMemo(
+    () => buildCRAdapterData(displayPiva, safeData as any),
+    [displayPiva, safeData]
+  );
 
   const handleBenchmarkRefresh = async () => {
     setBenchmarkRefreshing(true);
@@ -380,10 +421,10 @@ function MetisApp() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col p-6 gap-6 h-full overflow-hidden">
-        {backendError && (
+        {backendError && loadOp.phase === 'error' && (
           <div className="flex items-center gap-2 bg-yellow/10 border border-yellow/30 text-yellow text-xs font-space px-4 py-2 rounded-lg">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Backend non raggiungibile — dati dimostrativi in uso. Avvia il server FastAPI su porta 8000.
+            {loadOp.message}
           </div>
         )}
         <header className="flex justify-between items-center">
@@ -477,7 +518,9 @@ function MetisApp() {
               </div>
               {/* Centrale Rischi Adapter */}
               <div className="border border-glass-border rounded-lg p-4 mb-4 bg-black/30 transition hover:border-glass-hover">
-                <CentraleRischiAdapter data={crData} />
+                <ErrorBoundary label="Centrale Rischi">
+                  <CentraleRischiAdapter data={crData} />
+                </ErrorBoundary>
               </div>
 
               <div className="border border-glass-border rounded-lg p-5 mb-4 bg-black/30 transition hover:border-glass-hover">
@@ -799,12 +842,16 @@ function MetisApp() {
                 <div className="p-4">
                   {complianceTab === 'ccii' && (
                     <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
-                      <CCIIPanel result={cciiResult} />
+                      <ErrorBoundary label="CCII Panel">
+                        <CCIIPanel result={cciiResult} />
+                      </ErrorBoundary>
                     </div>
                   )}
                   {complianceTab === 'eba' && (
                     <div className="animate-[fadeUp_0.2s_ease-out_forwards]">
-                      <EBAPanel result={ebaResult} />
+                      <ErrorBoundary label="EBA Panel">
+                        <EBAPanel result={ebaResult} />
+                      </ErrorBoundary>
                     </div>
                   )}
                 </div>

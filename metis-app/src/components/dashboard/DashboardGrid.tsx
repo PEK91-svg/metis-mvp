@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -26,13 +26,35 @@ import { RiskChartWidget } from "./widgets/RiskChartWidget";
 import { Settings, Plus, Maximize2, X } from "lucide-react";
 
 export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK";
+export type WidgetWidth = 1 | 2 | 3 | 4;
+export type WidgetHeight = 1 | 2 | 3;
 
 export interface DashboardWidget {
   id: string;
   type: WidgetType;
   title: string;
-  w: number; // width in columns
-  h: number; // height in rows
+  w: WidgetWidth;
+  h: WidgetHeight;
+}
+
+// Struttura dati attesa dal Dashboard (proveniente da home/page.tsx)
+export interface DashboardData {
+  kpi?: {
+    pd?: string | number;
+    altman?: number;
+    dscr?: number;
+    [key: string]: unknown;
+  };
+  risk_models?: {
+    altman?: { score: number; status: string };
+    [key: string]: unknown;
+  };
+  forecast_dscr?: {
+    base?: string | number;
+    stress?: string | number;
+    ottimistico?: string | number;
+  };
+  [key: string]: unknown;
 }
 
 const WIDGET_TITLES: Record<WidgetType, string> = {
@@ -52,7 +74,7 @@ const INITIAL_WIDGETS: DashboardWidget[] = [
 ];
 
 interface DashboardGridProps {
-  data: any; // The KPI data passed from home/page.tsx
+  data: DashboardData | null;
 }
 
 export default function DashboardGrid({ data }: DashboardGridProps) {
@@ -60,14 +82,21 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
   const [widgets, setWidgets] = useState<DashboardWidget[]>(INITIAL_WIDGETS);
   const [mounted, setMounted] = useState(false);
   const [maximizedWidget, setMaximizedWidget] = useState<string | null>(null);
+  const widgetIdCounter = useRef(Date.now());
 
   useEffect(() => {
     // Load persisted layout
     const saved = localStorage.getItem("metis-dashboard-layout-v2");
     if (saved) {
       try {
-        setWidgets(JSON.parse(saved));
-      } catch (e) {}
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setWidgets(parsed);
+        }
+      } catch {
+        // Layout salvato corrotto — si usa quello di default (INITIAL_WIDGETS)
+        localStorage.removeItem("metis-dashboard-layout-v2");
+      }
     }
     setMounted(true);
   }, []);
@@ -99,11 +128,14 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
   };
 
   const addWidget = (type: WidgetType) => {
+    // Usa un counter incrementale per evitare collisioni anche se addWidget
+    // viene chiamata più volte nello stesso millisecondo
+    widgetIdCounter.current += 1;
     const newWidget: DashboardWidget = {
-      id: Date.now().toString(),
+      id: `w-${widgetIdCounter.current}`,
       type,
       title: WIDGET_TITLES[type],
-      w: type === "PIPELINE" ? 2 : 1, // Pipeline defaults to wider
+      w: type === "PIPELINE" ? 2 : 1,
       h: 2,
     };
     setWidgets([newWidget, ...widgets]);
@@ -151,9 +183,9 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
         <SortableContext items={widgets.map((w) => w.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-min gap-4">
             {widgets.map((w) => {
-              const spanClassMap: Record<number, string> = { 1: "md:col-span-1", 2: "md:col-span-2", 3: "md:col-span-3", 4: "md:col-span-4" };
-              const rowClassMap: Record<number, string> = { 1: "row-span-1", 2: "row-span-2", 3: "row-span-3" };
-              const spanClasses = `${spanClassMap[w.w] || "md:col-span-1"} ${rowClassMap[w.h] || "row-span-2"}`;
+              const spanClassMap: Record<WidgetWidth, string>  = { 1: "md:col-span-1", 2: "md:col-span-2", 3: "md:col-span-3", 4: "md:col-span-4" };
+              const rowClassMap: Record<WidgetHeight, string>  = { 1: "row-span-1", 2: "row-span-2", 3: "row-span-3" };
+              const spanClasses = `${spanClassMap[w.w]} ${rowClassMap[w.h]}`;
               
               const renderContent = () => {
                 switch (w.type) {
