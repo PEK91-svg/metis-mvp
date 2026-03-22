@@ -182,7 +182,7 @@ function MetisApp() {
 
   const startAnalysis = async () => {
     if (!selectedFile) {
-      alert("Per favore, trascina o clicca per selezionare un documento (es. Bilancio_NanoBanana.txt) prima di avviare l'IA.");
+      alert("Per favore, trascina o clicca per selezionare un documento (es. Bilancio_DeltaMeccanica.txt) prima di avviare l'IA.");
       return;
     }
     setStep("loading");

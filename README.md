@@ -86,7 +86,7 @@ metis/
 │   ├── main.py         # Agent orchestrator + DuckDuckGo crawler
 │   └── requirements.txt
 ├── metis_dashboard.html # Standalone HTML prototype
-├── Bilancio_NanoBanana.txt # Test document
+├── Bilancio_DeltaMeccanica.txt # Test document
 └── README.md
 ```
 

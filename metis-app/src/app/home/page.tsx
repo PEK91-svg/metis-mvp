@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { loadPratiche } from '@/lib/storage';
 import type { Pratica } from '@/lib/types';
+import DashboardGrid from '@/components/dashboard/DashboardGrid';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Status = 'APPROVATA' | 'IN ANALISI' | 'DA REVISIONARE' | 'SOSPESA' | 'RIFIUTATA';
@@ -444,21 +445,13 @@ export default function HomeDashboard() {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <Sidebar />
-      <main className="flex-1 flex flex-col bg-[rgba(9,13,20,0.85)] backdrop-blur-xl overflow-hidden relative">
-        {/* Ambient background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.08),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(0,229,255,0.06),_transparent_50%)] pointer-events-none" />
+      <main className="flex-1 flex flex-col bg-[#0f1211] overflow-hidden relative">
+        {/* Ambient background matching prototype */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(27,41,33,0.5),_transparent_80%),radial-gradient(ellipse_at_bottom_right,_rgba(12,25,18,0.8),_transparent_80%)] pointer-events-none" />
 
-        <div className="relative flex-1 flex flex-col p-6 overflow-auto">
+        <div className="relative flex-1 flex flex-col p-6 overflow-auto custom-scrollbar">
           {/* Header */}
-          <header className="flex items-center justify-between mb-5">
-            <div>
-              <h1 className="text-xl font-bold font-[var(--font-space)] tracking-wide text-white">
-                Pratiche Creditizie
-              </h1>
-              <p className="text-xs text-text-muted mt-0.5">
-                Panoramica e gestione del portafoglio in analisi
-              </p>
-            </div>
+          <header className="flex items-center justify-end mb-5">
             <div className="flex items-center gap-3">
               {/* Notifications */}
               <button
@@ -475,116 +468,74 @@ export default function HomeDashboard() {
                 )}
               </button>
               <NotificationPanel notifications={notifications} open={showNotifications} onClose={() => setShowNotifications(false)} onMarkRead={handleMarkRead} />
-
-              {/* Export */}
-              <button
-                onClick={exportCSV}
-                className="flex items-center gap-2 border border-white/10 hover:border-green/30 hover:bg-green/5 rounded-xl px-3 py-2 text-xs text-text-muted hover:text-green transition"
-                title="Esporta CSV"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export
-              </button>
-
-              {/* New practice */}
-              <Link href="/dossier">
-                <button className="flex items-center gap-2 bg-cyan/10 text-cyan hover:bg-cyan/20 border border-cyan/30 rounded-xl px-4 py-2 text-xs font-semibold transition shadow-[0_0_15px_rgba(0,229,255,0.1)] hover:shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                  <span className="text-base">+</span> Nuova Pratica
-                </button>
-              </Link>
-
-              {/* METIS Logo */}
-              <div className="flex items-center gap-2.5 ml-2 pl-4 border-l border-white/10">
-                <img src="/finomnia-logo.png" alt="METIS" className="w-8 h-8 rounded-lg shadow-[0_0_12px_rgba(0,229,255,0.15)]" />
-                <span className="font-space text-lg font-bold tracking-widest text-white">METIS</span>
-              </div>
             </div>
           </header>
 
-          {/* KPI Cards */}
-          <section className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-5">
-            {[
-              { label: 'Totali', value: kpis.total, cls: 'border-cyan/30 text-cyan', glow: 'shadow-[0_0_10px_rgba(0,229,255,0.08)]' },
-              { label: 'In Analisi', value: kpis.inAnalysis, cls: 'border-purple/30 text-purple', glow: 'shadow-[0_0_10px_rgba(123,44,191,0.08)]' },
-              { label: 'Approvate', value: kpis.approved, cls: 'border-green/30 text-green', glow: 'shadow-[0_0_10px_rgba(0,255,102,0.08)]' },
-              { label: 'Rifiutate', value: kpis.rejected, cls: 'border-red/30 text-red', glow: 'shadow-[0_0_10px_rgba(255,0,85,0.08)]' },
-              { label: 'Alto Rischio', value: kpis.highRisk, cls: 'border-yellow/30 text-yellow', glow: 'shadow-[0_0_10px_rgba(250,204,21,0.08)]' },
-              { label: 'PD Medio', value: kpis.avgPD.toFixed(2) + '%', cls: 'border-cyan/30 text-cyan', glow: '' },
-              { label: 'Altman Medio', value: kpis.avgAltman.toFixed(2), cls: 'border-green/30 text-green', glow: '' },
-              { label: 'Rev. Totale', value: formatCurrency(kpis.totalRevenue), cls: 'border-purple/30 text-purple', glow: '' },
-            ].map((kpi, i) => (
-              <div key={i} className={`glass-panel flex flex-col items-center justify-center p-3 border ${kpi.cls} ${kpi.glow}`}>
-                <span className="text-[10px] uppercase tracking-wider text-text-muted font-[var(--font-space)]">{kpi.label}</span>
-                <span className="text-lg font-bold mt-0.5 font-[var(--font-space)]">{kpi.value}</span>
-              </div>
-            ))}
-          </section>
-
-          {/* Charts row */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-            <StatusDistributionChart companies={companies} />
-            <RiskDistributionChart companies={companies} />
-            <PDTrendMiniChart companies={companies} />
-          </section>
+          {/* Dynamic Drag and Drop Dashboard */}
+          <DashboardGrid data={kpis} />
 
           {/* Search + Filters Bar */}
-          <div className="flex flex-col gap-3 mb-4">
-            <div className="flex flex-col md:flex-row items-center gap-3">
-              {/* Global search */}
-              <div className="relative w-full md:w-80">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input
-                  type="text"
-                  placeholder="Cerca per nome, P.IVA, settore…"
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  className="w-full bg-black/30 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition"
-                />
+          <div className="flex flex-col gap-3 mb-4 bg-[#0A0F14] border border-white/10 rounded-[24px] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+              <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                {/* Global search */}
+                <div className="relative w-full md:w-80 group">
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-[#00E5FF] transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input
+                    type="text"
+                    placeholder="Cerca per nome, P.IVA, settore…"
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#00E5FF]/50 focus:bg-[#00E5FF]/5 transition-all shadow-inner"
+                  />
+                </div>
+
+                {/* Status filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                  className="bg-black/40 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white/80 focus:outline-none focus:border-[#00E5FF]/50 focus:text-white transition-all appearance-none pr-8 cursor-pointer shadow-inner"
+                  style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300E5FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')", backgroundPosition: "right 8px center", backgroundRepeat: "no-repeat", backgroundSize: "16px" }}
+                >
+                  <option value="">Tutti gli stati</option>
+                  {(Object.keys(STATUS_CONFIG) as Status[]).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+
+                {/* Risk filter */}
+                <select
+                  value={riskFilter}
+                  onChange={(e) => { setRiskFilter(e.target.value); setPage(1); }}
+                  className="bg-black/40 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white/80 focus:outline-none focus:border-[#00E5FF]/50 focus:text-white transition-all appearance-none pr-8 cursor-pointer shadow-inner"
+                  style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300E5FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')", backgroundPosition: "right 8px center", backgroundRepeat: "no-repeat", backgroundSize: "16px" }}
+                >
+                  <option value="">Tutti i rischi</option>
+                  {(Object.keys(RISK_CONFIG) as RiskLevel[]).map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+
+                {/* Toggle advanced filters */}
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`flex items-center gap-2 border rounded-xl px-4 py-2.5 text-sm transition-all font-medium ${
+                    showAdvancedFilters || activeFilterCount > 0
+                      ? 'border-[#00E5FF]/50 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
+                      : 'border-white/10 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/5'
+                  }`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filtri {activeFilterCount > 0 && <span className="bg-[#00E5FF] text-black text-[10px] px-1.5 py-0.5 rounded-full ml-1">{activeFilterCount}</span>}
+                </button>
+
+                {activeFilterCount > 0 && (
+                  <button onClick={clearFilters} className="text-xs text-red-400 hover:text-red-300 transition-colors bg-red-400/10 px-3 py-1.5 rounded-xl border border-red-400/20">
+                    Resetta filtri
+                  </button>
+                )}
               </div>
 
-              {/* Status filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-purple/50 transition"
-              >
-                <option value="">Tutti gli stati</option>
-                {(Object.keys(STATUS_CONFIG) as Status[]).map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-
-              {/* Risk filter */}
-              <select
-                value={riskFilter}
-                onChange={(e) => { setRiskFilter(e.target.value); setPage(1); }}
-                className="bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-yellow/50 transition"
-              >
-                <option value="">Tutti i rischi</option>
-                {(Object.keys(RISK_CONFIG) as RiskLevel[]).map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-
-              {/* Toggle advanced filters */}
-              <button
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`flex items-center gap-1.5 border rounded-lg px-3 py-2 text-xs transition ${
-                  showAdvancedFilters || activeFilterCount > 0
-                    ? 'border-cyan/50 text-cyan bg-cyan/10'
-                    : 'border-white/10 text-text-muted hover:border-white/20'
-                }`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                Filtri {activeFilterCount > 0 && `(${activeFilterCount})`}
-              </button>
-
-              {activeFilterCount > 0 && (
-                <button onClick={clearFilters} className="text-xs text-red/70 hover:text-red transition">
-                  Resetta filtri
-                </button>
-              )}
-
               {/* Results count */}
-              <span className="ml-auto text-xs text-text-muted">
-                {filtered.length} di {companies.length} pratiche
-              </span>
+              <div className="text-sm text-white/50 font-[var(--font-space)] bg-black/40 px-4 py-2 rounded-xl border border-white/5">
+                <span className="text-[#00E5FF]">{filtered.length}</span> di {companies.length} pratiche
+              </div>
             </div>
 
             {/* Advanced filters panel */}
@@ -628,10 +579,10 @@ export default function HomeDashboard() {
           </div>
 
           {/* Table */}
-          <div className="flex-1 overflow-x-auto glass-panel">
+          <div className="flex-1 overflow-x-auto bg-[#0A0F14] border border-white/10 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] mt-4">
             <table className="min-w-full table-auto">
               <thead>
-                <tr className="bg-black/30 border-b border-white/10">
+                <tr className="bg-white/5 border-b border-white/10">
                   {([
                     { key: 'name' as SortKey, label: 'Azienda', w: '' },
                     { key: 'pd' as SortKey, label: 'PD', w: 'w-20' },
@@ -644,14 +595,14 @@ export default function HomeDashboard() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className={`px-4 py-2.5 text-left text-[10px] text-text-muted uppercase tracking-wider cursor-pointer hover:text-cyan transition select-none ${col.w}`}
+                      className={`px-6 py-4 text-left text-[11px] text-[#00E5FF] uppercase tracking-wider cursor-pointer hover:text-white transition select-none font-[var(--font-space)] ${col.w}`}
                     >
                       {col.label}
                       <SortIndicator sortKey={col.key} currentKey={sortKey} dir={sortDir} />
                     </th>
                   ))}
-                  <th className="px-4 py-2.5 text-left text-[10px] text-text-muted uppercase tracking-wider w-20">Operatore</th>
-                  <th className="px-2 py-2.5 w-10"></th>
+                  <th className="px-6 py-4 text-left text-[11px] text-[#00E5FF] uppercase tracking-wider font-[var(--font-space)] w-20">Operatore</th>
+                  <th className="px-6 py-4 w-10"></th>
                 </tr>
               </thead>
               <tbody>
@@ -667,38 +618,38 @@ export default function HomeDashboard() {
                   return (
                     <tr
                       key={c.id}
-                      className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-black/10' : ''} hover:bg-white/5 transition group`}
+                      className={`border-b border-white/5 ${idx % 2 === 0 ? 'bg-black/20' : ''} hover:bg-white/5 transition group`}
                     >
-                      <td className="px-4 py-2.5">
-                        <Link href={`/pratica?id=${c.id}`} className="text-cyan hover:text-white transition text-sm font-medium">
+                      <td className="px-6 py-4">
+                        <Link href={`/pratica?id=${c.id}`} className="text-[#00E5FF] hover:text-white transition text-sm font-semibold tracking-wide">
                           {c.name}
                         </Link>
-                        <div className="text-[10px] text-text-muted mt-0.5">{c.piva} · {c.sector}</div>
+                        <div className="text-[11px] text-white/40 mt-1">{c.piva} · {c.sector}</div>
                       </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-sm font-mono ${c.pd > 5 ? 'text-red' : c.pd > 3 ? 'text-yellow' : 'text-green'}`}>
+                      <td className="px-6 py-4">
+                        <span className={`text-sm font-[var(--font-space)] ${c.pd > 5 ? 'text-red-400' : c.pd > 3 ? 'text-yellow-400' : 'text-white'}`}>
                           {c.pd.toFixed(1)}%
                         </span>
                       </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-sm font-mono ${c.altman < 1.8 ? 'text-red' : c.altman < 2.7 ? 'text-yellow' : 'text-green'}`}>
+                      <td className="px-6 py-4">
+                        <span className={`text-sm font-[var(--font-space)] ${c.altman < 1.8 ? 'text-red-400' : c.altman < 2.7 ? 'text-yellow-400' : 'text-white'}`}>
                           {c.altman.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${rCfg.border} ${rCfg.bg} ${rCfg.text}`}>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-semibold uppercase tracking-wider border ${rCfg.border} ${rCfg.bg} ${rCfg.text}`}>
                           {c.risk}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${stCfg.border} ${stCfg.bg} ${stCfg.text}`}>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold uppercase tracking-wider border ${stCfg.border} ${stCfg.bg} ${stCfg.text}`}>
                           <span>{stCfg.icon}</span> {c.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-sm text-text-muted font-mono">{formatCurrency(c.revenue)}</td>
-                      <td className="px-4 py-2.5 text-xs text-text-muted">{formatDate(c.updated)}</td>
-                      <td className="px-4 py-2.5 text-xs text-text-muted">{c.operator}</td>
-                      <td className="px-2 py-2.5">
+                      <td className="px-6 py-4 text-sm text-white/70 font-[var(--font-space)]">{formatCurrency(c.revenue)}</td>
+                      <td className="px-6 py-4 text-xs text-white/50">{formatDate(c.updated)}</td>
+                      <td className="px-6 py-4 text-xs text-white/70">{c.operator}</td>
+                      <td className="px-6 py-4">
                         <QuickActions company={c} onAction={handleAction} />
                       </td>
                     </tr>
@@ -710,23 +661,24 @@ export default function HomeDashboard() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-muted">Righe per pagina:</span>
+            <div className="flex items-center justify-between mt-4 bg-[#0A0F14] border border-white/10 rounded-2xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-white/50">Righe per pagina:</span>
                 <select
                   value={perPage}
                   onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
-                  className="bg-black/30 border border-white/10 rounded py-1 px-2 text-xs text-white focus:outline-none"
+                  className="bg-black/40 border border-white/10 rounded-lg py-1.5 px-3 text-sm text-white focus:outline-none focus:border-[#00E5FF]/50 appearance-none pr-8 cursor-pointer"
+                  style={{ backgroundImage: "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2300E5FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')", backgroundPosition: "right 6px center", backgroundRepeat: "no-repeat", backgroundSize: "12px" }}
                 >
                   {[5, 10, 25].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-xs text-text-muted hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-sm text-white/40 hover:text-white hover:border-white/30 hover:bg-white/5 disabled:opacity-20 disabled:pointer-events-none transition-all"
                 >
                   ‹
                 </button>
@@ -734,10 +686,10 @@ export default function HomeDashboard() {
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-lg border flex items-center justify-center text-xs transition ${
+                    className={`w-10 h-10 rounded-xl border flex items-center justify-center text-sm font-medium transition-all ${
                       p === page
-                        ? 'border-cyan/50 text-cyan bg-cyan/10'
-                        : 'border-white/10 text-text-muted hover:text-white hover:border-white/20'
+                        ? 'border-[#00E5FF]/50 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
+                        : 'border-white/5 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5'
                     }`}
                   >
                     {p}
@@ -746,15 +698,15 @@ export default function HomeDashboard() {
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-xs text-text-muted hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-sm text-white/40 hover:text-white hover:border-white/30 hover:bg-white/5 disabled:opacity-20 disabled:pointer-events-none transition-all"
                 >
                   ›
                 </button>
               </div>
 
-              <span className="text-xs text-text-muted">
-                Pagina {page} di {totalPages}
-              </span>
+              <div className="text-sm font-[var(--font-space)] bg-black/40 border border-white/5 px-4 py-2 rounded-xl text-white/50">
+                Pagina <span className="text-[#00E5FF]">{page}</span> di {totalPages}
+              </div>
             </div>
           )}
         </div>

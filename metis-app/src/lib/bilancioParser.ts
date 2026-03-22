@@ -1,6 +1,6 @@
 // ─── Client-Side Bilancio Parser ──────────────────────────────────────────────
 // Parses Italian financial statements from text files into structured data.
-// Supports both minimal (like Bilancio_NanoBanana.txt) and extended formats.
+// Supports both minimal (like Bilancio_DeltaMeccanica.txt) and extended formats.
 
 import { ParsedBilancio } from './types';
 
