@@ -68,10 +68,10 @@ export default function WidgetContainer({
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-2">
-        <h3 className="text-white font-medium text-lg tracking-wide">{title}</h3>
+        <h3 className="text-white font-space font-bold text-base tracking-widest uppercase">{title}</h3>
         <div className="flex items-center gap-3">
           {!isEditMode && onMaximize && (
-            <button onClick={onMaximize} className="text-white/30 hover:text-[#00E5FF] transition-colors p-1" title="Maximize Widget">
+            <button onClick={onMaximize} className="text-white/30 hover:text-cyan transition-colors p-1" title="Espandi">
               <Maximize2 size={14} />
             </button>
           )}
@@ -82,12 +82,12 @@ export default function WidgetContainer({
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-5 pb-5 pt-2 flex flex-col">
+      <div className="flex-1 px-5 pb-5 pt-2 flex flex-col font-space">
         {children}
       </div>
 
       {/* Optional Glow Effect on hover */}
-      <div className="absolute inset-0 pointer-events-none border border-transparent group-hover:border-[#8dbba0]/20 rounded-2xl transition-colors duration-500" />
+      <div className="absolute inset-0 pointer-events-none border border-transparent group-hover:border-cyan/30 rounded-2xl transition-colors duration-500" />
     </div>
   );
 }

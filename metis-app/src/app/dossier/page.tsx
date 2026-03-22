@@ -9,6 +9,7 @@ import { runCCIICheck } from "@/lib/cciiCompliance";
 import { runEBACheck } from "@/lib/ebaCompliance";
 import { getBenchmarkMetadata, refreshBenchmarks } from "@/lib/atecoBenchmarks";
 import { calculateAllModels } from "@/lib/riskModels";
+import FifaRiskRadar from "@/components/FifaRiskRadar";
 
 // Mock company data for when navigating from pratica
 const COMPANY_DATA: Record<number, { name: string; dossier_id: string; piva: string; lat: number; lng: number; indirizzo: string }> = {
@@ -215,46 +216,103 @@ function MetisApp() {
 
   if (step === "upload") {
     return (
-      <main className="flex items-center justify-center h-screen w-screen overflow-hidden relative">
-        {/* Background Banner */}
-        <div className="absolute inset-0 z-0">
-          <img src="/hero-banner.png" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[rgba(9,13,20,0.75)]"></div>
-        </div>
-        <div className="glass-panel p-10 max-w-[650px] w-full text-center relative z-10 mx-4">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-14 h-14 rounded-xl" />
-            <span className="font-space font-bold text-5xl tracking-widest text-white">METIS</span>
-          </div>
-          <div className="font-space text-[10px] tracking-[0.4em] text-text-muted uppercase mb-1">by FINOMNIA</div>
-          <p className="text-text-main text-base mb-2">Automazione «Glass-Box» per l'Istruttoria di Fido</p>
-          <p className="text-text-muted text-sm mb-10">Conforme con EU AI Act - Nessun processo Black Box autorizzato.</p>
+      <main className="flex items-center justify-center flex-1 w-full h-screen bg-[var(--color-void)] relative overflow-hidden font-space">
+        
+        {/* Ambient Background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(0,229,255,0.1),_transparent_50%)] pointer-events-none"></div>
+        <div className="absolute top-[20%] left-[15%] w-64 h-64 bg-purple/20 rounded-full blur-[100px] animate-pulse"></div>
+        <div className="absolute bottom-[20%] right-[15%] w-80 h-80 bg-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+        {/* Back Button */}
+        <button 
+          onClick={() => router.push("/home")}
+          className="absolute top-8 left-8 z-20 group flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/70 hover:text-white backdrop-blur-md transition shadow-lg"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
+          <span className="text-sm font-space font-medium tracking-wide">Torna Indietro</span>
+        </button>
+
+        {/* Two-Panel Card */}
+        <div className="relative z-10 flex flex-col md:flex-row max-w-[1000px] w-full mx-6 rounded-2xl overflow-hidden glass-panel border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           
-          <div className="relative border-2 border-dashed border-glass-border hover:border-cyan transition rounded-xl p-16 mb-8 cursor-pointer bg-black/20 group">
-            <input 
-              type="file" 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-              onChange={handleFileChange}
-            />
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-dim flex items-center justify-center group-hover:bg-cyan transition">
-               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-cyan group-hover:text-black">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-               </svg>
-            </div>
-            <p className="font-space text-xl text-white mb-2">Trascina qui i documenti cliente</p>
-            <p className="text-xs text-text-muted">Formati Supportati: Visura C.R. (PDF), Bilancio Aziendale (XBRL, PDF)</p>
+          {/* Left Panel — Brand */}
+          <div className="hidden md:flex flex-col justify-between w-1/2 p-12 bg-gradient-to-br from-black/80 to-[rgba(14,21,33,1)] border-r border-white/5 relative">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
             
-            {selectedFile && (
-               <p className="mt-6 font-space text-sm text-cyan bg-cyan-dim py-2 px-4 rounded animate-[fadeUp_0.3s_ease-out_forwards]">Documento Riconosciuto: <strong>{selectedFile.name}</strong></p>
-            )}
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-12 h-12 rounded-xl shadow-[0_0_15px_rgba(0,229,255,0.2)]" />
+                <span className="font-space font-bold text-3xl tracking-widest text-white">METIS</span>
+              </div>
+              <div className="inline-block border border-cyan/30 bg-cyan/10 text-cyan text-[10px] font-space tracking-widest uppercase px-3 py-1 rounded-full mb-8">
+                AI Credit Underwriting v2.0
+              </div>
+              <h2 className="text-3xl font-light text-white leading-tight mb-6">
+                Analisi <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan to-purple">Automatica.</span><br/>
+                Decisione con <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green to-yellow">Fiducia.</span>
+              </h2>
+              <p className="text-text-muted text-sm leading-relaxed max-w-sm">
+                Carica un bilancio aziendale o una visura Centrale Rischi. Lo Swarm Multi-Agente elaborerà il dossier in pochi secondi, in modalità Glass-Box conforme EU AI Act.
+              </p>
+
+              <div className="mt-8 space-y-3">
+                {['EU AI Act Conforme', 'D.Lgs. 14/2019 CCII', 'EBA/GL/2020/06', 'Glass-Box — No Black Box'].map(badge => (
+                  <div key={badge} className="flex items-center gap-2 text-white/60 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan shrink-0"></div>
+                    {badge}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-16 font-space text-[10px] tracking-widest uppercase text-text-muted opacity-50">
+              Powered by Finomnia AI Research
+            </div>
           </div>
-          
-          <button 
-            onClick={startAnalysis}
-            className="w-full bg-purple hover:bg-[#8e3bd6] transition text-white font-space font-semibold py-4 rounded-lg shadow-[0_0_25px_rgba(123,44,191,0.5)] tracking-wider"
-          >
-            AVVIA ANALISI MULTI-AGENTE
-          </button>
+
+          {/* Right Panel — Upload */}
+          <div className="flex flex-col justify-center w-full md:w-1/2 p-10 lg:p-14 bg-[rgba(9,13,20,0.6)] backdrop-blur-md">
+            
+            <div className="mb-8">
+              <h3 className="font-space text-2xl font-bold text-white mb-2">Carica Nuovo Dossier</h3>
+              <p className="text-text-muted text-xs">Trascina o clicca per selezionare il documento da analizzare.</p>
+            </div>
+
+            {/* Drop Zone */}
+            <div className="relative border-2 border-dashed border-white/10 hover:border-cyan/60 transition-all rounded-xl p-10 mb-6 cursor-pointer bg-black/20 group">
+              <input 
+                type="file" 
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                onChange={handleFileChange}
+              />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-cyan/10 flex items-center justify-center group-hover:bg-cyan/20 transition border border-cyan/20 group-hover:border-cyan/50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-cyan">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <p className="font-space text-base text-white text-center mb-1">Trascina qui i documenti cliente</p>
+              <p className="text-xs text-text-muted text-center">PDF • XBRL • TXT — Bilancio, Visura CR</p>
+              
+              {selectedFile && (
+                <div className="mt-5 flex items-center gap-2 justify-center bg-cyan/10 border border-cyan/20 py-2 px-4 rounded-lg">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"></div>
+                  <p className="font-space text-sm text-cyan">Riconosciuto: <strong>{selectedFile.name}</strong></p>
+                </div>
+              )}
+            </div>
+
+            <button 
+              onClick={startAnalysis}
+              className="w-full py-3.5 rounded-lg font-space font-bold uppercase tracking-widest transition-all relative overflow-hidden group border border-transparent bg-gradient-to-r from-purple to-cyan text-white hover:shadow-[0_0_25px_rgba(123,44,191,0.4)]"
+            >
+              <span className="relative z-10">Avvia Analisi Multi-Agente</span>
+              <div className="absolute inset-0 -translate-x-full bg-white/10 skew-x-12 group-hover:translate-x-full transition-transform duration-700"></div>
+            </button>
+
+            <div className="mt-6 text-center text-xs text-text-muted">
+              Nessun dato trasmesso a terzi · Elaborazione locale conforme GDPR
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -330,8 +388,9 @@ function MetisApp() {
         )}
         <header className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.push("/home")} className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <button onClick={() => router.push("/home")} className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/60 hover:text-white transition shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
+              <span className="text-xs font-space font-medium tracking-wide">Indietro</span>
             </button>
             <div className="flex flex-col">
             <h1 className="font-space text-2xl font-semibold text-white">
@@ -533,64 +592,10 @@ function MetisApp() {
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
               
-              {/* Multi-Model Risk Selector — Expand/Collapse */}
-              <div className="mb-6 space-y-2">
-                {['altman', 'ohlson', 'zmijewski', 'modigliani'].map((key) => {
-                  const m = safeData?.risk_models?.[key];
-                  const label = m?.name || (key === 'altman' ? 'Altman Z-Score' : key === 'ohlson' ? 'Ohlson O-Score' : key === 'zmijewski' ? 'Zmijewski X-Score' : 'Modigliani-Miller');
-                  const isExpanded = selectedModel === key;
-                  const isDistress = m?.status?.includes('DISTRESS') || m?.status?.includes('ALTO') || m?.status?.includes('OVER');
-                  const cc = isDistress
-                    ? { text: 'text-red', b30: 'border-red/30', b40: 'border-red/40', b50: 'border-red/50', bg: 'bg-red/10' }
-                    : { text: 'text-cyan', b30: 'border-cyan/30', b40: 'border-cyan/40', b50: 'border-cyan/50', bg: 'bg-cyan/10' };
-                  const mainValue = key === 'modigliani' ? (m?.leverage ?? 0.34) : (m?.score ?? (key === 'altman' ? 3.12 : key === 'ohlson' ? -2.85 : -1.72));
-                  const extraLabel = key === 'modigliani' ? `WACC ${m?.wacc || 7.2}%` : (key !== 'altman' && m?.pd_pct !== undefined) ? `PD ${m.pd_pct}%` : '';
-
-                  return (
-                    <div key={key} className={`bg-black/30 border rounded-xl overflow-hidden transition-all duration-300 ${
-                      isExpanded ? 'border-cyan/30' : 'border-glass-border'
-                    }`}>
-                      {/* Collapsed Bar — Always Visible */}
-                      <button onClick={() => setSelectedModel(isExpanded ? '' : key)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition group">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${isDistress ? 'bg-red shadow-[0_0_6px_var(--color-red)]' : 'bg-cyan shadow-[0_0_6px_var(--color-cyan)]'}`}></div>
-                          <span className="font-space text-[11px] text-white font-semibold tracking-wider">{label}</span>
-                          <span className="text-[9px] text-text-muted hidden sm:inline">({m?.author || ''})</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {extraLabel && <span className={`text-[9px] px-1.5 py-0.5 rounded border font-space font-semibold ${cc.b30} ${cc.text} ${cc.bg}`}>{extraLabel}</span>}
-                          <span className={`font-space text-lg font-bold ${cc.text}`}>{mainValue}</span>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded border font-semibold ${cc.b40} ${cc.text} ${cc.bg}`}>{m?.status || 'N/A'}</span>
-                          <svg className={`w-3.5 h-3.5 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </button>
-
-                      {/* Expanded Detail */}
-                      {isExpanded && (
-                        <div className="px-5 pb-4 pt-1 border-t border-glass-border animate-[fadeUp_0.2s_ease-out_forwards]">
-                          <div className="flex items-end gap-4 mb-3">
-                            <span className={`font-space text-5xl font-bold ${cc.text}`}>{mainValue}</span>
-                            <div className="flex flex-col gap-1 mb-1">
-                              <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold tracking-wider ${cc.b50} ${cc.text} ${cc.bg}`}>{m?.status || 'SAFE ZONE'}</span>
-                              {key !== 'altman' && key !== 'modigliani' && m?.pd_pct !== undefined && (
-                                <span className="text-[10px] text-text-muted">PD stimata: <strong className={cc.text}>{m.pd_pct}%</strong></span>
-                              )}
-                              {key === 'modigliani' && (
-                                <span className="text-[10px] text-text-muted">WACC: <strong className={cc.text}>{m?.wacc || 7.2}%</strong></span>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-[10px] text-text-muted border-l-2 border-glass-border pl-2 leading-relaxed">
-                            {m?.description || 'Calcolo strutturale matematico deterministico.'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              {/* FIFA-style Risk Radar — replaces accordion */}
+              <div className="mb-6 bg-black/20 border border-glass-border rounded-xl p-4">
+                <div className="text-[10px] text-text-muted uppercase tracking-widest font-space mb-3">Credit Risk Radar</div>
+                <FifaRiskRadar compact={false} />
               </div>
 
               {/* DSCR Forecast - 3 Scenari (Module 7) */}

@@ -63,7 +63,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
 
   useEffect(() => {
     // Load persisted layout
-    const saved = localStorage.getItem("metis-dashboard-layout");
+    const saved = localStorage.getItem("metis-dashboard-layout-v2");
     if (saved) {
       try {
         setWidgets(JSON.parse(saved));
@@ -74,7 +74,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
 
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem("metis-dashboard-layout", JSON.stringify(widgets));
+      localStorage.setItem("metis-dashboard-layout-v2", JSON.stringify(widgets));
     }
   }, [widgets, mounted]);
 
@@ -112,11 +112,11 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
   if (!mounted) return null; // Prevent hydration mismatch
 
   return (
-    <div className="w-full mb-8">
+    <div className="w-full mb-8 font-space">
       {/* Dashboard Controls */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-[var(--font-space)] tracking-wide text-[#00E5FF]">
-          Command Center
+        <h2 className="text-xl font-bold tracking-widest uppercase text-cyan">
+          <span className="text-white/40 font-normal mr-2">METIS</span> Dashboard
         </h2>
         <div className="flex gap-2">
           {isEditMode && (
@@ -125,7 +125,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
                 <button
                   key={t}
                   onClick={() => addWidget(t as WidgetType)}
-                  className="flex items-center gap-1 text-[10px] uppercase text-[#00E5FF] bg-[#0A0F14] px-3 py-1.5 rounded-full border border-white/10 hover:text-[#00E5FF] hover:border-[#00E5FF] transition-colors"
+                  className="flex items-center gap-1 text-[10px] uppercase text-cyan bg-[#0A0F14] px-3 py-1.5 rounded-full border border-white/10 hover:border-cyan transition-colors font-space tracking-widest"
                 >
                   <Plus size={12} /> {t}
                 </button>
@@ -134,14 +134,14 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
           )}
           <button
             onClick={() => setIsEditMode(!isEditMode)}
-            className={`flex items-center gap-2 px-4 py-2 text-xs rounded-xl border transition-colors shadow-lg ${
+            className={`flex items-center gap-2 px-4 py-2 text-xs rounded-xl border transition-colors shadow-lg font-space uppercase tracking-widest font-semibold ${
               isEditMode
-                ? "bg-[#00E5FF] text-[#0A0F14] border-[#00E5FF] shadow-[#00E5FF]/10"
-                : "bg-[#0A0F14] text-[#00E5FF] border-white/10 hover:bg-[#111820] shadow-black/50"
+                ? "bg-cyan text-void border-cyan shadow-[0_0_15px_rgba(0,229,255,0.4)]"
+                : "bg-black/30 text-cyan border-white/10 hover:border-cyan/50 hover:bg-cyan/5"
             }`}
           >
             <Settings size={14} />
-            {isEditMode ? "Save Layout" : "Customize"}
+            {isEditMode ? "Salva Layout" : "Modifica AI"}
           </button>
         </div>
       </div>

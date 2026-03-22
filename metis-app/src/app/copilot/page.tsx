@@ -15,7 +15,7 @@ export default function CopilotPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Benvenuto nel terminale **ARIA**. Sono il tuo assistente agentico per l'onboarding e la delibera del credito.\n\nSto monitorando la tua pratica in tempo reale. Posso aiutarti a caricare i documenti, spiegarti le metriche di rischio o fornirti un report preliminare sulla solvibilità.\n\nCosa desideri approfondire?",
+      content: "Benvenuto nel terminale **METIS**. Sono il tuo assistente agentico per l'onboarding e la delibera del credito.\n\nSto monitorando il portafoglio in tempo reale. Posso aiutarti a caricare i documenti, spiegarti le metriche di rischio o fornirti un report preliminare sulla solvibilità di specifiche pratiche.\n\nCosa desideri approfondire?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -77,8 +77,8 @@ export default function CopilotPage() {
               </div>
             </div>
             <div>
-              <h1 className="font-space text-base font-bold text-white tracking-[0.2em] uppercase">ARIA <span className="text-cyan/70 font-normal ml-2">v2.0</span></h1>
-              <p className="text-[10px] text-text-muted font-space tracking-widest uppercase">Autonomous Risk Intelligence Auditor</p>
+              <h1 className="font-space text-base font-bold text-white tracking-[0.2em] uppercase">METIS <span className="text-cyan/70 font-normal ml-2">v2.0</span></h1>
+              <p className="text-[10px] text-text-muted font-space tracking-widest uppercase">Agentic Credit Intelligence</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -119,7 +119,7 @@ export default function CopilotPage() {
                   <div className={`flex-1 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                     <div className="flex items-center gap-3 mb-2 px-1">
                        <span className="text-[10px] font-space uppercase tracking-widest text-text-muted">
-                         {msg.role === "assistant" ? "ARIA Auditor" : "Commercial Officer"}
+                         {msg.role === "assistant" ? "METIS Copilot" : "Commercial Officer"}
                        </span>
                        <span className="w-1 h-1 rounded-full bg-white/10" />
                        <span className="text-[9px] text-white/20 font-space">
@@ -176,7 +176,7 @@ export default function CopilotPage() {
                      <input
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Interroga ARIA per estensione fidi o analisi rischio..."
+                      placeholder="Interroga METIS per estensione fidi o analisi rischio..."
                       className="w-full bg-transparent text-[14px] text-white outline-none placeholder:text-white/20 font-medium"
                     />
                   </div>
@@ -246,7 +246,7 @@ export default function CopilotPage() {
                 <div className="space-y-6">
                   {[
                     { label: "Document Ingestion", active: true, completed: true },
-                    { label: "Explainable AI (ARIA)", active: true, completed: false },
+                    { label: "Explainable AI (METIS)", active: true, completed: false },
                     { label: "Underwriter Review", active: false, completed: false },
                     { label: "Credit Approval", active: false, completed: false },
                   ].map((step, i) => (
