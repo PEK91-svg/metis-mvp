@@ -337,6 +337,20 @@ export interface FairnessCheckResult {
   overallStatus: 'CONFORME' | 'PARZIALMENTE CONFORME' | 'NON CONFORME';
 }
 
+// ── CCII — D.Lgs. 14/2019 ─────────────────────────────────────────────────────
+// Re-exported from cciiCompliance.ts for convenience
+export type { CCIIStatus, CCIIIndicator, CCIIResult } from './cciiCompliance';
+
+// ── EBA/GL/2020/06 ────────────────────────────────────────────────────────────
+// Re-exported from ebaCompliance.ts for convenience
+export type { EBAStatus, EBACheckItem, EBAResult } from './ebaCompliance';
+
+// ── Centrale Rischi Adapter ───────────────────────────────────────────────────
+export type { CRLineData, CRAdapterData } from '../components/CentraleRischiAdapter';
+
+// ── Benchmark Metadata ────────────────────────────────────────────────────────
+export type { BenchmarkMetadata } from './atecoBenchmarks';
+
 // ── Pratica (summary for Home list) ───────────────────────────────────────────
 export interface Pratica {
   id: string;
