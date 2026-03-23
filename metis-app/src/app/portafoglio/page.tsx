@@ -97,6 +97,7 @@ function formatDate(d: string): string {
 // ─── Subcomponents ───────────────────────────────────────────────────────────
 
 function StatusDistributionChart({ companies }: { companies: Company[] }) {
+  const [hovered, setHovered] = useState<Status | null>(null);
   const total = companies.length || 1;
   const counts: Record<Status, number> = {
     'APPROVATA': 0, 'IN ANALISI': 0, 'DA REVISIONARE': 0, 'SOSPESA': 0, 'RIFIUTATA': 0,
@@ -112,27 +113,66 @@ function StatusDistributionChart({ companies }: { companies: Company[] }) {
   };
 
   return (
-    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden group hover:border-cyan/30 transition-all duration-300">
+    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden flex flex-col justify-between">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Stati</h3>
-      <div className="flex gap-1 h-3 rounded-full overflow-hidden bg-black/30 mb-3">
-        {bars.filter(b => b.count > 0).map(b => (
-          <div key={b.status} style={{ width: `${b.pct}%`, backgroundColor: colorMap[b.status] }} className="transition-all duration-500" title={`${b.status}: ${b.count}`} />
-        ))}
+      
+      <div className="relative flex gap-1 h-4 rounded-full bg-black/30 mb-4 cursor-crosshair">
+        {bars.filter(b => b.count > 0).map(b => {
+          const isHov = hovered === b.status;
+          return (
+            <div
+              key={b.status}
+              onMouseEnter={() => setHovered(b.status)}
+              onMouseLeave={() => setHovered(null)}
+              className="relative transition-all duration-300 rounded-full"
+              style={{
+                width: `${b.pct}%`,
+                backgroundColor: isHov ? colorMap[b.status] : `${colorMap[b.status]}80`,
+                boxShadow: isHov ? `0 0 12px ${colorMap[b.status]}` : "none",
+                transform: isHov ? "scaleY(1.3)" : "scaleY(1)"
+              }}
+            >
+              {isHov && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none">
+                  <div className="px-3 py-1.5 rounded-lg border whitespace-nowrap flex flex-col items-center" style={{ background: "#0A0F1Aee", borderColor: `${colorMap[b.status]}60` }}>
+                    <span className="text-[14px] font-space font-bold" style={{ color: colorMap[b.status], textShadow: `0 0 8px ${colorMap[b.status]}` }}>{b.count}</span>
+                    <span className="text-[8px] uppercase tracking-widest text-white/50">{b.status}</span>
+                  </div>
+                  <div className="w-2 h-2 flex rotate-45 mx-auto -mt-[5px] rounded-sm" style={{ background: `${colorMap[b.status]}80` }} />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {bars.map(b => (
-          <div key={b.status} className="flex items-center gap-1.5 text-[11px]">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorMap[b.status] }} />
-            <span className="text-text-muted">{b.status}</span>
-            <span className="text-white font-semibold">{b.count}</span>
-          </div>
-        ))}
+
+      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-auto">
+        {bars.map(b => {
+          const isHov = hovered === b.status;
+          return (
+            <div
+              key={b.status}
+              className="flex items-center gap-1.5 text-[11px] transition-all cursor-crosshair"
+              onMouseEnter={() => setHovered(b.status)}
+              onMouseLeave={() => setHovered(null)}
+              style={{ opacity: hovered && !isHov ? 0.4 : 1 }}
+            >
+              <div
+                className="w-2.5 h-2.5 rounded-full transition-shadow"
+                style={{ backgroundColor: colorMap[b.status], boxShadow: isHov ? `0 0 8px ${colorMap[b.status]}` : "none" }}
+              />
+              <span className="text-white/60 text-[9px] uppercase tracking-widest">{b.status}</span>
+              <span className="text-white font-space font-bold">{b.count}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function RiskDistributionChart({ companies }: { companies: Company[] }) {
+  const [hovered, setHovered] = useState<RiskLevel | null>(null);
   const total = companies.length || 1;
   const counts: Record<RiskLevel, number> = { 'BASSO': 0, 'MEDIO': 0, 'ALTO': 0, 'CRITICO': 0 };
   companies.forEach(c => counts[c.risk]++);
@@ -142,21 +182,40 @@ function RiskDistributionChart({ companies }: { companies: Company[] }) {
   };
 
   return (
-    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden group hover:border-yellow/30 transition-all duration-300">
+    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Rischio</h3>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2 h-full pb-2">
         {(Object.keys(counts) as RiskLevel[]).map(r => {
           const pct = (counts[r] / total) * 100;
+          const isHov = hovered === r;
+          const c = riskColors[r];
           return (
-            <div key={r} className="flex flex-col items-center gap-1">
-              <div className="w-full h-16 bg-black/30 rounded-md relative overflow-hidden flex items-end">
+            <div
+              key={r}
+              className="flex flex-col items-center justify-end gap-1 cursor-crosshair relative"
+              onMouseEnter={() => setHovered(r)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {isHov && (
+                <div className="absolute bottom-full mb-1 z-50 pointer-events-none">
+                  <div className="px-2 py-1 rounded border whitespace-nowrap text-center" style={{ background: "#0A0F1Aee", borderColor: `${c}60` }}>
+                    <div className="text-[14px] font-space font-bold" style={{ color: c }}>{counts[r]}</div>
+                    <div className="text-[8px] uppercase tracking-widest text-white/50">{r}</div>
+                  </div>
+                </div>
+              )}
+              <div className="w-full h-16 bg-white/5 rounded-md relative flex items-end">
                 <div
-                  className="w-full rounded-t-sm transition-all duration-700"
-                  style={{ height: `${Math.max(pct, 5)}%`, backgroundColor: riskColors[r], opacity: r === 'CRITICO' ? 0.8 : 0.6 }}
+                  className="w-full rounded-b-md transition-all duration-300"
+                  style={{
+                    height: `${Math.max(pct, 5)}%`,
+                    backgroundColor: isHov ? c : `${c}60`,
+                    boxShadow: isHov ? `0 -4px 12px ${c}40` : "none"
+                  }}
                 />
               </div>
-              <span className="text-[10px] text-text-muted uppercase">{r}</span>
-              <span className="text-xs font-bold" style={{ color: riskColors[r] }}>{counts[r]}</span>
+              <span className="text-[9px] text-white/50 uppercase font-space tracking-wider">{r}</span>
+              <span className="text-[11px] font-bold font-space" style={{ color: c }}>{counts[r]}</span>
             </div>
           );
         })}
@@ -166,6 +225,7 @@ function RiskDistributionChart({ companies }: { companies: Company[] }) {
 }
 
 function PDTrendMiniChart({ companies }: { companies: Company[] }) {
+  const [hovIdx, setHovIdx] = useState<number | null>(null);
   const sorted = [...companies].sort((a, b) => a.pd - b.pd);
   const max = Math.max(...companies.map(c => c.pd), 1);
   const step = 100 / (sorted.length || 1);
@@ -180,30 +240,59 @@ function PDTrendMiniChart({ companies }: { companies: Company[] }) {
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
   return (
-    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden group hover:border-cyan/30 transition-all duration-300">
+    <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">PD Distribution</h3>
-      <svg viewBox="0 0 100 60" className="w-full h-20" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="pdGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* Area fill */}
-        <path d={`${pathD} L ${points[points.length - 1]?.x ?? 0} 55 L ${points[0]?.x ?? 0} 55 Z`} fill="url(#pdGrad)" />
-        {/* Line */}
-        <path d={pathD} fill="none" stroke="#00E5FF" strokeWidth="0.8" />
-        {/* Danger threshold */}
-        <line x1="0" y1={100 - (5 / max) * 80 - 10} x2="100" y2={100 - (5 / max) * 80 - 10} stroke="#FF0055" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.5" />
-        {/* Dots */}
-        {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="1.2" fill={p.pd > 5 ? '#FF0055' : '#00E5FF'} />
-        ))}
-      </svg>
-      <div className="flex justify-between text-[9px] text-text-muted mt-1">
+      
+      {hovIdx !== null && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="px-3 py-1.5 rounded-lg border text-center whitespace-nowrap" style={{ background: "#0A0F1Aee", borderColor: points[hovIdx].pd > 5 ? "#FF005560" : "#00E5FF60" }}>
+            <div className="text-[10px] text-white/50 uppercase tracking-widest">{points[hovIdx].name}</div>
+            <div className="text-[18px] font-space font-black mt-0.5" style={{ color: points[hovIdx].pd > 5 ? "#FF0055" : "#00E5FF", textShadow: `0 0 10px ${points[hovIdx].pd > 5 ? "#FF0055" : "#00E5FF"}` }}>{points[hovIdx].pd.toFixed(1)}%</div>
+          </div>
+          <div className="w-2 h-2 rotate-45 mx-auto -mt-[5px]" style={{ background: points[hovIdx].pd > 5 ? "#FF005580" : "#00E5FF80" }} />
+        </div>
+      )}
+
+      <div className="relative h-20 w-full" onMouseLeave={() => setHovIdx(null)}>
+        <svg viewBox="0 0 100 60" className="w-full h-full absolute inset-0" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="pdGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#00E5FF" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="pdGradDanger" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FF0055" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#FF0055" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${pathD} L 100 60 L 0 60 Z`} fill="url(#pdGrad)" />
+          <path d={pathD} fill="none" stroke="#00E5FF" strokeWidth="0.8" />
+          <line x1="0" y1={100 - (5 / max) * 80 - 10} x2="100" y2={100 - (5 / max) * 80 - 10} stroke="#FF0055" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.6" />
+          
+          {points.map((p, i) => {
+            const isHov = hovIdx === i;
+            const isDanger = p.pd > 5;
+            const c = isDanger ? "#FF0055" : "#00E5FF";
+            return (
+              <g key={i}>
+                {isHov && <line x1={p.x} y1={0} x2={p.x} y2={60} stroke={c} strokeWidth={0.5} strokeOpacity={0.4} strokeDasharray="1,1" />}
+                <circle cx={p.x} cy={p.y} r={isHov ? 2.5 : 1.2} fill={c} opacity={isHov ? 1 : 0.6} style={{ filter: isHov ? `drop-shadow(0 0 5px ${c})` : "none", transition: "all 0.15s" }} />
+              </g>
+            );
+          })}
+        </svg>
+
+        <div className="absolute inset-0 flex items-end">
+          {points.map((p, i) => (
+            <div key={i} className="flex-1 h-full cursor-crosshair" onMouseEnter={() => setHovIdx(i)} />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-between text-[9px] text-white/40 mt-2 font-space uppercase">
         <span>Min: {Math.min(...companies.map(c => c.pd)).toFixed(1)}%</span>
-        <span className="text-red/60">Soglia: 5.0%</span>
-        <span>Max: {Math.max(...companies.map(c => c.pd)).toFixed(1)}%</span>
+        <span className="text-red-400">Soglia: 5.0%</span>
+        <span>Max: {max.toFixed(1)}%</span>
       </div>
     </div>
   );
