@@ -1,12 +1,14 @@
 "use client";
+import { useState } from "react";
 
 export function PortfolioHealthWidget() {
   const metrics = [
-    { label: "Coverage Ratio",   value: 83, color: "#00E5FF" },
-    { label: "Exposure",         value: 67, color: "#a78bfa" },
-    { label: "Liquidity Score",  value: 91, color: "#34d399" },
-    { label: "Concentration",    value: 44, color: "#facc15" },
+    { label: "Coverage Ratio",   value: 83, color: "#00E5FF", desc: "Il rapporto tra attivi e passivi del portafoglio" },
+    { label: "Exposure",         value: 67, color: "#a78bfa", desc: "Esposizione creditizia normalizzata" },
+    { label: "Liquidity Score",  value: 91, color: "#34d399", desc: "Disponibilità di liquidità a breve termine" },
+    { label: "Concentration",    value: 44, color: "#facc15", desc: "Indice di concentrazione del portafoglio" },
   ];
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full w-full gap-5">
@@ -30,19 +32,40 @@ export function PortfolioHealthWidget() {
               <span className="text-[11px] text-white/60">{m.label}</span>
               <span className="text-[11px] font-[var(--font-space)]" style={{ color: m.color }}>{m.value}%</span>
             </div>
-            <div className="h-2 bg-white/5 rounded-full overflow-hidden cursor-help relative group">
+            <div
+              className="h-2 bg-white/5 rounded-full overflow-visible cursor-crosshair relative"
+              onMouseEnter={() => setHoveredBar(m.label)}
+              onMouseLeave={() => setHoveredBar(null)}
+            >
               <div
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${m.value}%`,
-                  background: `linear-gradient(90deg, ${m.color}88, ${m.color})`,
-                  boxShadow: `0 0 8px ${m.color}60`,
+                  background: hoveredBar === m.label
+                    ? m.color
+                    : `linear-gradient(90deg, ${m.color}88, ${m.color})`,
+                  boxShadow: hoveredBar === m.label
+                    ? `0 0 14px ${m.color}, 0 0 4px ${m.color}`
+                    : `0 0 8px ${m.color}60`,
                 }}
               />
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max px-3 py-1.5 bg-[#0A0F14]/95 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all pointer-events-none z-50 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />
-                <span className="text-[11px] font-space text-white">{m.label}: <strong style={{ color: m.color }}>{m.value}%</strong></span>
-              </div>
+              {/* Tooltip */}
+              {hoveredBar === m.label && (
+                <div
+                  className="absolute -top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+                >
+                  <div
+                    className="px-3 py-2 rounded-xl flex flex-col items-center border whitespace-nowrap"
+                    style={{ background: "#0A0F14ee", borderColor: `${m.color}60` }}
+                  >
+                    <span className="text-[18px] font-space font-black leading-none" style={{ color: m.color }}>
+                      {m.value}%
+                    </span>
+                    <span className="text-[9px] uppercase tracking-widest text-white/50 mt-0.5">{m.label}</span>
+                  </div>
+                  <div className="w-2 h-2 rotate-45 mx-auto -mt-[5px] rounded-sm" style={{ background: `${m.color}60` }} />
+                </div>
+              )}
             </div>
           </div>
         ))}

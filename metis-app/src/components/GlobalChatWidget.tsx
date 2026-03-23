@@ -29,17 +29,52 @@ export function GlobalChatWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
-  
-  // Drag state
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [hasDragged, setHasDragged] = useState(false);
-  const dragRef = useRef({ startX: 0, startY: 0, lastX: 0, lastY: 0 });
+
+  // --- Drag state stored as fixed position from viewport edge ---
+  const [pos, setPos] = useState({ bottom: 24, right: 24 });
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0, bottom: 24, right: 24 });
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    isDragging.current = true;
+    hasDragged.current = false;
+    dragStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+      bottom: pos.bottom,
+      right: pos.right,
+    };
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const dx = e.clientX - dragStart.current.x;
+      const dy = e.clientY - dragStart.current.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDragged.current = true;
+      setPos({
+        right: Math.max(8, dragStart.current.right - dx),
+        bottom: Math.max(8, dragStart.current.bottom - dy),
+      });
+    };
+    const onUp = () => { isDragging.current = false; };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const handleFabClick = () => {
+    if (hasDragged.current) return;
+    setIsOpen(!isOpen);
+  };
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-
-  // Hide the floating widget on the /copilot page since it already has a full-screen chat
   const isCopilotPage = pathname === "/copilot";
 
   useEffect(() => {
@@ -56,10 +91,7 @@ export function GlobalChatWidget() {
     setMsgs(next);
     setInput("");
     setLoading(true);
-    
-    // Attempt to open chat if it was closed by the user but they still managed to send (e.g., via quick actions outside, though not possible here)
     if (!isOpen) setIsOpen(true);
-
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -78,54 +110,15 @@ export function GlobalChatWidget() {
 
   const QUICK = ["Portafoglio Rischio", "Sintesi Dossier Alpha", "Verifica EBA Dashboard"];
 
-  // Drag handlers
-  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    setIsDragging(true);
-    setHasDragged(false);
-    e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      lastX: offset.x,
-      lastY: offset.y,
-    };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (!isDragging) return;
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) setHasDragged(true);
-    setOffset({
-      x: dragRef.current.lastX + dx,
-      y: dragRef.current.lastY + dy,
-    });
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
-    setIsDragging(false);
-    e.currentTarget.releasePointerCapture(e.pointerId);
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (hasDragged) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    setIsOpen(!isOpen);
-  };
-
   if (isCopilotPage) return null;
 
   return (
-    <div 
-      className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end pointer-events-none"
-      style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+    <div
+      className="fixed z-[9999] flex flex-col items-end pointer-events-none select-none"
+      style={{ bottom: pos.bottom, right: pos.right }}
     >
-      
       {/* Popover Chat Interface */}
-      <div 
+      <div
         className={`pointer-events-auto bg-[#0A0F14]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-bottom-right mb-4 ${
           isOpen ? "opacity-100 scale-100 w-[380px] h-[550px]" : "opacity-0 scale-95 w-[380px] h-[0px] border-none"
         }`}
@@ -179,11 +172,7 @@ export function GlobalChatWidget() {
             <div className="flex items-center gap-2 px-3 py-2 w-[80%]">
               <div className="flex gap-1.5 bg-black/40 px-3 py-2 rounded-full border border-white/5">
                 {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"
-                    style={{ animationDelay: `${i * 0.15}s` }}
-                  />
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
             </div>
@@ -191,7 +180,7 @@ export function GlobalChatWidget() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Footer actions and Input */}
+        {/* Footer */}
         <div className="p-3 bg-black/60 border-t border-white/10 shrink-0">
           {msgs.length < 3 && (
             <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 mb-2">
@@ -206,32 +195,21 @@ export function GlobalChatWidget() {
               ))}
             </div>
           )}
-
-          <form
-            onSubmit={(e) => { e.preventDefault(); send(input); }}
-            className="flex items-end gap-2"
-          >
+          <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2">
             <textarea
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-              placeholder="Invia comando a Finomnia AI..."
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+              placeholder="Invia comando a Metis AI..."
               className="flex-1 bg-[#0A0F14] border border-white/20 rounded-xl px-4 py-3 text-[12px] text-white placeholder:text-white/30 outline-none focus:border-cyan/50 focus:bg-white/5 transition resize-none leading-relaxed"
-              style={{ minHeight: '44px', maxHeight: '120px' }}
+              style={{ minHeight: "44px", maxHeight: "120px" }}
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
               className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all shrink-0 shadow-lg ${
-                input.trim()
-                  ? "bg-cyan border-none text-black hover:bg-[#00cce6]"
-                  : "bg-white/10 text-white/30"
+                input.trim() ? "bg-cyan text-black hover:bg-[#00cce6]" : "bg-white/10 text-white/30"
               }`}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -244,14 +222,11 @@ export function GlobalChatWidget() {
       </div>
 
       {/* Floating Action Button */}
-      <button 
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onClick={handleClick}
-        style={{ touchAction: "none" }}
-        className={`pointer-events-auto relative flex items-center justify-center w-[60px] h-[60px] rounded-full border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-all duration-300 overflow-hidden group ${
-          isOpen ? "bg-[#0A0F14] rotate-90 scale-90" : "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] cursor-grab active:cursor-grabbing"
+      <button
+        onMouseDown={handleMouseDown}
+        onClick={handleFabClick}
+        className={`pointer-events-auto relative flex items-center justify-center w-[60px] h-[60px] rounded-full border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-[box-shadow,border-color,transform] duration-300 overflow-hidden cursor-grab active:cursor-grabbing ${
+          isOpen ? "bg-[#0A0F14] rotate-90 scale-90" : "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] hover:border-white/40"
         }`}
       >
         {isOpen ? (
@@ -259,19 +234,12 @@ export function GlobalChatWidget() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <img 
-            src="/metis-m-logo.png" 
-            alt="Toggle AI Chat" 
-            className="w-full h-full object-cover z-10"
-          />
+          <img src="/metis-m-logo.png" alt="Toggle AI Chat" className="w-full h-full object-cover z-10" />
         )}
-
-        {/* Unread dot */}
         {!isOpen && hasUnread && (
-          <span className="absolute top-0 right-0 w-4 h-4 bg-red rounded-full border-2 border-[#0A0F14] shadow-[0_0_8px_var(--color-red)] animate-pulse z-20" />
+          <span className="absolute top-0 right-0 w-4 h-4 bg-red rounded-full border-2 border-[#0A0F14] animate-pulse z-20" />
         )}
       </button>
-
     </div>
   );
 }

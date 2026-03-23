@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import type { DashboardData } from "@/components/dashboard/DashboardGrid";
 
 export function PipelineChartWidget({ data: _data }: { data: DashboardData | null }) {
@@ -7,6 +8,9 @@ export function PipelineChartWidget({ data: _data }: { data: DashboardData | nul
     { label: "Pending",  values: [20, 28, 22, 35, 30, 38, 28, 42], color: "#a78bfa" },
     { label: "Rejected", values: [10, 15, 12, 20, 14, 22, 16, 26], color: "#f87171" },
   ];
+
+  // Track which bar+week is hovered: "barLabel-weekIndex" key
+  const [hovered, setHovered] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full w-full gap-4">
@@ -22,24 +26,66 @@ export function PipelineChartWidget({ data: _data }: { data: DashboardData | nul
             {/* Sparkline */}
             <div className="flex items-end gap-[3px] h-14 w-full">
               {b.values.map((v, j) => {
+                const key = `${b.label}-${j}`;
+                const isHov = hovered === key;
                 const pct = (v / 100) * 100;
                 const isLast = j === b.values.length - 1;
+
                 return (
                   <div
                     key={j}
-                    className="flex-1 rounded-sm transition-all cursor-help relative group"
+                    onMouseEnter={() => setHovered(key)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="flex-1 rounded-sm cursor-crosshair relative"
                     style={{
                       height: `${pct}%`,
                       minHeight: 4,
-                      background: isLast ? b.color : `${b.color}40`,
-                      boxShadow: isLast ? `0 0 8px ${b.color}80` : "none",
+                      // glow + fill change on hover
+                      background: isHov
+                        ? b.color
+                        : isLast
+                        ? b.color
+                        : `${b.color}40`,
+                      boxShadow: isHov
+                        ? `0 0 16px ${b.color}, 0 0 6px ${b.color}`
+                        : isLast
+                        ? `0 0 8px ${b.color}80`
+                        : "none",
+                      transition: "background 0.15s, box-shadow 0.15s",
+                      transform: isHov ? "scaleY(1.08)" : "scaleY(1)",
+                      transformOrigin: "bottom",
                     }}
                   >
-                    {/* Sci-Fi Tooltip */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-2 bg-[#0A0F14]/95 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all pointer-events-none z-50 flex flex-col items-center">
-                      <div className="text-[9px] uppercase tracking-widest text-white/50 mb-0.5">Settimana {j + 1}</div>
-                      <div className="text-[12px] font-space font-bold" style={{ color: b.color }}>{v} <span className="text-white/60 font-normal lowercase">{b.label}</span></div>
-                    </div>
+                    {/* Single tooltip - only shows when THIS bar is hovered */}
+                    {isHov && (
+                      <div
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none"
+                        style={{ filter: `drop-shadow(0 0 8px ${b.color}60)` }}
+                      >
+                        <div
+                          className="px-3 py-2 rounded-xl font-space border whitespace-nowrap flex flex-col items-center gap-0.5"
+                          style={{
+                            background: "#0A0F14ee",
+                            borderColor: `${b.color}60`,
+                          }}
+                        >
+                          <span
+                            className="text-xl font-black leading-none"
+                            style={{ color: b.color, textShadow: `0 0 10px ${b.color}` }}
+                          >
+                            {v}
+                          </span>
+                          <span className="text-[9px] uppercase tracking-widest text-white/50">
+                            Sett. {j + 1} · {b.label}
+                          </span>
+                        </div>
+                        {/* Arrow */}
+                        <div
+                          className="w-2 h-2 rotate-45 mx-auto -mt-[5px] rounded-sm"
+                          style={{ background: `${b.color}60` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
