@@ -244,12 +244,12 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
         <button
           onClick={runSim}
           disabled={simRunning}
-          className={`w-full py-2.5 rounded-lg font-space font-bold uppercase tracking-widest text-[11px] transition-all flex items-center justify-center gap-2
+          className={`w-full py-3.5 rounded-xl font-space font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 shadow-lg
             ${simRunning
-              ? 'bg-purple/20 text-purple/60 border border-purple/20 cursor-wait'
-              : 'bg-purple text-white hover:bg-purple/80 hover:shadow-[0_0_20px_rgba(123,44,191,0.5)] shadow-[0_0_15px_rgba(123,44,191,0.3)] border border-purple/50'}`}
+              ? 'bg-purple/10 text-purple/40 border border-purple/20 cursor-wait'
+              : 'bg-gradient-to-r from-purple to-[#9D4EDD] text-white hover:shadow-[0_0_25px_rgba(157,78,221,0.5)] border border-purple/50 hover:scale-[1.02]'}`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
           {simRunning ? 'SIMULAZIONE IN CORSO...' : 'RUN SIMULATION vs CHAMPION'}
@@ -278,24 +278,25 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
         />
 
         {/* Fair Lending Score */}
-        <div className="border border-white/10 rounded-xl p-4 bg-white/5 relative">
-          <div className="flex justify-between items-center mb-4">
+        <div className="glass-panel border border-white/10 rounded-xl p-5 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan/5 to-purple/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex justify-between items-center mb-4 relative z-10">
             <div className="text-[10px] text-[var(--color-text-muted)] font-space tracking-widest uppercase">
               Fair Lending Score
             </div>
-            <span className="text-[8px] bg-cyan/10 border border-cyan/30 text-cyan px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="text-[9px] bg-cyan/10 border border-cyan/30 text-cyan px-2.5 py-1 rounded-md uppercase tracking-wider font-bold shadow-[0_0_10px_rgba(0,229,255,0.1)]">
               EU AI Act
             </span>
           </div>
-          <div className="mb-2 flex justify-between font-space text-[11px]">
+          <div className="mb-2.5 flex justify-between font-space text-xs relative z-10">
             <span className="text-white/50">Champion: {CHAMPION.fairLendingScore}/100</span>
-            <span className="text-cyan font-bold">Challenger: {challenger.fairLendingScore}/100</span>
+            <span className="text-cyan font-bold drop-shadow-[0_0_5px_rgba(0,229,255,0.5)]">Challenger: {challenger.fairLendingScore}/100</span>
           </div>
-          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden relative">
-            <div className="absolute top-0 left-0 bottom-0 bg-white/30 transition-all duration-500" style={{ width: `${CHAMPION.fairLendingScore}%` }} />
-            <div className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-cyan to-purple transition-all duration-500" style={{ width: `${challenger.fairLendingScore}%` }} />
+          <div className="h-2.5 w-full bg-black/50 rounded-full overflow-hidden relative shadow-inner">
+            <div className="absolute top-0 left-0 bottom-0 bg-white/20 transition-all duration-500" style={{ width: `${CHAMPION.fairLendingScore}%` }} />
+            <div className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-cyan to-purple transition-all duration-500 shadow-[0_0_10px_rgba(0,229,255,0.5)]" style={{ width: `${challenger.fairLendingScore}%` }} />
           </div>
-          <p className="mt-3 text-[10px] text-[var(--color-text-muted)] leading-relaxed border-l border-cyan/50 pl-2">
+          <p className="mt-4 text-[10px] text-white/50 leading-relaxed border-l-2 border-cyan/50 pl-3 relative z-10">
             {challenger.fairLendingScore > 80
               ? 'Il Challenger supera la soglia EU AI Act. De-biasing FairBoost™ attivo su features socio-demografiche.'
               : challenger.fairLendingScore > CHAMPION.fairLendingScore
@@ -314,19 +315,19 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
 
         {/* Distribution bar */}
         {hasRun && (
-          <div className="border border-white/10 rounded-xl p-4 bg-white/5">
-            <div className="text-[10px] text-[var(--color-text-muted)] font-space tracking-widest uppercase mb-3">
+          <div className="glass-panel border border-white/10 rounded-xl p-5">
+            <div className="text-[10px] text-[var(--color-text-muted)] font-space tracking-widest uppercase mb-4">
               Application Distribution
             </div>
-            <div className="h-3 w-full rounded-full overflow-hidden flex">
-              <div className="bg-green transition-all duration-500" style={{ width: `${(challenger.approved / challenger.totalApplications) * 100}%` }} />
-              <div className="bg-yellow transition-all duration-500" style={{ width: `${(challenger.manualReview / challenger.totalApplications) * 100}%` }} />
-              <div className="bg-red transition-all duration-500" style={{ width: `${(challenger.rejected / challenger.totalApplications) * 100}%` }} />
+            <div className="h-4 w-full rounded-full overflow-hidden flex shadow-inner bg-black/40">
+              <div className="bg-green transition-all duration-500 shadow-[0_0_10px_rgba(0,255,102,0.5)]" style={{ width: `${(challenger.approved / challenger.totalApplications) * 100}%` }} />
+              <div className="bg-yellow transition-all duration-500 shadow-[0_0_10px_rgba(250,204,21,0.5)]" style={{ width: `${(challenger.manualReview / challenger.totalApplications) * 100}%` }} />
+              <div className="bg-red transition-all duration-500 shadow-[0_0_10px_rgba(255,0,85,0.5)]" style={{ width: `${(challenger.rejected / challenger.totalApplications) * 100}%` }} />
             </div>
-            <div className="flex justify-between mt-2 text-[9px] font-space">
-              <span className="text-green">Approved: {challenger.approved}</span>
-              <span className="text-yellow">Review: {challenger.manualReview}</span>
-              <span className="text-red">Rejected: {challenger.rejected}</span>
+            <div className="flex justify-between mt-3 text-[10px] font-space font-bold">
+              <span className="text-green drop-shadow-[0_0_5px_rgba(0,255,102,0.3)]">Appr: {challenger.approved}</span>
+              <span className="text-yellow drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]">Rev: {challenger.manualReview}</span>
+              <span className="text-red drop-shadow-[0_0_5px_rgba(255,0,85,0.3)]">Rej: {challenger.rejected}</span>
             </div>
           </div>
         )}
@@ -339,10 +340,10 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
           className={`w-full py-3 rounded-lg font-space font-bold uppercase tracking-widest text-[11px] transition-all flex items-center justify-center gap-2 shadow-xl
             ${deployStep === "deployed" 
               ? 'bg-white/10 text-white/50 border border-white/20 cursor-default' 
-              : hasRun && challenger.approvalRate > CHAMPION.approvalRate && challenger.defaultRate <= CHAMPION.defaultRate
+              : hasRun
               ? 'bg-gradient-to-r from-green to-[rgba(0,255,102,0.6)] text-black shadow-[0_0_20px_rgba(0,255,102,0.4)] hover:shadow-[0_0_30px_rgba(0,255,102,0.6)] hover:scale-[1.02]'
               : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/10'}`}
-          disabled={deployStep === "deployed" || !hasRun || challenger.approvalRate <= CHAMPION.approvalRate || challenger.defaultRate > CHAMPION.defaultRate}
+          disabled={deployStep === "deployed" || !hasRun}
         >
           {deployStep === "deployed" ? (
              <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg> POLICY DEPLOYED</>
@@ -352,22 +353,23 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
 
       {/* Deploy Maker-Checker Modal Overlay */}
       {deployStep !== "idle" && deployStep !== "deployed" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
-          <div className="w-[480px] bg-[rgba(14,21,33,0.95)] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,255,102,0.1)] p-8 relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-[500px] glass-panel border border-cyan/30 rounded-3xl shadow-[0_0_80px_rgba(0,255,102,0.15)] p-10 relative overflow-hidden animate-in zoom-in-95 duration-500">
             {/* Background elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-green/5 rounded-full blur-3xl" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-green/10 to-transparent rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-cyan/10 to-transparent rounded-full blur-3xl" />
             
-            <div className="text-center mb-6 relative z-10">
-              <div className="w-16 h-16 mx-auto bg-green/10 border border-green/30 rounded-2xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(0,255,102,0.2)]">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="text-center mb-8 relative z-10">
+              <div className="w-20 h-20 mx-auto bg-green/10 border border-green/40 rounded-3xl flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(0,255,102,0.2)]">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
               </div>
-              <h2 className="font-space text-lg font-bold text-white mb-1">Governance Sign-off</h2>
-              <p className="text-[11px] text-white/50">Richiesta approvazione Maker-Checker (CRO Livello 2)</p>
+              <h2 className="font-space text-2xl font-bold text-white mb-2">Governance Sign-off</h2>
+              <p className="text-xs text-white/50 font-medium">Richiesta approvazione Maker-Checker (CRO Livello 2)</p>
             </div>
 
-            <div className="space-y-3 mb-8 relative z-10">
+            <div className="space-y-4 mb-10 relative z-10">
               <AuditItem 
                 label="Simulazione Finanziaria" 
                 value="Challenger Win (+5.3% Appr.)" 
@@ -385,7 +387,7 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
               />
               <AuditItem 
                 label="Firma Digitale CRO" 
-                value={deployStep === "requesting" ? "In attesa..." : deployStep === "audit" ? "Richiesta inviata" : "Firmato da Gaetano Pecorella"} 
+                value={deployStep === "requesting" ? "In attesa..." : deployStep === "audit" ? "Richiesta approvazione inviata" : "Firmato elettronicamente"} 
                 status={deployStep === "signed" ? "done" : "pending"} 
                 isLast
               />
@@ -395,10 +397,10 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
               {deployStep === "audit" && (
                  <button 
                   onClick={() => setDeployStep("signed")}
-                  className="w-full py-3 bg-white/5 border border-white/10 text-white font-space font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-white/10 hover:border-cyan/50 transition flex items-center justify-center gap-2"
+                  className="w-full py-4 glass-panel border border-cyan/40 text-cyan font-space font-bold text-sm uppercase tracking-widest rounded-xl hover:bg-cyan/10 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.1)] hover:shadow-[0_0_30px_rgba(0,229,255,0.3)]"
                  >
-                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                   MOCK SIGN (CRO)
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                   Simula Firma CRO
                  </button>
               )}
               {deployStep === "signed" && (
@@ -406,10 +408,10 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
                   onClick={() => {
                     setDeployStep("deployed");
                   }}
-                  className="w-full py-3 bg-green text-black font-space font-bold text-xs uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(0,255,102,0.4)] transition hover:scale-105 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-[#00FF66] to-[#00CC52] text-black font-space font-bold text-sm uppercase tracking-widest rounded-xl shadow-[0_0_30px_rgba(0,255,102,0.5)] transition-all hover:scale-[1.03] flex items-center justify-center gap-2"
                  >
-                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                   PUBLISH NOW
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                   PUBLISH TO PRODUCTION
                  </button>
               )}
             </div>
@@ -417,9 +419,9 @@ export default function WhatIfSimulator({ nodes, edges }: WhatIfSimulatorProps) 
             {(deployStep === "requesting" || deployStep === "audit") && (
               <button 
                 onClick={() => setDeployStep("idle")}
-                className="absolute top-4 right-4 text-white/30 hover:text-white transition"
+                className="absolute top-6 right-6 text-white/30 hover:text-white transition-colors bg-white/5 rounded-full p-2 hover:bg-white/10"
               >
-                ×
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             )}
           </div>
@@ -459,23 +461,24 @@ function MetricCard({
   const improved = higherIsBetter ? diff > 0 : diff < 0;
 
   return (
-    <div className={`border border-white/10 rounded-xl p-4 bg-white/5 relative overflow-hidden group hover:border-${colorVar}/50 transition`}>
-      {isRunning && <div className={`absolute inset-0 bg-${colorVar}/5 animate-pulse`} />}
+    <div className={`glass-panel border border-white/10 rounded-xl p-5 relative overflow-hidden group hover:border-${colorVar}/40 transition-all duration-300`}>
+      {isRunning && <div className={`absolute inset-0 bg-${colorVar}/10 animate-pulse`} />}
+      <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-20 transition-opacity group-hover:opacity-40" style={{ backgroundColor: `var(--color-${colorVar})` }} />
       <div className="text-[10px] text-[var(--color-text-muted)] font-space tracking-widest uppercase mb-4 relative z-10">{title}</div>
       <div className="flex items-end justify-between relative z-10">
         <div>
-          <div className="text-[10px] text-white/40 mb-1">Champion</div>
-          <div className="font-space text-xl text-white/70">
+          <div className="text-[10px] text-white/40 mb-1.5">Champion</div>
+          <div className="font-space text-lg text-white/60">
             {champion.toFixed(unit === '%' && champion < 10 ? 2 : 1)}{unit}
           </div>
         </div>
         <div>
-          <div className={`text-[10px] text-${colorVar} mb-1 flex justify-end`}>Challenger</div>
-          <div className="flex items-center gap-2">
-            <span className={`text-[11px] px-1.5 py-0.5 rounded font-bold ${improved ? 'bg-green/20 text-green border border-green/30' : diff !== 0 ? 'bg-red/20 text-red border border-red/30' : 'bg-white/10 text-white/40 border border-white/10'}`}>
+          <div className={`text-[10px] text-${colorVar} mb-1.5 flex justify-end font-bold`}>Challenger</div>
+          <div className="flex items-center gap-2.5">
+            <span className={`text-[11px] px-2 py-0.5 rounded-md font-bold shadow-sm ${improved ? 'bg-green/20 text-green border border-green/30 shadow-[0_0_10px_rgba(0,255,102,0.1)]' : diff !== 0 ? 'bg-red/20 text-red border border-red/30 shadow-[0_0_10px_rgba(255,0,85,0.1)]' : 'bg-white/10 text-white/40 border border-white/10'}`}>
               {diff > 0 ? '+' : ''}{diff.toFixed(unit === '%' && Math.abs(diff) < 1 ? 2 : 1)}{unit}
             </span>
-            <div className={`font-space text-3xl font-bold text-${colorVar} drop-shadow-[0_0_8px_${colorVar === 'cyan' ? 'rgba(0,229,255,0.5)' : 'rgba(123,44,191,0.5)'}]`}>
+            <div className={`font-space text-3xl font-bold text-${colorVar} drop-shadow-[0_0_15px_${colorVar === 'cyan' ? 'rgba(0,229,255,0.6)' : 'rgba(123,44,191,0.6)'}]`}>
               {challenger.toFixed(unit === '%' && challenger < 10 ? 2 : 1)}{unit}
             </div>
           </div>

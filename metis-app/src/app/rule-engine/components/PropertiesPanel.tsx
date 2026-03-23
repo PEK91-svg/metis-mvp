@@ -68,7 +68,7 @@ export default function PropertiesPanel({ node, onUpdate, onDelete }: Properties
             type="text"
             value={data.label}
             onChange={(e) => onUpdate(id, { label: e.target.value })}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[12px] text-white font-space focus:border-cyan/50 focus:outline-none transition"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white font-space focus:border-cyan/50 focus:ring-1 focus:ring-cyan/50 focus:outline-none transition-all shadow-inner"
           />
         </FieldGroup>
 
@@ -77,7 +77,7 @@ export default function PropertiesPanel({ node, onUpdate, onDelete }: Properties
             value={data.description}
             onChange={(e) => onUpdate(id, { description: e.target.value })}
             rows={2}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white/80 focus:border-cyan/50 focus:outline-none transition resize-none"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white/80 focus:border-cyan/50 focus:ring-1 focus:ring-cyan/50 focus:outline-none transition-all resize-none shadow-inner"
           />
         </FieldGroup>
 
@@ -169,9 +169,9 @@ function SliderField({
 }) {
   return (
     <div className="mb-3">
-      <div className="flex justify-between text-[10px] mb-1">
-        <span className="text-white/60">{label}</span>
-        <span className="font-mono font-bold" style={{ color }}>{value}{unit}</span>
+      <div className="flex justify-between text-[10px] mb-2 font-space">
+        <span className="text-white/60 tracking-wide">{label}</span>
+        <span className="font-mono font-bold" style={{ color, textShadow: `0 0 10px ${color}80` }}>{value}{unit}</span>
       </div>
       <input
         type="range"
@@ -274,7 +274,7 @@ function FraudDetectionEditor({ config, onChange }: { config: FraudDetectionConf
         <select
           value={config.anomalyModel}
           onChange={(e) => onChange({ anomalyModel: e.target.value })}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-yellow/50 focus:outline-none transition"
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-yellow/50 focus:ring-1 focus:ring-yellow/50 focus:outline-none transition-all shadow-inner appearance-none"
         >
           <option value="isolation_forest">Isolation Forest</option>
           <option value="autoencoder">Autoencoder</option>
@@ -343,7 +343,7 @@ function DecisionEditor({ config, onChange }: { config: DecisionConfig; onChange
         <select
           value={config.action}
           onChange={(e) => onChange({ action: e.target.value })}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-green/50 focus:outline-none transition"
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-green/50 focus:ring-1 focus:ring-green/50 focus:outline-none transition-all shadow-inner appearance-none"
         >
           <option value="approve">Approve</option>
           <option value="reject">Reject</option>
@@ -480,9 +480,9 @@ function CustomRuleEditor({ config, onChange }: { config: CustomRuleConfig; onCh
               const expr = newConditions.map(c => `[${RULE_METRICS.find(m => m.id === c.field)?.label || c.field}] ${c.op} ${c.value}`).join(` ${config.operator} `);
               onChange({ conditions: newConditions, expression: expr });
             }}
-            className="w-full py-2 border border-dashed border-white/20 rounded-lg text-[10px] text-white/40 hover:text-white/80 hover:border-white/40 hover:bg-white/5 transition font-space uppercase tracking-widest flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 border border-dashed border-white/20 rounded-lg text-[10px] text-white/50 hover:text-white hover:border-cyan/40 hover:bg-cyan/10 transition-all font-space uppercase tracking-widest flex items-center justify-center gap-1.5 hover:shadow-[0_0_15px_rgba(0,229,255,0.1)]"
           >
-            <span className="text-red font-bold text-lg leading-none mb-0.5">+</span> ADD CONDITION
+            <span className="text-cyan font-bold text-lg leading-none mb-0.5">+</span> ADD CONDITION
           </button>
         </div>
       </FieldGroup>

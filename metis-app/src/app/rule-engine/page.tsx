@@ -239,18 +239,19 @@ export default function RuleEngine() {
     const isCurrent = currentPolicy?.id === p.id;
     const isLarge = size === "large";
     return (
-      <div key={p.id} className={`rounded-xl border transition ${isLarge ? "p-5" : "p-3"} ${isCurrent && view === "editor" ? "border-cyan/40 bg-cyan/5" : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]"}`}>
-        <div className="flex items-center justify-between mb-2">
-          <button onClick={() => loadPolicy(p)} className="text-left flex-1">
-            <div className={`text-white ${isLarge ? "text-base" : "text-sm"} font-medium hover:text-cyan transition`}>{p.name}</div>
+      <div key={p.id} className={`glass-panel border group transition-all duration-300 ${isLarge ? "p-5" : "p-3"} ${isCurrent && view === "editor" ? "border-cyan/40 bg-cyan/10" : "border-white/10 hover:border-cyan/30 hover:bg-white/[0.04]"}`}>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => loadPolicy(p)} className="text-left flex-1 group-hover:translate-x-1 transition-transform">
+            <div className={`text-white ${isLarge ? "text-base" : "text-sm"} font-semibold group-hover:text-cyan transition-colors`}>{p.name}</div>
           </button>
-          <span className={`text-[8px] px-2 py-0.5 rounded ${ps.bg} ${ps.border} ${ps.text} border font-space uppercase tracking-widest`}>{ps.label}</span>
+          <span className={`text-[9px] px-2 py-0.5 rounded-md ${ps.bg} ${ps.border} ${ps.text} border font-space uppercase tracking-widest shadow-[0_0_10px_rgba(255,255,255,0.05)]`}>{ps.label}</span>
         </div>
-        <p className={`text-text-muted ${isLarge ? "text-xs mb-3" : "text-[10px] mb-2"}`}>{p.description}</p>
+        <p className={`text-text-muted leading-relaxed ${isLarge ? "text-xs mb-4" : "text-[10px] mb-3"}`}>{p.description}</p>
         {isLarge && (
-          <div className="flex items-center gap-4 mb-3 text-[10px] text-white/30 font-space">
-            <span>{p.nodes.length} nodes</span>
-            <span>{p.edges.length} edges</span>
+          <div className="flex items-center gap-4 mb-4 text-[10px] text-white/40 font-mono">
+            <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-cyan" /> {p.nodes.length} nodes</span>
+            <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-purple" /> {p.edges.length} edges</span>
+            <span className="text-white/20">&bull;</span>
             <span>Creata: {p.createdAt}</span>
           </div>
         )}
@@ -322,24 +323,25 @@ export default function RuleEngine() {
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-8">
+            <div className="flex-1 overflow-y-auto p-8 [scrollbar-width:thin] [scrollbar-color:rgba(0,229,255,0.2)_transparent]">
               {/* KPI */}
-              <section className="grid grid-cols-4 gap-4 mb-6">
+              <section className="grid grid-cols-4 gap-6 mb-8">
                 {[
-                  { label: "Policy Totali", value: policies.length, cls: "border-cyan/30 text-cyan bg-cyan/10" },
-                  { label: "Attive", value: policyCounts.active, cls: "border-green/30 text-green bg-green/10" },
-                  { label: "Bozze", value: policyCounts.draft, cls: "border-yellow/30 text-yellow bg-yellow/10" },
-                  { label: "Archiviate", value: policyCounts.archived, cls: "border-white/20 text-white/40 bg-white/5" },
+                  { label: "Policy Totali", value: policies.length, color: "text-cyan", border: "border-cyan/30", bg: "bg-cyan/5", glow: "shadow-[0_0_30px_rgba(0,229,255,0.1)]" },
+                  { label: "Attive", value: policyCounts.active, color: "text-green", border: "border-green/30", bg: "bg-green/5", glow: "shadow-[0_0_30px_rgba(0,255,102,0.1)]" },
+                  { label: "Bozze", value: policyCounts.draft, color: "text-yellow", border: "border-yellow/30", bg: "bg-yellow/5", glow: "shadow-[0_0_30px_rgba(250,204,21,0.1)]" },
+                  { label: "Archiviate", value: policyCounts.archived, color: "text-white/40", border: "border-white/10", bg: "bg-white/5", glow: "" },
                 ].map((kpi, i) => (
-                  <div key={i} className={`glass-panel flex flex-col items-center justify-center p-4 border ${kpi.cls}`}>
-                    <span className="text-[10px] uppercase tracking-wider text-text-muted">{kpi.label}</span>
-                    <span className="text-2xl font-bold mt-1 font-space">{kpi.value}</span>
+                  <div key={i} className={`glass-panel flex flex-col items-center justify-center p-6 border ${kpi.border} ${kpi.bg} ${kpi.glow} relative overflow-hidden group`}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-[10px] font-space uppercase tracking-[0.2em] text-text-muted relative z-10">{kpi.label}</span>
+                    <span className={`text-4xl font-bold mt-2 font-space ${kpi.color} drop-shadow-lg relative z-10`}>{kpi.value}</span>
                   </div>
                 ))}
               </section>
 
               {/* Policy Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {policies.map(p => renderPolicyCard(p, "large"))}
               </div>
             </div>
@@ -407,27 +409,32 @@ export default function RuleEngine() {
 
       {/* New Policy Modal */}
       {showNewModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowNewModal(false)}>
-          <div className="glass-panel border border-white/10 w-[420px] shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-white/10">
-              <h2 className="font-space text-sm font-semibold text-white">Nuova Policy</h2>
-              <button onClick={() => setShowNewModal(false)} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md" onClick={() => setShowNewModal(false)}>
+          <div className="w-[450px] bg-[#0A0E17] border border-cyan/30 shadow-[0_0_50px_rgba(0,229,255,0.15)] rounded-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-white/5 bg-black/40">
+              <h2 className="font-space text-lg font-bold text-white flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan/10 border border-cyan/30 flex items-center justify-center text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                Nuova Policy
+              </h2>
+              <button onClick={() => setShowNewModal(false)} className="w-8 h-8 rounded-lg bg-red/10 border border-red/30 hover:bg-red/20 flex items-center justify-center text-red transition-all shadow-[0_0_10px_rgba(255,71,87,0.1)]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-6 space-y-5 bg-[#0D121B]">
               <div>
-                <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">Nome Policy</label>
-                <input type="text" value={newPolicyName} onChange={e => setNewPolicyName(e.target.value)} placeholder="Es. Real Estate Conservative" className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition" autoFocus />
+                <label className="text-[10px] text-cyan font-space uppercase tracking-widest block mb-2 font-bold">Nome Policy</label>
+                <input type="text" value={newPolicyName} onChange={e => setNewPolicyName(e.target.value)} placeholder="Es. Real Estate Conservative" className="w-full bg-black/50 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/50 transition-all shadow-inner" autoFocus />
               </div>
               <div>
-                <label className="text-[10px] text-text-muted font-space uppercase tracking-widest block mb-2">Descrizione</label>
-                <textarea value={newPolicyDesc} onChange={e => setNewPolicyDesc(e.target.value)} placeholder="Breve descrizione della policy..." rows={3} className="w-full bg-black/30 border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition resize-none" />
+                <label className="text-[10px] text-purple font-space uppercase tracking-widest block mb-2 font-bold">Descrizione</label>
+                <textarea value={newPolicyDesc} onChange={e => setNewPolicyDesc(e.target.value)} placeholder="Breve descrizione della finalità della policy..." rows={3} className="w-full bg-black/50 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-purple/50 focus:ring-1 focus:ring-purple/50 transition-all resize-none shadow-inner" />
               </div>
             </div>
-            <div className="p-5 border-t border-white/10 flex gap-3">
-              <button onClick={() => setShowNewModal(false)} className="flex-1 py-2.5 rounded-lg font-space text-xs font-bold uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 transition">Annulla</button>
-              <button onClick={createPolicy} disabled={!newPolicyName.trim()} className={`flex-1 py-2.5 rounded-lg font-space text-xs font-bold uppercase tracking-widest transition ${newPolicyName.trim() ? "bg-gradient-to-r from-cyan to-[rgba(0,229,255,0.6)] text-black shadow-[0_0_15px_rgba(0,229,255,0.2)]" : "bg-white/10 text-white/30 cursor-not-allowed border border-white/10"}`}>
+            <div className="p-6 border-t border-white/5 bg-black/40 flex gap-4">
+              <button onClick={() => setShowNewModal(false)} className="flex-1 py-3 rounded-xl font-space text-xs font-bold uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 transition-colors">Annulla</button>
+              <button onClick={createPolicy} disabled={!newPolicyName.trim()} className={`flex-1 py-3 rounded-xl font-space text-xs font-bold uppercase tracking-widest transition-all ${newPolicyName.trim() ? "bg-cyan/10 text-cyan border border-cyan/40 hover:bg-cyan/20 hover:scale-[1.02] shadow-[0_0_15px_rgba(0,229,255,0.2)] focus:outline-none focus:ring-2 focus:ring-cyan" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/5"}`}>
                 Crea Policy
               </button>
             </div>

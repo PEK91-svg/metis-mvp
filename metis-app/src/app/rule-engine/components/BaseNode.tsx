@@ -43,19 +43,19 @@ function BaseNode({ id, data, selected }: BaseNodeProps) {
   return (
     <div
       className={`
-        relative min-w-[220px] max-w-[280px]
-        bg-black/70 backdrop-blur-xl
-        border rounded-lg p-3
-        shadow-xl transition-all duration-200
-        hover:-translate-y-0.5
+        relative min-w-[240px] max-w-[300px]
+        bg-[rgba(10,14,23,0.85)] backdrop-blur-2xl
+        border rounded-xl p-4
+        transition-all duration-300
+        hover:-translate-y-1 hover:shadow-2xl
+        group
         ${selected
-          ? `border-[${meta.color}] shadow-[0_0_25px_${meta.glowColor}]`
-          : 'border-white/10 hover:border-white/20'}
+          ? `border-[${meta.color}] shadow-[0_0_30px_${meta.glowColor}] ring-1 ring-[${meta.color}]`
+          : 'border-white/10 hover:border-white/30'}
       `}
       style={{
-        borderLeftWidth: '3px',
-        borderLeftColor: meta.color,
-        ...(selected ? { boxShadow: `0 0 25px ${meta.glowColor}` } : {}),
+        boxShadow: selected ? `0 0 30px ${meta.glowColor}, inset 0 0 20px ${meta.glowColor}` : '0 10px 40px -10px rgba(0,0,0,0.8)',
+        borderColor: selected ? meta.color : undefined
       }}
     >
       {/* Input handle */}
@@ -71,33 +71,34 @@ function BaseNode({ id, data, selected }: BaseNodeProps) {
       />
 
       {/* Header */}
-      <div className="flex items-center gap-2.5 mb-2">
+      <div className="flex items-center gap-3 mb-4">
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center border shrink-0"
+          className="w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 transition-colors group-hover:bg-opacity-20"
           style={{
             backgroundColor: `${meta.color}15`,
             borderColor: `${meta.color}40`,
             color: meta.color,
+            boxShadow: `inset 0 0 10px ${meta.glowColor}`,
           }}
         >
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <div
-            className="font-space font-bold uppercase text-[10px] tracking-widest truncate"
+            className="font-space font-bold uppercase text-[11px] tracking-widest truncate"
             style={{ color: meta.color }}
           >
             {data.label}
           </div>
-          <div className="text-[10px] text-[var(--color-text-muted)] truncate">
+          <div className="text-[10px] text-white/50 truncate mt-0.5 font-medium">
             {data.description}
           </div>
         </div>
         <div
-          className="w-2 h-2 rounded-full shrink-0 animate-pulse"
+          className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse border border-black/50"
           style={{
             backgroundColor: data.active ? meta.color : '#555',
-            boxShadow: data.active ? `0 0 8px ${meta.color}` : 'none',
+            boxShadow: data.active ? `0 0 10px ${meta.glowColor}` : 'none',
           }}
         />
       </div>
@@ -126,41 +127,41 @@ function NodePreview({ data, color }: { data: RuleNodeData; color: string }) {
     case 'dataIngestion': {
       const cfg = data.config as import("./types").DataIngestionConfig;
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {cfg.sources.slice(0, 3).map((s, i) => (
-            <div key={i} className="bg-white/5 border border-white/5 rounded px-2 py-1 text-[9px] text-white/70 flex items-center gap-1.5">
-              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: color }} />
-              {s}
+            <div key={i} className="bg-black/50 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] text-white/80 flex items-center gap-2 shadow-inner">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 5px ${color}` }} />
+              <span className="font-medium">{s}</span>
             </div>
           ))}
-          <div className="text-[9px] text-white/30 mt-1">Quality: {cfg.dataQualityThreshold}%</div>
+          <div className="text-[10px] text-white/40 mt-2 font-mono ml-1">Quality: {cfg.dataQualityThreshold}%</div>
         </div>
       );
     }
     case 'fraudDetection': {
       const cfg = data.config as import("./types").FraudDetectionConfig;
       return (
-        <div className="bg-white/5 border border-white/10 rounded p-2 text-[9px] text-white flex justify-between">
-          <span>False Positive Limit</span>
-          <span className="font-mono font-bold" style={{ color }}>{cfg.falsePositiveLimit}%</span>
+        <div className="bg-black/50 border border-white/10 rounded-md p-2.5 text-[10px] text-white/80 flex justify-between shadow-inner items-center">
+          <span className="font-medium">False Pos. Limit</span>
+          <span className="font-mono font-bold px-1.5 py-0.5 rounded bg-white/5" style={{ color }}>{cfg.falsePositiveLimit}%</span>
         </div>
       );
     }
     case 'aiScoring': {
       const cfg = data.config as import("./types").AIScoringConfig;
       return (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {cfg.weights.map((w, i) => (
-            <div key={i} className="bg-black/40 border border-white/5 rounded px-2 py-1 flex justify-between text-[9px]">
-              <span className="text-white/70">{w.label}</span>
-              <span className="text-cyan font-mono">{w.value}%</span>
+            <div key={i} className="bg-black/50 border border-white/10 rounded-md px-2.5 py-1.5 flex justify-between text-[10px] shadow-inner items-center">
+              <span className="text-white/80 font-medium">{w.label}</span>
+              <span className="text-cyan font-mono font-bold bg-cyan/10 px-1.5 py-0.5 rounded border border-cyan/20">{w.value}%</span>
             </div>
           ))}
-          <div className="flex gap-1.5 mt-2">
-            <div className="flex-1 bg-green/10 border border-green/30 rounded py-0.5 text-center text-[8px] text-green font-space uppercase">
+          <div className="flex gap-2 mt-3">
+            <div className="flex-1 bg-green/10 border border-green/30 rounded-md py-1 text-center text-[10px] text-green font-space uppercase font-bold shadow-[inset_0_0_10px_rgba(0,255,102,0.1)]">
               &gt; {cfg.approvalThreshold}
             </div>
-            <div className="flex-1 bg-red/10 border border-red/30 rounded py-0.5 text-center text-[8px] text-red font-space uppercase">
+            <div className="flex-1 bg-red/10 border border-red/30 rounded-md py-1 text-center text-[10px] text-red font-space uppercase font-bold shadow-[inset_0_0_10px_rgba(255,71,87,0.1)]">
               &lt; {cfg.rejectThreshold}
             </div>
           </div>
@@ -170,22 +171,23 @@ function NodePreview({ data, color }: { data: RuleNodeData; color: string }) {
     case 'decision': {
       const cfg = data.config as import("./types").DecisionConfig;
       const actionColors: Record<string, string> = {
-        approve: '#00FF66', reject: '#FF0055', manual_review: '#FACC15', escalate: '#00E5FF'
+        approve: '#00E5FF', reject: '#FF4757', manual_review: '#FACC15', escalate: '#A55EEA'
       };
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 pt-1">
           <span
-            className="text-[9px] px-2 py-0.5 rounded border font-space font-semibold uppercase tracking-widest"
+            className="text-[10px] px-2.5 py-1 rounded-md border font-space font-bold uppercase tracking-widest shadow-inner"
             style={{
               color: actionColors[cfg.action],
-              borderColor: `${actionColors[cfg.action]}40`,
+              borderColor: `${actionColors[cfg.action]}50`,
               backgroundColor: `${actionColors[cfg.action]}15`,
+              boxShadow: `0 0 10px ${actionColors[cfg.action]}20`
             }}
           >
             {cfg.action.replace('_', ' ')}
           </span>
           {cfg.requiresSignoff && (
-            <span className="text-[8px] text-white/40">Signoff req.</span>
+            <span className="text-[9px] text-white/50 font-medium bg-white/5 px-2 py-1 rounded border border-white/10">Signoff req.</span>
           )}
         </div>
       );
@@ -193,8 +195,9 @@ function NodePreview({ data, color }: { data: RuleNodeData; color: string }) {
     case 'customRule': {
       const cfg = data.config as import("./types").CustomRuleConfig;
       return (
-        <div className="bg-black/40 border border-white/5 rounded p-1.5 text-[9px] font-mono text-white/60 break-all">
-          {cfg.expression}
+        <div className="bg-[#090D14] border border-white/10 rounded-md p-2.5 text-[10px] font-mono text-white/70 break-all shadow-inner relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-red/50"></div>
+          <span className="pl-1">{cfg.expression}</span>
         </div>
       );
     }
