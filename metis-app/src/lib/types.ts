@@ -6,6 +6,7 @@ export interface ParsedBilancio {
   partitaIva: string;
   settore: string;
   dataChiusura: string; // es. "31/12/2025"
+  area_geografica?: string; // es. "Nord-Ovest", "Sud", "Centro"
 
   // Conto Economico
   ricavi: number;

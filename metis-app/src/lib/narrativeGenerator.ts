@@ -119,6 +119,15 @@ function generateDSCRForecast(models: RiskModelResults): NarrativeModule {
   };
 }
 
+// ── Regional macro profiles (aligned with data/istat/macro_regionali.json) ────
+const REGIONAL_PROFILES: Record<string, { pil: number; disoccupazione: number; produzione: number; inflazione: number; tassi: number }> = {
+  'Nord-Ovest': { pil: 1.8, disoccupazione: 5.2, produzione: 2.1, inflazione: 2.4, tassi: 3.75 },
+  'Nord-Est':   { pil: 1.6, disoccupazione: 4.8, produzione: 1.9, inflazione: 2.3, tassi: 3.75 },
+  'Centro':     { pil: 1.1, disoccupazione: 7.4, produzione: 1.0, inflazione: 2.5, tassi: 3.75 },
+  'Sud':        { pil: 0.4, disoccupazione: 16.8, produzione: 0.3, inflazione: 2.6, tassi: 3.75 },
+  'Isole':      { pil: 0.3, disoccupazione: 18.2, produzione: 0.2, inflazione: 2.7, tassi: 3.75 },
+};
+
 // ── SWOT Matrix Generation ────────────────────────────────────────────────────
 export function generateSWOT(b: ParsedBilancio, models: RiskModelResults, bench: BenchmarkComparison): SWOTMatrix {
   const strengths: string[] = [];
@@ -156,6 +165,18 @@ export function generateSWOT(b: ParsedBilancio, models: RiskModelResults, bench:
   threats.push('Volatilità tassi BCE');
   if (leverage > 2) threats.push('Dipendenza da finanziamento esterno');
   if (b.ebitdaMargin < 8) threats.push('Marginalità esposta a shock di costo');
+
+  // GEO-MACRO context
+  const geo = b.area_geografica;
+  const macro = geo ? REGIONAL_PROFILES[geo] : undefined;
+  if (macro) {
+    if (macro.pil > 1.5) opportunities.push(`Contesto regionale in espansione — PIL ${geo} +${macro.pil.toFixed(1)}%`);
+    if (macro.produzione > 1.0) opportunities.push(`Settore in crescita nel territorio (produzione +${macro.produzione.toFixed(1)}%)`);
+    if (macro.disoccupazione < 6.0) opportunities.push(`Mercato del lavoro favorevole ${geo} (disoccupazione ${macro.disoccupazione.toFixed(1)}%)`);
+    if (macro.pil < 0.5) threats.push(`Rallentamento economico regionale ${geo} — PIL +${macro.pil.toFixed(1)}%`);
+    if (macro.disoccupazione > 10.0) threats.push(`Contrazione domanda locale — disoccupazione ${geo} ${macro.disoccupazione.toFixed(1)}%`);
+    if (macro.inflazione > 3.5) threats.push(`Erosione margini da inflazione (${macro.inflazione.toFixed(1)}%)`);
+  }
 
   return { strengths, weaknesses, opportunities, threats };
 }

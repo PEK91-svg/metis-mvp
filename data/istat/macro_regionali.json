@@ -1,0 +1,44 @@
+{
+  "Nord-Ovest": {
+    "pil_regionale": 1.8,
+    "tasso_disoccupazione": 5.2,
+    "indice_produzione_settore": 2.1,
+    "inflazione": 2.4,
+    "tassi_interesse": 3.75
+  },
+  "Nord-Est": {
+    "pil_regionale": 1.6,
+    "tasso_disoccupazione": 4.8,
+    "indice_produzione_settore": 1.9,
+    "inflazione": 2.3,
+    "tassi_interesse": 3.75
+  },
+  "Centro": {
+    "pil_regionale": 1.1,
+    "tasso_disoccupazione": 7.4,
+    "indice_produzione_settore": 1.0,
+    "inflazione": 2.5,
+    "tassi_interesse": 3.75
+  },
+  "Sud": {
+    "pil_regionale": 0.4,
+    "tasso_disoccupazione": 16.8,
+    "indice_produzione_settore": 0.3,
+    "inflazione": 2.6,
+    "tassi_interesse": 3.75
+  },
+  "Isole": {
+    "pil_regionale": 0.3,
+    "tasso_disoccupazione": 18.2,
+    "indice_produzione_settore": 0.2,
+    "inflazione": 2.7,
+    "tassi_interesse": 3.75
+  },
+  "default": {
+    "pil_regionale": 1.0,
+    "tasso_disoccupazione": 6.7,
+    "indice_produzione_settore": 1.2,
+    "inflazione": 2.4,
+    "tassi_interesse": 3.75
+  }
+}
