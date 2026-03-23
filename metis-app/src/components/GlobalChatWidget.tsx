@@ -86,8 +86,8 @@ export function GlobalChatWidget() {
         {/* Header */}
         <div className="bg-gradient-to-r from-black/80 to-black/40 border-b border-white/10 p-4 shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-cyan to-purple border border-white/20 text-white shadow-[0_0_15px_rgba(0,229,255,0.3)]">
-              <span className="font-space font-bold text-lg leading-none mt-0.5">M</span>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full overflow-hidden shadow-[0_0_15px_rgba(0,229,255,0.3)]">
+              <img src="/metis-m-logo.png" alt="Metis AI" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="text-white font-space font-bold text-sm tracking-wider">METIS AI</div>
@@ -200,7 +200,7 @@ export function GlobalChatWidget() {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`pointer-events-auto relative flex items-center justify-center w-[60px] h-[60px] rounded-full border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-all duration-300 overflow-hidden group ${
-          isOpen ? "bg-[#0A0F14] rotate-90 scale-90" : "bg-gradient-to-br from-cyan to-purple hover:scale-105 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)]"
+          isOpen ? "bg-[#0A0F14] rotate-90 scale-90" : "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,229,255,0.5)]"
         }`}
       >
         {isOpen ? (
@@ -208,7 +208,11 @@ export function GlobalChatWidget() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <span className="text-white font-space font-extrabold text-3xl z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] tracking-tighter mt-1">M</span>
+          <img 
+            src="/metis-m-logo.png" 
+            alt="Toggle AI Chat" 
+            className="w-full h-full object-cover z-10"
+          />
         )}
 
         {/* Unread dot */}
