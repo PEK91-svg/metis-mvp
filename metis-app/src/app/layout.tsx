@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "AI Credit Underwriting Platform",
 };
 
+import { GlobalChatWidget } from "@/components/GlobalChatWidget";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +28,7 @@ export default function RootLayout({
     <html lang="it" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen" suppressHydrationWarning>
         {children}
+        <GlobalChatWidget />
       </body>
     </html>
   );
