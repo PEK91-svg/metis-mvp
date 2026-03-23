@@ -24,10 +24,10 @@ import RecommendationsWidget from "./widgets/RecommendationsWidget";
 import { PipelineChartWidget } from "./widgets/PipelineChartWidget";
 import { RiskChartWidget } from "./widgets/RiskChartWidget";
 import { SearchWidget } from "./widgets/SearchWidget";
-import { MetisChatWidget } from "./widgets/MetisChatWidget";
+import { UploadWidget } from "./widgets/UploadWidget";
 import { Settings, Plus, Maximize2, X } from "lucide-react";
 
-export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK" | "SEARCH";
+export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK" | "SEARCH" | "UPLOAD";
 export type WidgetWidth = 1 | 2 | 3 | 4;
 export type WidgetHeight = 1 | 2 | 3;
 
@@ -66,6 +66,7 @@ const WIDGET_TITLES: Record<WidgetType, string> = {
   PIPELINE: "Pipeline Flow",
   RISK: "Risk Analysis",
   SEARCH: "Ricerca Pratiche",
+  UPLOAD: "Carica Documenti",
 };
 
 const WIDGET_DESCRIPTIONS: Record<WidgetType, string> = {
@@ -75,6 +76,7 @@ const WIDGET_DESCRIPTIONS: Record<WidgetType, string> = {
   PIPELINE: "Visualizzazione del flusso delle pratiche attraverso gli stati: approvate, in analisi, rifiutate. Include distribuzione settimanale e trend.",
   RISK: "Analisi radar multi-dimensionale del rischio di portafoglio. Combina PD, Altman Z-Score, EBA compliance, CCII e indici di liquidità.",
   SEARCH: "Ricerca full-text su tutte le pratiche del portafoglio per nome azienda, PIVA, settore o stato. Permette di accedere rapidamente a pratica o dossier.",
+  UPLOAD: "Area Dropzone per caricare file (Bilanci PDF/JSON, XML, Centrale Rischi). Esegue l'analisi automatica e aggiorna i KPI.",
 };
 
 
@@ -85,6 +87,7 @@ const INITIAL_WIDGETS: DashboardWidget[] = [
   { id: "4", type: "PIPELINE",      title: WIDGET_TITLES.PIPELINE,       w: 2, h: 2 },
   { id: "5", type: "RISK",          title: WIDGET_TITLES.RISK,           w: 1, h: 2 },
   { id: "6", type: "SEARCH",        title: WIDGET_TITLES.SEARCH,         w: 1, h: 2 },
+  { id: "7", type: "UPLOAD",        title: WIDGET_TITLES.UPLOAD,         w: 1, h: 2 },
 ];
 
 interface DashboardGridProps {
@@ -168,7 +171,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
         <div className="flex gap-2">
           {isEditMode && (
             <div className="flex gap-2 mr-4 animate-[fadeIn_0.2s_ease-out] flex-wrap">
-              {(["KPI", "HEALTH", "RECOMMENDATIONS", "PIPELINE", "RISK", "SEARCH"] as WidgetType[]).map((t) => (
+              {(["KPI", "HEALTH", "RECOMMENDATIONS", "PIPELINE", "RISK", "SEARCH", "UPLOAD"] as WidgetType[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => addWidget(t)}
@@ -210,6 +213,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
                   case "PIPELINE":        return <PipelineChartWidget data={data} />;
                   case "RISK":            return <RiskChartWidget data={data} />;
                   case "SEARCH":          return <SearchWidget />;
+                  case "UPLOAD":          return <UploadWidget />;
                   default:               return null;
                 }
               };
@@ -264,6 +268,7 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
                     case "RECOMMENDATIONS": return <div className="scale-125 transform origin-center w-full max-w-2xl"><RecommendationsWidget /></div>;
                     case "PIPELINE": return <div className="scale-125 transform origin-center w-full"><PipelineChartWidget data={data} /></div>;
                     case "RISK": return <div className="scale-150 transform origin-center w-[80%]"><RiskChartWidget data={data} /></div>;
+                    case "UPLOAD": return <div className="scale-150 transform origin-center w-[80%]"><UploadWidget /></div>;
                     default: return null;
                   }
                 })()}

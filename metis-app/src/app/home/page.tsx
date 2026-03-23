@@ -311,28 +311,54 @@ export default function HomeDashboard() {
   const [companies, setCompanies] = useState(mockCompanies);
 
   useEffect(() => {
+    let currentCompanies = [...mockCompanies];
+    
+    // 1. Load from localStorage (Dossier manual adds)
     const stored = loadPratiche();
     if (stored.length > 0) {
-      // Convert stored pratiche to Company format and merge
       const fromStorage: Company[] = stored.map((p: Pratica, idx: number) => ({
-        id: 100 + idx,
-        name: p.name,
-        piva: p.piva,
-        pd: p.pd,
-        altman: p.altman,
-        status: p.status as Status,
-        risk: p.risk as RiskLevel,
-        operator: p.operator,
-        updated: p.updated.slice(0, 10),
-        created: p.created.slice(0, 10),
-        sector: p.sector,
-        revenue: p.revenue,
+        id: 100 + idx, name: p.name, piva: p.piva, pd: p.pd, altman: p.altman,
+        status: p.status as Status, risk: p.risk as RiskLevel, operator: p.operator,
+        updated: p.updated.slice(0, 10), created: p.created.slice(0, 10), sector: p.sector, revenue: p.revenue,
       }));
-      // Merge: stored first, then mock (avoiding duplicates by name)
       const storedNames = new Set(fromStorage.map(c => c.name));
-      const merged = [...fromStorage, ...mockCompanies.filter(c => !storedNames.has(c.name))];
-      setCompanies(merged);
+      currentCompanies = [...fromStorage, ...currentCompanies.filter(c => !storedNames.has(c.name))];
     }
+
+    // 2. Load from sessionStorage (Newly analyzed document via UploadWidget)
+    if (typeof window !== "undefined") {
+      const newAnalysisStr = sessionStorage.getItem("metis_new_analysis");
+      if (newAnalysisStr) {
+        try {
+          const data = JSON.parse(newAnalysisStr);
+          const { soggetto, score_in_analisi, bilancio_t0 } = data;
+          const newComp: Company = {
+            id: 999, 
+            name: soggetto.ragione_sociale, 
+            piva: soggetto.partita_iva, 
+            pd: score_in_analisi.pd_stimata,
+            altman: score_in_analisi.altman_z_stimato, 
+            status: "IN ANALISI", 
+            risk: score_in_analisi.rischio_stimato as RiskLevel,
+            operator: "METIS AI", 
+            updated: new Date().toISOString().slice(0,10), 
+            created: new Date().toISOString().slice(0,10),
+            sector: soggetto.settore, 
+            revenue: bilancio_t0.ricavi,
+          };
+          const idx = currentCompanies.findIndex(c => c.name === newComp.name || c.piva === newComp.piva);
+          if (idx >= 0) {
+            currentCompanies[idx] = { ...currentCompanies[idx], ...newComp, id: currentCompanies[idx].id };
+          } else {
+            currentCompanies = [newComp, ...currentCompanies];
+          }
+        } catch (e) {
+          console.error("Error parsing new analysis:", e);
+        }
+      }
+    }
+
+    setCompanies(currentCompanies);
   }, []);
 
   // Filtered data

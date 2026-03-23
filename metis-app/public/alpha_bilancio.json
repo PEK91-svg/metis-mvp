@@ -1,0 +1,60 @@
+{
+  "soggetto": {
+    "ragione_sociale": "Alpha S.p.A.",
+    "codice_fiscale": "12345678901",
+    "partita_iva": "IT12345678901",
+    "codice_ateco": "28.92",
+    "settore": "Manifatturiero",
+    "dimensione": "media",
+    "provincia": "MI",
+    "area_geografica": "Nord-Ovest"
+  },
+  "score_in_analisi": {
+    "pd_stimata": 2.1,
+    "altman_z_stimato": 3.12,
+    "dscr_stimato": 1.45,
+    "rischio_stimato": "BASSO"
+  },
+  "bilancio_t0": {
+    "ricavi": 15400000.0,
+    "costi_operativi": 12800000.0,
+    "ebitda": 2600000.0,
+    "ammortamenti": 950000.0,
+    "oneri_finanziari": 220000.0,
+    "utile_netto": 980000.0,
+    "attivo_totale": 24500000.0,
+    "patrimonio_netto": 6200000.0,
+    "debiti_finanziari_bt": 2100000.0,
+    "debiti_finanziari_mlt": 4800000.0,
+    "debiti_commerciali": 3400000.0,
+    "crediti_commerciali": 4200000.0,
+    "disponibilita_liquide": 1850000.0,
+    "attivo_corrente": 8400000.0,
+    "passivo_corrente": 6500000.0,
+    "numero_dipendenti": 85,
+    "capex": 1200000.0,
+    "imposte": 320000.0
+  },
+  "bilancio_t1": {
+    "ricavi": 14200000.0,
+    "costi_operativi": 12100000.0,
+    "ebitda": 2100000.0,
+    "ammortamenti": 880000.0,
+    "oneri_finanziari": 240000.0,
+    "utile_netto": 680000.0,
+    "attivo_totale": 23100000.0,
+    "patrimonio_netto": 5220000.0,
+    "debiti_finanziari_bt": 2400000.0,
+    "debiti_finanziari_mlt": 5100000.0,
+    "debiti_commerciali": 3100000.0,
+    "crediti_commerciali": 3800000.0,
+    "disponibilita_liquide": 1250000.0,
+    "attivo_corrente": 7600000.0,
+    "passivo_corrente": 6100000.0,
+    "numero_dipendenti": 80,
+    "capex": 950000.0,
+    "imposte": 210000.0
+  },
+  "anno_t0": 2024,
+  "anno_t1": 2023
+}
