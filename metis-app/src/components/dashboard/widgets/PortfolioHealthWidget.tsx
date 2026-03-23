@@ -30,7 +30,7 @@ export function PortfolioHealthWidget() {
               <span className="text-[11px] text-white/60">{m.label}</span>
               <span className="text-[11px] font-[var(--font-space)]" style={{ color: m.color }}>{m.value}%</span>
             </div>
-            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden cursor-help" title={`${m.label}: ${m.value}%`}>
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -47,7 +47,7 @@ export function PortfolioHealthWidget() {
       {/* SVG area chart at bottom */}
       <div className="border-t border-white/10 pt-3">
         <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">Trend mensile</p>
-        <svg viewBox="0 0 200 40" className="w-full h-10" preserveAspectRatio="none">
+        <svg viewBox="0 0 200 40" className="w-full h-10 cursor-help" preserveAspectRatio="none" title="Trend della salute del portafoglio negli ultimi mesi.">
           <defs>
             <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.3"/>

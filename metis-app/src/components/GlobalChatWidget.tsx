@@ -30,6 +30,12 @@ export function GlobalChatWidget() {
   const [loading, setLoading] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   
+  // Drag state
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
+  const dragRef = useRef({ startX: 0, startY: 0, lastX: 0, lastY: 0 });
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -72,10 +78,51 @@ export function GlobalChatWidget() {
 
   const QUICK = ["Portafoglio Rischio", "Sintesi Dossier Alpha", "Verifica EBA Dashboard"];
 
+  // Drag handlers
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    setIsDragging(true);
+    setHasDragged(false);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: offset.x,
+      lastY: offset.y,
+    };
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) setHasDragged(true);
+    setOffset({
+      x: dragRef.current.lastX + dx,
+      y: dragRef.current.lastY + dy,
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    setIsDragging(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (hasDragged) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    setIsOpen(!isOpen);
+  };
+
   if (isCopilotPage) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end pointer-events-none">
+    <div 
+      className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end pointer-events-none"
+      style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+    >
       
       {/* Popover Chat Interface */}
       <div 
@@ -198,9 +245,13 @@ export function GlobalChatWidget() {
 
       {/* Floating Action Button */}
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onClick={handleClick}
+        style={{ touchAction: "none" }}
         className={`pointer-events-auto relative flex items-center justify-center w-[60px] h-[60px] rounded-full border border-white/20 shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-all duration-300 overflow-hidden group ${
-          isOpen ? "bg-[#0A0F14] rotate-90 scale-90" : "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,229,255,0.5)]"
+          isOpen ? "bg-[#0A0F14] rotate-90 scale-90" : "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] cursor-grab active:cursor-grabbing"
         }`}
       >
         {isOpen ? (

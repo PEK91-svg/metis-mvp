@@ -27,7 +27,7 @@ import { SearchWidget } from "./widgets/SearchWidget";
 import { MetisChatWidget } from "./widgets/MetisChatWidget";
 import { Settings, Plus, Maximize2, X } from "lucide-react";
 
-export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK" | "SEARCH" | "METIS_CHAT";
+export type WidgetType = "KPI" | "HEALTH" | "RECOMMENDATIONS" | "PIPELINE" | "RISK" | "SEARCH";
 export type WidgetWidth = 1 | 2 | 3 | 4;
 export type WidgetHeight = 1 | 2 | 3;
 
@@ -66,7 +66,6 @@ const WIDGET_TITLES: Record<WidgetType, string> = {
   PIPELINE: "Pipeline Flow",
   RISK: "Risk Analysis",
   SEARCH: "Ricerca Pratiche",
-  METIS_CHAT: "Metis AI",
 };
 
 const WIDGET_DESCRIPTIONS: Record<WidgetType, string> = {
@@ -76,7 +75,6 @@ const WIDGET_DESCRIPTIONS: Record<WidgetType, string> = {
   PIPELINE: "Visualizzazione del flusso delle pratiche attraverso gli stati: approvate, in analisi, rifiutate. Include distribuzione settimanale e trend.",
   RISK: "Analisi radar multi-dimensionale del rischio di portafoglio. Combina PD, Altman Z-Score, EBA compliance, CCII e indici di liquidità.",
   SEARCH: "Ricerca full-text su tutte le pratiche del portafoglio per nome azienda, PIVA, settore o stato. Permette di accedere rapidamente a pratica o dossier.",
-  METIS_CHAT: "Assistente AI conversazionale contestualizzato sul portafoglio. Risponde in italiano con analisi tecniche sui dati creditizi in tempo reale.",
 };
 
 
@@ -87,7 +85,6 @@ const INITIAL_WIDGETS: DashboardWidget[] = [
   { id: "4", type: "PIPELINE",      title: WIDGET_TITLES.PIPELINE,       w: 2, h: 2 },
   { id: "5", type: "RISK",          title: WIDGET_TITLES.RISK,           w: 1, h: 2 },
   { id: "6", type: "SEARCH",        title: WIDGET_TITLES.SEARCH,         w: 1, h: 2 },
-  { id: "7", type: "METIS_CHAT",    title: WIDGET_TITLES.METIS_CHAT,     w: 1, h: 2 },
 ];
 
 interface DashboardGridProps {
@@ -108,7 +105,8 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setWidgets(parsed);
+          // Filter out the old METIS_CHAT widget if it exists in localstorage cache
+          setWidgets(parsed.filter((w: DashboardWidget) => w.type !== "METIS_CHAT" as any));
         }
       } catch {
         // Layout salvato corrotto — si usa quello di default (INITIAL_WIDGETS)
@@ -170,13 +168,13 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
         <div className="flex gap-2">
           {isEditMode && (
             <div className="flex gap-2 mr-4 animate-[fadeIn_0.2s_ease-out] flex-wrap">
-              {(["KPI", "HEALTH", "RECOMMENDATIONS", "PIPELINE", "RISK", "SEARCH", "METIS_CHAT"] as WidgetType[]).map((t) => (
+              {(["KPI", "HEALTH", "RECOMMENDATIONS", "PIPELINE", "RISK", "SEARCH"] as WidgetType[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => addWidget(t)}
                   className="flex items-center gap-1 text-[10px] uppercase text-cyan bg-[#0A0F14] px-3 py-1.5 rounded-full border border-white/10 hover:border-cyan transition-colors font-space tracking-widest"
                 >
-                  <Plus size={12} /> {t === "METIS_CHAT" ? "Metis AI" : t === "SEARCH" ? "Ricerca" : t}
+                  <Plus size={12} /> {t === "SEARCH" ? "Ricerca" : t}
                 </button>
               ))}
             </div>
@@ -212,7 +210,6 @@ export default function DashboardGrid({ data }: DashboardGridProps) {
                   case "PIPELINE":        return <PipelineChartWidget data={data} />;
                   case "RISK":            return <RiskChartWidget data={data} />;
                   case "SEARCH":          return <SearchWidget />;
-                  case "METIS_CHAT":      return <MetisChatWidget />;
                   default:               return null;
                 }
               };

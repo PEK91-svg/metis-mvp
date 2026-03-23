@@ -27,7 +27,8 @@ export function PipelineChartWidget({ data: _data }: { data: DashboardData | nul
                 return (
                   <div
                     key={j}
-                    className="flex-1 rounded-sm transition-all"
+                    title={`Settimana ${j + 1}\nPratiche: ${v} (${b.label})`}
+                    className="flex-1 rounded-sm transition-all cursor-help hover:brightness-125"
                     style={{
                       height: `${pct}%`,
                       minHeight: 4,

@@ -97,7 +97,9 @@ export default function FifaRiskRadar({ axes = DEFAULT_AXES, compact = false }: 
             {axes.map((ax, i) => {
               const { x, y } = polarToXY((360 / N) * i, (vals[i] / 100) * R);
               return (
-                <circle key={i} cx={x} cy={y} r={3.5} fill={ax.color} stroke="#0A0F14" strokeWidth="1.5"
+                <circle key={i} cx={x} cy={y} r={4.5} fill={ax.color} stroke="#0A0F14" strokeWidth="1.5"
+                  className="cursor-help hover:r-[6px] transition-all"
+                  title={`${ax.label}\nScore normalizzato: ${Math.round(ax.value)}\nValore grezzo: ${ax.raw}`}
                   style={{ transition: `all 0.9s cubic-bezier(0.4,0,0.2,1) ${i * 50}ms` }} />
               );
             })}
