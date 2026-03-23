@@ -200,6 +200,214 @@ function MetisAiPanel({ company, uploadedCount, totalDocs }: {
   );
 }
 
+// ─── Delibera Panel ──────────────────────────────────────────────────────────
+type DelibraStep = "idle" | "approve" | "reject" | "escalation" | "done_approve" | "done_reject" | "done_escalation";
+
+function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean }) {
+  const [step, setStep] = useState<DelibraStep>("idle");
+  const [note, setNote] = useState("");
+
+  const status = company.status;
+
+  // Pratiche già concluse → mostra badge finale
+  if (status === "APPROVATA") {
+    return (
+      <div className="glass-panel border border-green/30 p-6 rounded-xl">
+        <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-3">Proposta di Delibera</h3>
+        <div className="flex items-center gap-3 bg-green/10 border border-green/30 rounded-xl p-4">
+          <div className="w-10 h-10 rounded-full bg-green/20 flex items-center justify-center text-green shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div className="text-green text-sm font-bold font-space uppercase tracking-widest">Pratica Approvata</div>
+            <div className="text-green/60 text-[11px]">La delibera è già stata emessa con esito favorevole.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "RIFIUTATA") {
+    return (
+      <div className="glass-panel border border-red/30 p-6 rounded-xl">
+        <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-3">Proposta di Delibera</h3>
+        <div className="flex items-center gap-3 bg-red/10 border border-red/30 rounded-xl p-4">
+          <div className="w-10 h-10 rounded-full bg-red/20 flex items-center justify-center text-red shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div>
+            <div className="text-red text-sm font-bold font-space uppercase tracking-widest">Pratica Rifiutata</div>
+            <div className="text-red/60 text-[11px]">La delibera è già stata emessa con esito negativo.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Documenti mancanti o stato iniziale (non ancora in analisi)
+  if (status !== "IN ANALISI" && status !== "DA REVISIONARE" && status !== "SOSPESA") {
+    return (
+      <div className="glass-panel border border-white/10 p-6 rounded-xl opacity-50">
+        <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-3">Proposta di Delibera</h3>
+        <p className="text-[11px] text-white/40">Avvia l&apos;analisi XAI per sbloccare le azioni di delibera.</p>
+      </div>
+    );
+  }
+
+  // Pulsanti da mostrare per stato
+  const showApproveReject = status === "IN ANALISI" || status === "DA REVISIONARE";
+  const showEscalation = true; // sempre disponibile per stati attivi
+
+  return (
+    <>
+      <div className="glass-panel border border-white/10 p-6 rounded-xl">
+        <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-1">Proposta di Delibera</h3>
+        <p className="text-[11px] text-white/50 mb-5">
+          {status === "SOSPESA" ? "Pratica sospesa. Puoi richiedere integrazioni o ulteriori informazioni." : "Seleziona l\u2019esito finale per questa pratica di fido."}
+        </p>
+
+        <div className="space-y-3">
+          {/* Approva */}
+          {showApproveReject && (
+            <button
+              onClick={() => setStep("approve")}
+              className="w-full flex items-center gap-4 p-4 rounded-xl border border-green/30 bg-green/5 hover:bg-green/10 hover:border-green/50 hover:shadow-[0_0_20px_rgba(0,255,102,0.15)] transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-green/10 border border-green/30 flex items-center justify-center text-green shrink-0 group-hover:scale-110 transition-transform">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div className="text-left">
+                <div className="text-green text-sm font-bold font-space uppercase tracking-widest">Approva</div>
+                <div className="text-green/60 text-[11px]">Proposta delibera favorevole al CRO</div>
+              </div>
+            </button>
+          )}
+
+          {/* Escalation / Richiedi Integrazione */}
+          {showEscalation && (
+            <button
+              onClick={() => setStep("escalation")}
+              className="w-full flex items-center gap-4 p-4 rounded-xl border border-yellow/30 bg-yellow/5 hover:bg-yellow/10 hover:border-yellow/50 hover:shadow-[0_0_20px_rgba(250,204,21,0.15)] transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-yellow/10 border border-yellow/30 flex items-center justify-center text-yellow shrink-0 group-hover:scale-110 transition-transform">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div className="text-left">
+                <div className="text-yellow text-sm font-bold font-space uppercase tracking-widest">Richiedi Integrazione</div>
+                <div className="text-yellow/60 text-[11px]">Scala al livello superiore o richiedi doc aggiuntivi</div>
+              </div>
+            </button>
+          )}
+
+          {/* Rifiuta */}
+          {showApproveReject && (
+            <button
+              onClick={() => setStep("reject")}
+              className="w-full flex items-center gap-4 p-4 rounded-xl border border-red/30 bg-red/5 hover:bg-red/10 hover:border-red/50 hover:shadow-[0_0_20px_rgba(255,71,87,0.15)] transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-red/10 border border-red/30 flex items-center justify-center text-red shrink-0 group-hover:scale-110 transition-transform">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div className="text-left">
+                <div className="text-red text-sm font-bold font-space uppercase tracking-widest">Rifiuta</div>
+                <div className="text-red/60 text-[11px]">Proposta delibera negativa con motivazione</div>
+              </div>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ─── Modali Conferma ─────────────────────────────────── */}
+      {(step === "approve" || step === "reject" || step === "escalation") && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+          <div className="w-[480px] glass-panel border rounded-2xl p-8 relative overflow-hidden shadow-2xl"
+            style={{ borderColor: step === "approve" ? "rgba(0,255,102,0.4)" : step === "escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)" }}>
+
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-20"
+              style={{ backgroundColor: step === "approve" ? "#00FF66" : step === "escalation" ? "#FACC15" : "#FF4757" }} />
+
+            <div className="text-center mb-6 relative z-10">
+              <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 border"
+                style={{
+                  background: step === "approve" ? "rgba(0,255,102,0.1)" : step === "escalation" ? "rgba(250,204,21,0.1)" : "rgba(255,71,87,0.1)",
+                  borderColor: step === "approve" ? "rgba(0,255,102,0.4)" : step === "escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)"
+                }}>
+                {step === "approve" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
+                {step === "escalation" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
+                {step === "reject" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+              </div>
+              <h2 className="text-white font-space text-lg font-bold mb-1">
+                {step === "approve" ? "Conferma Approvazione" : step === "escalation" ? "Richiesta di Integrazione" : "Conferma Rifiuto"}
+              </h2>
+              <p className="text-white/50 text-[11px]">{company.name} — {company.piva}</p>
+            </div>
+
+            <div className="mb-6 relative z-10">
+              <label className="block text-[10px] font-space uppercase tracking-[0.2em] text-text-muted mb-2">
+                {step === "escalation" ? "Motivo escalation / documenti richiesti" : "Note per il CRO (facoltativo)"}
+              </label>
+              <textarea
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                rows={3}
+                placeholder={step === "approve" ? "Es: DSCR solido, garanzie adeguate…" : step === "escalation" ? "Es: Mancano 2 anni di bilancio, richiedere integrazione…" : "Es: PD superiore alla soglia, scoring negativo…"}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[12px] text-white placeholder:text-white/30 focus:border-cyan/50 focus:ring-1 focus:ring-cyan/50 outline-none resize-none transition-all"
+              />
+            </div>
+
+            <div className="flex gap-3 relative z-10">
+              <button
+                onClick={() => { setStep("idle"); setNote(""); }}
+                className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-white/60 text-xs font-space font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={() => {
+                  setStep(step === "approve" ? "done_approve" : step === "escalation" ? "done_escalation" : "done_reject");
+                  setNote("");
+                }}
+                className="flex-1 py-3 rounded-xl text-xs font-space font-bold uppercase tracking-widest transition-all"
+                style={{
+                  background: step === "approve" ? "linear-gradient(to right, #00FF66, #00CC52)" : step === "escalation" ? "linear-gradient(to right, #FACC15, #EAB308)" : "linear-gradient(to right, #FF4757, #CC2936)",
+                  color: "black",
+                  boxShadow: step === "approve" ? "0 0 20px rgba(0,255,102,0.4)" : step === "escalation" ? "0 0 20px rgba(250,204,21,0.4)" : "0 0 20px rgba(255,71,87,0.4)"
+                }}
+              >
+                {step === "approve" ? "Invia al CRO →" : step === "escalation" ? "Richiedi Integrazione →" : "Conferma Rifiuto →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Toast Esito ─────────────────────────────────── */}
+      {(step === "done_approve" || step === "done_reject" || step === "done_escalation") && (
+        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-4 px-6 py-4 rounded-2xl border shadow-2xl glass-panel animate-in slide-in-from-bottom duration-500"
+          style={{ borderColor: step === "done_approve" ? "rgba(0,255,102,0.4)" : step === "done_escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center border shrink-0"
+            style={{ background: step === "done_approve" ? "rgba(0,255,102,0.1)" : step === "done_escalation" ? "rgba(250,204,21,0.1)" : "rgba(255,71,87,0.1)", borderColor: step === "done_approve" ? "rgba(0,255,102,0.4)" : step === "done_escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)" }}>
+            {step === "done_approve" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
+            {step === "done_escalation" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
+            {step === "done_reject" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+          </div>
+          <div>
+            <div className="text-white text-sm font-bold font-space uppercase tracking-widest">
+              {step === "done_approve" ? "Pratica approvata ✓" : step === "done_escalation" ? "Escalation inviata ✓" : "Pratica rifiutata ✓"}
+            </div>
+            <div className="text-white/50 text-[11px]">
+              {step === "done_approve" ? "Proposta inviata al CRO per signature" : step === "done_escalation" ? "Richiesta inviata al livello superiore" : "Notifica inviata con motivazione"}
+            </div>
+          </div>
+          <button onClick={() => setStep("idle")} className="ml-4 text-white/30 hover:text-white transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 export default function PraticaPageWrapper() {
   return (
@@ -562,6 +770,9 @@ function PraticaPage() {
                   ))}
                 </div>
               </div>
+
+              {/* ─── Proposta di Delibera ─────────────────────────── */}
+              <DelibraPanel company={company} isElaborata={isElaborata} />
 
             </div>
           </div>
