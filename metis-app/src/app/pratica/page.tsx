@@ -137,60 +137,63 @@ function MetisAiPanel({ company, uploadedCount, totalDocs }: {
   }, [msgs, loading]);
 
   return (
-    <div className="glass-panel border border-cyan/20 p-4 flex flex-col gap-3">
+    <div className="glass-panel border border-cyan/20 p-5 rounded-xl flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg overflow-hidden shadow-[0_0_10px_rgba(0,229,255,0.3)]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(0,229,255,0.4)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/metis-icon.png" alt="Metis AI" className="w-full h-full object-cover" />
+            <img src="/metis-icon.png" alt="" aria-hidden="true" className="w-full h-full object-cover" />
           </div>
-          <span className="text-[10px] font-space font-bold text-cyan uppercase tracking-widest">Metis AI</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_#00FF66] animate-pulse" />
+          <span className="text-[11px] font-space font-bold text-cyan uppercase tracking-[0.2em]">Metis AI</span>
+          <span className="w-2 h-2 rounded-full bg-green shadow-[0_0_8px_#00FF66] animate-pulse" aria-label="Online" />
         </div>
-        <Link href="/copilot" className="text-[8px] font-space uppercase tracking-widest text-text-muted hover:text-cyan border border-white/10 hover:border-cyan/30 px-2 py-0.5 rounded transition">
-          Apri completo →
+        <Link href="/copilot" className="text-[9px] font-space uppercase tracking-[0.2em] font-bold text-text-muted hover:text-cyan border border-white/10 hover:border-cyan/30 px-3 py-1.5 rounded-lg transition-colors">
+          Apri a schermo intero
         </Link>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto max-h-[220px] space-y-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]">
+      <div className="flex-1 overflow-y-auto max-h-[250px] space-y-3 pr-2 [scrollbar-width:thin] [scrollbar-color:rgba(0,229,255,0.2)_transparent]" aria-live="polite">
         {msgs.map((m, i) => (
-          <div key={i} className={`text-[11px] leading-relaxed px-3 py-2 rounded-lg ${
+          <div key={i} className={`text-[12px] leading-relaxed px-4 py-3 rounded-xl ${
             m.role === "assistant"
-              ? "bg-black/30 border border-white/5 text-white/80 border-l-2 border-l-cyan/40"
-              : "bg-cyan/5 border border-cyan/20 text-white ml-4"
+              ? "bg-black/40 border border-white/5 text-white/90 border-l-2 border-l-cyan/50"
+              : "bg-cyan/10 border border-cyan/30 text-white ml-6 shadow-inner"
           }`}>
             {m.content}
           </div>
         ))}
         {loading && (
-          <div className="flex items-center gap-2 px-3 py-2">
-            <div className="flex gap-1">
-              {[0,1,2].map(i => <div key={i} className="w-1 h-1 rounded-full bg-cyan/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="flex gap-1.5">
+              {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
             </div>
-            <span className="text-[9px] font-space text-cyan/50 uppercase tracking-widest">Metis sta elaborando...</span>
+            <span className="text-[10px] font-space text-cyan/70 uppercase tracking-[0.1em] font-bold">Metis sta analizzando...</span>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-center gap-2">
+      {/* Input Form */}
+      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-center gap-3 mt-1">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Chiedi a Metis sulla pratica..."
-          className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white placeholder:text-white/20 outline-none focus:border-cyan/30 transition"
+          placeholder="Chiedi a Metis su questa pratica…"
+          aria-label="Messaggio per Metis AI"
+          autoComplete="off"
+          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[12px] text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-[#090D14] transition-all"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0 ${
-            input.trim() ? "bg-cyan/20 text-cyan border border-cyan/40 hover:bg-cyan/30" : "bg-white/5 text-white/20 border border-white/5"
+          aria-label="Invia messaggio"
+          className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-[#090D14] ${
+            input.trim() ? "bg-cyan/20 text-cyan border border-cyan/40 hover:bg-cyan/30 hover:scale-[1.05] hover:shadow-[0_0_15px_rgba(0,229,255,0.3)]" : "bg-white/5 text-white/20 border border-white/5"
           }`}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </form>
     </div>
@@ -215,6 +218,7 @@ function PraticaPage() {
   const [docs, setDocs] = useState<RequiredDoc[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<{ title: string; filename?: string } | null>(null);
 
   useEffect(() => {
     if (company) setDocs(company.documents);
@@ -289,7 +293,7 @@ function PraticaPage() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* KPI Summary */}
-          <section className="grid grid-cols-5 gap-4 mb-6">
+          <section className="grid grid-cols-5 gap-6 mb-6">
             {[
               { label: "PD", value: `${company.pd.toFixed(1)}%`, cls: company.pd > 5 ? "border-red/30 text-red bg-red/10" : company.pd > 3 ? "border-yellow/30 text-yellow bg-yellow/10" : "border-green/30 text-green bg-green/10" },
               { label: "Altman Z-Score", value: company.altman.toFixed(2), cls: company.altman < 1.8 ? "border-red/30 text-red bg-red/10" : company.altman < 3 ? "border-yellow/30 text-yellow bg-yellow/10" : "border-green/30 text-green bg-green/10" },
@@ -297,73 +301,87 @@ function PraticaPage() {
               { label: "Documenti", value: `${uploadedCount}/${docs.length}`, cls: allUploaded ? "border-green/30 text-green bg-green/10" : "border-yellow/30 text-yellow bg-yellow/10" },
               { label: "Fatturato", value: `€${(company.revenue / 1_000_000).toFixed(1)}M`, cls: "border-cyan/30 text-cyan bg-cyan/10" },
             ].map((kpi, i) => (
-              <div key={i} className={`glass-panel flex flex-col items-center justify-center p-3 border ${kpi.cls}`}>
-                <span className="text-[10px] uppercase tracking-wider text-text-muted">{kpi.label}</span>
-                <span className="text-xl font-bold mt-1 font-space">{kpi.value}</span>
+              <div key={i} className={`glass-panel flex flex-col items-center justify-center p-5 border ${kpi.cls} transition-all duration-300 hover:scale-[1.02] hover:bg-white/[0.02] cursor-default`}>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted font-space">{kpi.label}</span>
+                <span className={`text-2xl font-bold mt-2 font-mono [font-variant-numeric:tabular-nums] ${kpi.label === 'Fatturato' ? 'text-white' : ''}`}>{kpi.value}</span>
               </div>
             ))}
           </section>
 
           {/* Main Grid */}
           <div className="grid grid-cols-3 gap-6">
-            {/* Documents Panel — 2 cols */}
-            <div className="col-span-2 glass-panel border border-white/10 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-space text-sm font-semibold text-white flex items-center gap-2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            {/* Left Column — 2 cols */}
+            <div className="col-span-2 space-y-6 flex flex-col">
+              {/* Metis AI Panel */}
+              <MetisAiPanel company={company} uploadedCount={uploadedCount} totalDocs={docs.length} />
+
+              {/* Documents Panel */}
+              <div className="glass-panel border border-white/10 p-6 flex flex-col gap-5">
+              <header className="flex items-center justify-between">
+                <h2 className="font-space text-lg font-semibold text-white flex items-center gap-2 [text-wrap:balance]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                   Documenti Richiesti
                 </h2>
-                <div className="flex items-center gap-2 text-[10px] font-space">
-                  <span className="text-green">{uploadedCount} caricati</span>
-                  {missingCount > 0 && <span className="text-white/30">&bull;</span>}
-                  {missingCount > 0 && <span className="text-yellow">{missingCount} mancanti</span>}
-                  {errorCount > 0 && <span className="text-white/30">&bull;</span>}
-                  {errorCount > 0 && <span className="text-red">{errorCount} errori</span>}
+                <div className="flex items-center gap-3 text-[11px] font-space tracking-widest uppercase">
+                  <span className="text-green font-bold">{uploadedCount} caricati</span>
+                  {missingCount > 0 && <span className="text-white/20">|</span>}
+                  {missingCount > 0 && <span className="text-yellow font-bold">{missingCount} mancanti</span>}
+                  {errorCount > 0 && <span className="text-white/20">|</span>}
+                  {errorCount > 0 && <span className="text-red font-bold">{errorCount} errori</span>}
                 </div>
-              </div>
+              </header>
 
               {/* Progress Bar */}
-              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mb-5">
+              <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan to-green transition-all duration-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-cyan to-green transition-all duration-700 ease-out rounded-full shadow-[0_0_10px_var(--color-cyan)]"
                   style={{ width: `${(uploadedCount / docs.length) * 100}%` }}
+                  role="progressbar"
+                  aria-valuenow={Math.round((uploadedCount / docs.length) * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
                 />
               </div>
 
               {/* Document List */}
-              <div className="space-y-2">
+              <div className="space-y-3 flex-1 overflow-y-auto pr-2 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]">
                 {docs.map((doc, idx) => {
                   const dCfg = DOC_STATUS_CONFIG[doc.status];
                   return (
-                    <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border ${dCfg.border} ${dCfg.bg} transition hover:border-white/20`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${dCfg.text} bg-black/30 border ${dCfg.border}`}>
-                          {dCfg.icon}
+                    <div
+                      key={idx}
+                      onClick={() => doc.status === "uploaded" && setSelectedDoc({ title: doc.name, filename: doc.fileName })}
+                      className={`group flex items-center justify-between p-4 min-h-[4rem] rounded-xl border ${dCfg.border} ${dCfg.bg} transition-all duration-300 hover:border-white/30 ${doc.status === "uploaded" ? "cursor-pointer hover:bg-white/[0.08]" : "hover:bg-white/[0.04]"}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${dCfg.text} bg-black/40 border ${dCfg.border} shadow-inner`}>
+                          {typeof dCfg.icon === 'string' ? dCfg.icon : dCfg.icon}
                         </div>
-                        <div>
-                          <div className="text-white text-sm font-medium">{doc.name}</div>
-                          <div className="text-text-muted text-[10px]">
+                        <div className="flex flex-col justify-center">
+                          <div className="text-white text-sm font-semibold tracking-wide group-hover:text-cyan transition-colors">{doc.name}</div>
+                          <div className="text-text-muted text-[11px] mt-0.5">
                             {doc.status === "uploaded"
-                              ? `${doc.fileName} — caricato il ${doc.uploadedAt}`
+                              ? <span className="text-white/60 font-mono group-hover:text-white transition-colors">{doc.fileName} — <span className="text-text-muted">{doc.uploadedAt}</span></span>
                               : doc.status === "error"
-                              ? "Errore nel file caricato — ricaricare"
+                              ? <span className="text-red/80">Errore nel file caricato — necessario caricare un nuovo documento</span>
                               : doc.description}
                           </div>
                         </div>
                       </div>
                       <div>
                         {doc.status === "uploaded" ? (
-                          <span className="text-[9px] font-space uppercase tracking-widest text-green bg-green/10 border border-green/30 px-2 py-1 rounded">Caricato</span>
+                          <span className="text-[10px] font-space uppercase tracking-[0.2em] font-bold text-green bg-green/10 border border-green/30 px-3 py-1.5 rounded-lg shadow-[0_0_10px_rgba(0,255,102,0.1)] group-hover:bg-green/20 transition-colors">Apri ✓</span>
                         ) : (
                           <button
-                            onClick={() => handleUpload(idx)}
-                            className={`text-[10px] font-space uppercase tracking-widest px-3 py-1.5 rounded-lg font-bold transition ${
+                            onClick={(e) => { e.stopPropagation(); handleUpload(idx); }}
+                            className={`text-[10px] font-space uppercase tracking-[0.2em] font-bold px-4 py-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                               doc.status === "error"
-                                ? "bg-red/10 text-red border border-red/30 hover:bg-red/20"
-                                : "bg-cyan/10 text-cyan border border-cyan/30 hover:bg-cyan/20"
+                                ? "bg-red/10 text-red border border-red/40 hover:bg-red/20 hover:shadow-[0_0_15px_rgba(255,71,87,0.3)] focus-visible:ring-red"
+                                : "bg-cyan/10 text-cyan border border-cyan/40 hover:bg-cyan/20 hover:shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:scale-[1.02] focus-visible:ring-cyan"
                             }`}
+                            aria-label={`Carica documento ${doc.name}`}
                           >
-                            {doc.status === "error" ? "Ricarica" : "Carica"}
+                            {doc.status === "error" ? "Ricarica" : "Carica File"}
                           </button>
                         )}
                       </div>
@@ -373,49 +391,55 @@ function PraticaPage() {
               </div>
 
               {/* Submit / Status */}
-              <div className="mt-5 pt-4 border-t border-white/10">
+              <div className="mt-2 pt-5 border-t border-white/10" aria-live="polite">
                 {submitted ? (
-                  <div className="flex items-center gap-3 bg-green/10 border border-green/30 rounded-lg p-4">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green"><polyline points="20 6 9 17 4 12"/></svg>
+                  <div className="flex items-center gap-4 bg-green/10 border border-green/30 rounded-xl p-5 shadow-[0_0_20px_rgba(0,255,102,0.1)]">
+                    <div className="w-10 h-10 rounded-full bg-green/20 flex items-center justify-center text-green shrink-0">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
                     <div>
-                      <div className="text-green text-sm font-semibold">Pratica Sottomessa</div>
-                      <div className="text-green/70 text-[10px]">In coda per analisi automatica. Tempo stimato: 3-5 minuti.</div>
+                      <div className="text-green text-sm font-bold font-space uppercase tracking-widest mb-1">Pratica Sottomessa</div>
+                      <div className="text-green/80 text-[11px] leading-relaxed">In coda per analisi automatica. Il motore XAI è in esecuzione, tempo stimato: 3-5 minuti...</div>
                     </div>
                   </div>
                 ) : isElaborata ? (
-                  <div className="flex items-center gap-3 bg-green/10 border border-green/30 rounded-lg p-4">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green"><polyline points="20 6 9 17 4 12"/></svg>
+                  <div className="flex items-center gap-4 bg-cyan/10 border border-cyan/30 rounded-xl p-5 shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+                    <div className="w-10 h-10 rounded-full bg-cyan/20 flex items-center justify-center text-cyan shrink-0">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
                     <div>
-                      <div className="text-green text-sm font-semibold">Analisi Completata</div>
-                      <div className="text-green/70 text-[10px]">Tutti i moduli M1-M8 sono stati eseguiti. Clicca &quot;Apri Dashboard Analisi&quot; in alto per i risultati.</div>
+                      <div className="text-cyan text-sm font-bold font-space uppercase tracking-widest mb-1">Analisi Completata</div>
+                      <div className="text-cyan/80 text-[11px] leading-relaxed">Tutti i moduli M1-M8 sono stati eseguiti con successo. Procedi alla Dashboard Analisi per i risultati XAI.</div>
                     </div>
                   </div>
                 ) : allUploaded ? (
                   <button
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="w-full py-3 rounded-lg font-space font-bold uppercase tracking-widest text-xs transition-all bg-gradient-to-r from-cyan to-[rgba(0,229,255,0.6)] text-black shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-xl font-space font-bold uppercase tracking-[0.2em] text-xs transition-all bg-cyan text-black shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-70 disabled:hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] disabled:hover:bg-cyan flex items-center justify-center gap-3"
                   >
                     {submitting ? (
                       <>
-                        <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                        Sottomissione in corso...
+                        <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        Sottomissione Motore XAI...
                       </>
                     ) : (
                       <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        Sottometti Pratica per Analisi
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Avvia Analisi Pratica
                       </>
                     )}
                   </button>
                 ) : (
-                  <div className="flex items-center gap-3 bg-yellow/10 border border-yellow/30 rounded-lg p-4">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <div className="flex items-center gap-4 bg-yellow/10 border border-yellow/30 rounded-xl p-5">
+                    <div className="w-10 h-10 rounded-full bg-yellow/20 flex items-center justify-center text-yellow shrink-0">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
                     <div>
-                      <div className="text-yellow text-sm font-semibold">Documenti Mancanti</div>
-                      <div className="text-yellow/70 text-[10px]">
-                        Carica i {missingCount} document{missingCount === 1 ? "o" : "i"} mancant{missingCount === 1 ? "e" : "i"}
-                        {errorCount > 0 && ` e correggi ${errorCount} error${errorCount === 1 ? "e" : "i"}`} per poter sottomettere la pratica.
+                      <div className="text-yellow text-sm font-bold font-space uppercase tracking-widest mb-1">Azione Richiesta</div>
+                      <div className="text-yellow/80 text-[11px] leading-relaxed">
+                        Sistema in attesa di <strong className="text-yellow">{missingCount}</strong> document{missingCount === 1 ? "o" : "i"}
+                        {errorCount > 0 && ` e correzione di ${errorCount} error${errorCount === 1 ? "e" : "i"}`} per sbloccare l'analisi automatica.
                       </div>
                     </div>
                   </div>
@@ -423,37 +447,77 @@ function PraticaPage() {
               </div>
             </div>
 
+            {/* Bilanci Storici Panel */}
+            <div className="glass-panel border border-white/10 p-6 flex flex-col gap-4 rounded-xl">
+              <header className="flex items-center justify-between">
+                <h2 className="font-space text-lg font-semibold text-white flex items-center gap-2 [text-wrap:balance]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="8" y1="18" x2="8" y2="15"/><line x1="16" y1="18" x2="16" y2="9"/></svg>
+                  Archivio Bilanci Storici
+                </h2>
+              </header>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-[11px]">
+                  <thead>
+                    <tr className="border-b border-white/10 text-text-muted font-space uppercase tracking-[0.1em]">
+                      <th className="pb-3 px-3 font-medium">Esercizio</th>
+                      <th className="pb-3 px-3 font-medium">Stato Patrimoniale</th>
+                      <th className="pb-3 px-3 font-medium">Conto Economico</th>
+                      <th className="pb-3 px-3 font-medium text-right">Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {["2023", "2022", "2021"].map((yr) => (
+                      <tr key={yr} className="group hover:bg-white/[0.02] transition-colors">
+                        <td className="py-3 px-3 text-white font-mono">{yr}</td>
+                        <td className="py-3 px-3 text-white/70">Depositato (XBRL)</td>
+                        <td className="py-3 px-3 text-white/70">Depositato (XBRL)</td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            onClick={() => setSelectedDoc({ title: `Fascicolo di Bilancio ${yr}`, filename: `bilancio_xbrl_${yr}.pdf` })}
+                            className="text-[10px] font-space uppercase text-cyan hover:text-white border border-cyan/30 hover:border-cyan/60 hover:bg-cyan/10 px-3 py-1.5 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+                          >
+                            Visualizza
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
             {/* Right Column — Info */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Location Map Card */}
               {(company.lat && company.lng) && (
-                <div className="glass-panel border border-white/10 overflow-hidden">
+                <div className="glass-panel border border-white/10 overflow-hidden rounded-xl">
                   <iframe
                     src={`https://www.google.com/maps?q=${company.lat},${company.lng}&z=15&output=embed`}
-                    className="w-full h-[130px] border-0 opacity-80"
+                    className="w-full h-[150px] border-0 opacity-80 filter grayscale invert contrast-125 transition-all duration-700 hover:filter-none hover:opacity-100"
                     loading="lazy"
-                    allowFullScreen
+                    title="Mappa Sede Aziendale"
                   />
-                  <div className="p-3">
+                  <div className="p-4 bg-black/40">
                     <div className="flex items-center gap-2 mb-2">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan shrink-0">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-cyan shrink-0">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                       </svg>
-                      <span className="text-[10px] text-text-muted font-space uppercase tracking-widest">Sede Legale</span>
+                      <span className="text-[10px] text-cyan font-space uppercase tracking-[0.2em] font-bold">Sede Legale</span>
                     </div>
-                    <div className="text-[11px] text-white leading-relaxed">{company.indirizzo || "Indirizzo non disponibile"}</div>
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className="text-[10px] text-text-muted font-mono">{company.piva}</span>
-                      <span className="text-white/20">·</span>
-                      <span className="text-[10px] text-text-muted">{company.sector}</span>
+                    <div className="text-[12px] text-white leading-relaxed font-medium">{company.indirizzo || "Indirizzo non disponibile"}</div>
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
+                      <span className="text-[10px] text-text-muted font-mono tracking-widest">{company.piva}</span>
+                      <span className="text-white/20">|</span>
+                      <span className="text-[10px] text-white/80">{company.sector}</span>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Company Info Card */}
-              <div className="glass-panel border border-white/10 p-5">
-                <h3 className="text-[10px] text-text-muted font-space uppercase tracking-widest mb-3">Anagrafica Azienda</h3>
+              <div className="glass-panel border border-white/10 p-6 rounded-xl">
+                <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-4">Anagrafica Azienda</h3>
                 <div className="space-y-2">
                   {[
                     ["Ragione Sociale", company.name],
@@ -462,18 +526,18 @@ function PraticaPage() {
                     ["Fatturato", `€${(company.revenue / 1_000_000).toFixed(1)}M`],
                     ["Operatore", company.operator],
                   ].map(([label, val]) => (
-                    <div key={label} className="flex justify-between items-center bg-black/30 rounded-lg px-3 py-2 border border-white/5">
-                      <span className="text-text-muted text-[11px]">{label}</span>
-                      <span className="text-white text-[11px] font-mono">{val}</span>
+                    <div key={label} className="flex justify-between items-center bg-black/40 rounded-lg px-4 py-3 border border-white/5 transition-colors hover:bg-white/[0.03]">
+                      <span className="text-text-muted text-[11px] font-medium">{label}</span>
+                      <span className="text-white text-[12px] font-mono [font-variant-numeric:tabular-nums] font-semibold">{val}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Analysis Status */}
-              <div className="glass-panel border border-white/10 p-5">
-                <h3 className="text-[10px] text-text-muted font-space uppercase tracking-widest mb-3">Stato Moduli Analisi</h3>
-                <div className="space-y-1.5">
+              <div className="glass-panel border border-white/10 p-6 rounded-xl">
+                <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-4">Stato Moduli Analisi XAI</h3>
+                <div className="space-y-2">
                   {[
                     { module: "M1", name: "Sintesi PEF", done: isElaborata },
                     { module: "M2", name: "Web Sentiment", done: isElaborata },
@@ -484,25 +548,136 @@ function PraticaPage() {
                     { module: "M7", name: "Forecast DSCR", done: isElaborata },
                     { module: "M8", name: "SWOT", done: isElaborata },
                   ].map((m) => (
-                    <div key={m.module} className={`flex items-center justify-between rounded-lg px-3 py-2 border ${m.done ? "border-green/20 bg-green/5" : "border-white/5 bg-black/30"}`}>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[9px] font-space font-bold ${m.done ? "text-green" : "text-white/30"}`}>{m.module}</span>
-                        <span className={`text-[11px] ${m.done ? "text-white" : "text-white/30"}`}>{m.name}</span>
+                    <div key={m.module} className={`flex items-center justify-between rounded-lg px-4 py-2.5 border transition-all ${m.done ? "border-green/20 bg-green/5 hover:border-green/40" : "border-white/5 bg-black/40 hover:bg-white/[0.02]"}`}>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-space font-bold ${m.done ? "text-green" : "text-white/30"}`}>{m.module}</span>
+                        <span className={`text-[11px] font-medium ${m.done ? "text-white" : "text-white/40"}`}>{m.name}</span>
                       </div>
-                      <span className={`text-[9px] font-space uppercase tracking-widest ${m.done ? "text-green" : "text-white/20"}`}>
-                        {m.done ? "✓ Completato" : "— In attesa"}
+                      <span className={`flex items-center gap-1.5 text-[9px] font-space uppercase tracking-[0.1em] font-bold ${m.done ? "text-green" : "text-white/20"}`}>
+                        {m.done ? (
+                          <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> Fatto</>
+                        ) : "In attesa"}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Metis AI Panel */}
-              <MetisAiPanel company={company} uploadedCount={uploadedCount} totalDocs={docs.length} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Document Viewer Modal */}
+      {selectedDoc && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 outline-none"
+          tabIndex={-1}
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Escape') setSelectedDoc(null); }}
+          onClick={() => setSelectedDoc(null)}
+        >
+          {/* Modal Container */}
+          <div 
+            className="w-full max-w-5xl h-[85vh] bg-[#0A0E17] border border-cyan/30 rounded-2xl flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,229,255,0.1)] animate-in fade-in zoom-in duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Toolbar */}
+            <div className="h-14 bg-black/60 border-b border-white/10 flex items-center justify-between px-6 shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-lg bg-cyan/10 border border-cyan/30 flex items-center justify-center text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                  <h3 className="text-white text-sm font-space font-bold tracking-wide">{selectedDoc.title}</h3>
+                  {selectedDoc.filename && <span className="text-[10px] text-white/50 font-mono">{selectedDoc.filename}</span>}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Fake action buttons */}
+                <button className="text-white/50 hover:text-white p-2 transition-colors rounded hover:bg-white/10" aria-label="Scarica PDF" title="Scarica Documento">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+                <button className="text-white/50 hover:text-white p-2 transition-colors rounded hover:bg-white/10" aria-label="Stampa" title="Stampa Documento">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                </button>
+                <div className="w-px h-6 bg-white/10 mx-1"></div>
+                <button 
+                  onClick={() => setSelectedDoc(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-red/10 text-red border border-red/30 hover:bg-red/20 transition-all shadow-[0_0_10px_rgba(255,71,87,0.1)]"
+                  aria-label="Chiudi visualizzatore"
+                  title="Chiudi"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Viewer Content (Fake A4 Page) */}
+            <div className="flex-1 bg-[#1A1D24] overflow-y-auto p-8 flex justify-center [scrollbar-width:thin] [scrollbar-color:rgba(0,229,255,0.2)_transparent] cursor-zoom-in">
+              <div className="w-full max-w-3xl bg-white min-h-[1000px] shadow-2xl rounded p-12 text-[#333] cursor-text">
+                {/* Fake PDF Header */}
+                <div className="flex justify-between items-start border-b-2 border-gray-200 pb-6 mb-8">
+                  <div>
+                    <h1 className="text-3xl font-serif font-bold text-gray-900">{company.name}</h1>
+                    <p className="text-sm font-mono text-gray-500 mt-1">P.IVA: {company.piva} - Sede: {company.indirizzo}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-cyan-700 bg-cyan-50 px-3 py-1 border border-cyan-200 rounded">
+                      DOCUMENTO UFFICIALE
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2 font-mono">ID Prot: {Math.random().toString(36).substring(2, 10).toUpperCase()}</p>
+                  </div>
+                </div>
+
+                {/* Fake Document Content (Skeleton lines representing text & tables) */}
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold border-b border-gray-100 pb-2 mb-4">{selectedDoc.title}</h2>
+                    <p className="text-sm leading-relaxed text-gray-600 mb-6">
+                      Il presente documento contiene l'evidenza ufficiale per la pratica in oggetto. I dati sottostanti sono estratti in via automatizzata tramite lettore ottico OCR o da flusso XBRL validato.
+                    </p>
+                  </div>
+
+                  {/* Fake Table */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200 font-bold text-gray-700 text-left">
+                        <tr>
+                          <th className="p-3">Voce / Descrizione</th>
+                          <th className="p-3">Periodo Attuale</th>
+                          <th className="p-3">Variazione %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-gray-600">
+                        <tr><td className="p-3 font-medium">A) Valore della produzione</td><td className="p-3 font-mono">€ 15.420.000</td><td className="p-3 text-green-600">+4.2%</td></tr>
+                        <tr><td className="p-3 font-medium">B) Costi della produzione</td><td className="p-3 font-mono">€ 12.100.000</td><td className="p-3 text-red-600">+1.1%</td></tr>
+                        <tr><td className="p-3 font-medium">C) Proventi e oneri finanziari</td><td className="p-3 font-mono">€ 320.000</td><td className="p-3 text-gray-400">0.0%</td></tr>
+                        <tr className="bg-gray-50 font-bold text-gray-800"><td className="p-3">Risultato prima delle imposte</td><td className="p-3 font-mono">€ 3.000.000</td><td className="p-3 text-green-600">+8.5%</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Skeleton Text Blocks */}
+                  <div className="space-y-3 pt-6">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-100 rounded w-3/4 mt-4"></div>
+                    <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+                  </div>
+                </div>
+
+                {/* Fake Footer */}
+                <div className="mt-20 pt-6 border-t border-gray-200 text-center text-xs text-gray-400 font-mono">
+                  Pagina 1 di 12 — Generato dal sistema Metis AI engine il {new Date().toLocaleDateString('it-IT')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
