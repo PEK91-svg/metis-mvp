@@ -123,7 +123,7 @@ export default function CopilotPage() {
             <div className="relative">
               <div className="w-11 h-11 rounded-xl overflow-hidden shadow-[0_0_25px_rgba(0,229,255,0.35)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/metis-icon.png" alt="Metis AI" className="w-full h-full object-cover" />
+                <img src="/ai_widget_icon.png" alt="Metis AI" className="w-full h-full object-cover" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#090D14] border border-white/10 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-green shadow-[0_0_8px_#00FF66]" />
