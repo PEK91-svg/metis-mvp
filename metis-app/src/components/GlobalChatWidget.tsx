@@ -234,7 +234,7 @@ export function GlobalChatWidget() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <img src="/metis-m-logo.png" alt="Toggle AI Chat" className="w-full h-full object-cover z-10" />
+          <img src="/ai_widget_icon.png" alt="Toggle AI Chat" className="w-full h-full object-cover z-10" />
         )}
         {!isOpen && hasUnread && (
           <span className="absolute top-0 right-0 w-4 h-4 bg-red rounded-full border-2 border-[#0A0F14] animate-pulse z-20" />
