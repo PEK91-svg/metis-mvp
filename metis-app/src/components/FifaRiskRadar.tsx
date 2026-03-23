@@ -52,6 +52,8 @@ interface Props {
 
 export default function FifaRiskRadar({ axes = DEFAULT_AXES, compact = false }: Props) {
   const [animated, setAnimated] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   useEffect(() => { const t = setTimeout(() => setAnimated(true), 100); return () => clearTimeout(t); }, []);
 
   const vals = animated ? axes.map(a => a.value) : axes.map(() => 0);
@@ -93,14 +95,29 @@ export default function FifaRiskRadar({ axes = DEFAULT_AXES, compact = false }: 
               strokeLinejoin="round"
               style={{ transition: "all 0.9s cubic-bezier(0.4,0,0.2,1)" }}
             />
-            {/* Vertex dots */}
+            {/* Vertex dots & Tooltips */}
             {axes.map((ax, i) => {
               const { x, y } = polarToXY((360 / N) * i, (vals[i] / 100) * R);
+              const isHovered = hoveredIdx === i;
               return (
-                <circle key={i} cx={x} cy={y} r={4.5} fill={ax.color} stroke="#0A0F14" strokeWidth="1.5"
-                  className="cursor-help hover:r-[6px] transition-all"
-                  title={`${ax.label}\nScore normalizzato: ${Math.round(ax.value)}\nValore grezzo: ${ax.raw}`}
-                  style={{ transition: `all 0.9s cubic-bezier(0.4,0,0.2,1) ${i * 50}ms` }} />
+                <g key={`dot-${i}`}>
+                  <circle cx={x} cy={y} r={isHovered ? 6 : 4.5} fill={ax.color} stroke="#0A0F14" strokeWidth="1.5"
+                    className="cursor-help transition-all duration-300"
+                    onMouseEnter={() => setHoveredIdx(i)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                  />
+                  {isHovered && (
+                    <g className="animate-[fadeIn_0.2s_ease-out]">
+                      <rect x={x - 45} y={y - 35} width="90" height="28" rx="4" fill="#0A0F14" fillOpacity="0.9" stroke="rgba(255,255,255,0.1)" />
+                      <text x={x} y={y - 24} textAnchor="middle" fill={ax.color} fontSize="8" fontFamily="var(--font-space,sans-serif)" fontWeight="bold">
+                        {ax.label}
+                      </text>
+                      <text x={x} y={y - 14} textAnchor="middle" fill="#fff" fontSize="8" fontFamily="var(--font-space,sans-serif)">
+                        Score: {Math.round(ax.value)} ({ax.raw})
+                      </text>
+                    </g>
+                  )}
+                </g>
               );
             })}
             {/* Labels */}

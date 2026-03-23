@@ -27,15 +27,20 @@ export function PipelineChartWidget({ data: _data }: { data: DashboardData | nul
                 return (
                   <div
                     key={j}
-                    title={`Settimana ${j + 1}\nPratiche: ${v} (${b.label})`}
-                    className="flex-1 rounded-sm transition-all cursor-help hover:brightness-125"
+                    className="flex-1 rounded-sm transition-all cursor-help relative group"
                     style={{
                       height: `${pct}%`,
                       minHeight: 4,
                       background: isLast ? b.color : `${b.color}40`,
                       boxShadow: isLast ? `0 0 8px ${b.color}80` : "none",
                     }}
-                  />
+                  >
+                    {/* Sci-Fi Tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-2 bg-[#0A0F14]/95 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all pointer-events-none z-50 flex flex-col items-center">
+                      <div className="text-[9px] uppercase tracking-widest text-white/50 mb-0.5">Settimana {j + 1}</div>
+                      <div className="text-[12px] font-space font-bold" style={{ color: b.color }}>{v} <span className="text-white/60 font-normal lowercase">{b.label}</span></div>
+                    </div>
+                  </div>
                 );
               })}
             </div>

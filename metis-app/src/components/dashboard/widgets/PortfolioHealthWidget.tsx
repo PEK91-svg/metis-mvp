@@ -30,7 +30,7 @@ export function PortfolioHealthWidget() {
               <span className="text-[11px] text-white/60">{m.label}</span>
               <span className="text-[11px] font-[var(--font-space)]" style={{ color: m.color }}>{m.value}%</span>
             </div>
-            <div className="h-2 bg-white/5 rounded-full overflow-hidden cursor-help" title={`${m.label}: ${m.value}%`}>
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden cursor-help relative group">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -39,6 +39,10 @@ export function PortfolioHealthWidget() {
                   boxShadow: `0 0 8px ${m.color}60`,
                 }}
               />
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max px-3 py-1.5 bg-[#0A0F14]/95 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all pointer-events-none z-50 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: m.color }} />
+                <span className="text-[11px] font-space text-white">{m.label}: <strong style={{ color: m.color }}>{m.value}%</strong></span>
+              </div>
             </div>
           </div>
         ))}
