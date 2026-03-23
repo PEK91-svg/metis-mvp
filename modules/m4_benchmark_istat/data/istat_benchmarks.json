@@ -1,0 +1,112 @@
+{
+  "28_Nord-Ovest": {
+    "EBITDA Margin": {"mediana": 0.12, "p25": 0.07, "p75": 0.17, "higher_is_better": true},
+    "ROE": {"mediana": 0.10, "p25": 0.03, "p75": 0.16, "higher_is_better": true},
+    "ROA": {"mediana": 0.05, "p25": 0.02, "p75": 0.09, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 2.2, "p25": 1.3, "p75": 3.5, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.4, "p25": 1.0, "p75": 2.0, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 4.5, "p25": 2.5, "p75": 9.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 2.8, "p25": 1.2, "p75": 4.5, "higher_is_better": false},
+    "DSO": {"mediana": 75, "p25": 45, "p75": 105, "higher_is_better": false},
+    "DPO": {"mediana": 65, "p25": 35, "p75": 95, "higher_is_better": false}
+  },
+  "28_Nord-Est": {
+    "EBITDA Margin": {"mediana": 0.11, "p25": 0.06, "p75": 0.16, "higher_is_better": true},
+    "ROE": {"mediana": 0.09, "p25": 0.03, "p75": 0.15, "higher_is_better": true},
+    "ROA": {"mediana": 0.05, "p25": 0.02, "p75": 0.08, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 2.3, "p25": 1.4, "p75": 3.7, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.35, "p25": 0.95, "p75": 1.9, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 4.2, "p25": 2.2, "p75": 8.5, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 2.9, "p25": 1.4, "p75": 4.7, "higher_is_better": false},
+    "DSO": {"mediana": 78, "p25": 48, "p75": 108, "higher_is_better": false},
+    "DPO": {"mediana": 68, "p25": 38, "p75": 98, "higher_is_better": false}
+  },
+  "28_Sud": {
+    "EBITDA Margin": {"mediana": 0.07, "p25": 0.03, "p75": 0.11, "higher_is_better": true},
+    "ROE": {"mediana": 0.05, "p25": 0.01, "p75": 0.10, "higher_is_better": true},
+    "ROA": {"mediana": 0.02, "p25": 0.00, "p75": 0.05, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 3.2, "p25": 1.8, "p75": 5.0, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.1, "p25": 0.7, "p75": 1.6, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 2.8, "p25": 1.2, "p75": 5.5, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 4.0, "p25": 2.0, "p75": 6.5, "higher_is_better": false},
+    "DSO": {"mediana": 95, "p25": 65, "p75": 130, "higher_is_better": false},
+    "DPO": {"mediana": 85, "p25": 55, "p75": 120, "higher_is_better": false}
+  },
+  "46_Nord-Ovest": {
+    "EBITDA Margin": {"mediana": 0.08, "p25": 0.04, "p75": 0.12, "higher_is_better": true},
+    "ROE": {"mediana": 0.08, "p25": 0.02, "p75": 0.14, "higher_is_better": true},
+    "ROA": {"mediana": 0.04, "p25": 0.01, "p75": 0.07, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 2.6, "p25": 1.5, "p75": 4.0, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.3, "p25": 0.9, "p75": 1.7, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 3.5, "p25": 1.8, "p75": 7.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 3.2, "p25": 1.8, "p75": 5.0, "higher_is_better": false},
+    "DSO": {"mediana": 82, "p25": 55, "p75": 110, "higher_is_better": false},
+    "DPO": {"mediana": 72, "p25": 45, "p75": 100, "higher_is_better": false}
+  },
+  "46_Sud": {
+    "EBITDA Margin": {"mediana": 0.04, "p25": 0.02, "p75": 0.08, "higher_is_better": true},
+    "ROE": {"mediana": 0.04, "p25": 0.00, "p75": 0.09, "higher_is_better": true},
+    "ROA": {"mediana": 0.02, "p25": 0.00, "p75": 0.04, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 3.8, "p25": 2.2, "p75": 5.5, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.1, "p25": 0.7, "p75": 1.5, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 2.2, "p25": 0.9, "p75": 4.5, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 4.5, "p25": 2.5, "p75": 7.0, "higher_is_better": false},
+    "DSO": {"mediana": 105, "p25": 75, "p75": 140, "higher_is_better": false},
+    "DPO": {"mediana": 95, "p25": 65, "p75": 130, "higher_is_better": false}
+  },
+  "28": {
+    "EBITDA Margin": {"mediana": 0.10, "p25": 0.05, "p75": 0.15, "higher_is_better": true},
+    "ROE": {"mediana": 0.08, "p25": 0.02, "p75": 0.14, "higher_is_better": true},
+    "ROA": {"mediana": 0.04, "p25": 0.01, "p75": 0.07, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 2.5, "p25": 1.5, "p75": 4.0, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.3, "p25": 0.9, "p75": 1.8, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 4.0, "p25": 2.0, "p75": 8.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 3.0, "p25": 1.5, "p75": 5.0, "higher_is_better": false},
+    "DSO": {"mediana": 80, "p25": 50, "p75": 110, "higher_is_better": false},
+    "DPO": {"mediana": 70, "p25": 40, "p75": 100, "higher_is_better": false}
+  },
+  "46": {
+    "EBITDA Margin": {"mediana": 0.06, "p25": 0.03, "p75": 0.10, "higher_is_better": true},
+    "ROE": {"mediana": 0.06, "p25": 0.01, "p75": 0.12, "higher_is_better": true},
+    "ROA": {"mediana": 0.03, "p25": 0.01, "p75": 0.06, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 3.0, "p25": 1.8, "p75": 4.5, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.2, "p25": 0.8, "p75": 1.6, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 3.0, "p25": 1.5, "p75": 6.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 3.5, "p25": 2.0, "p75": 5.5, "higher_is_better": false},
+    "DSO": {"mediana": 90, "p25": 60, "p75": 120, "higher_is_better": false},
+    "DPO": {"mediana": 80, "p25": 50, "p75": 110, "higher_is_better": false}
+  },
+  "41": {
+    "EBITDA Margin": {"mediana": 0.08, "p25": 0.03, "p75": 0.12, "higher_is_better": true},
+    "ROE": {"mediana": 0.05, "p25": 0.00, "p75": 0.10, "higher_is_better": true},
+    "ROA": {"mediana": 0.02, "p25": 0.00, "p75": 0.05, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 3.5, "p25": 2.0, "p75": 5.0, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.1, "p25": 0.7, "p75": 1.5, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 2.5, "p25": 1.0, "p75": 5.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 4.0, "p25": 2.0, "p75": 6.0, "higher_is_better": false},
+    "DSO": {"mediana": 100, "p25": 70, "p75": 140, "higher_is_better": false},
+    "DPO": {"mediana": 90, "p25": 60, "p75": 120, "higher_is_better": false}
+  },
+  "62": {
+    "EBITDA Margin": {"mediana": 0.15, "p25": 0.08, "p75": 0.22, "higher_is_better": true},
+    "ROE": {"mediana": 0.12, "p25": 0.04, "p75": 0.20, "higher_is_better": true},
+    "ROA": {"mediana": 0.06, "p25": 0.02, "p75": 0.10, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 1.5, "p25": 0.8, "p75": 3.0, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.5, "p25": 1.0, "p75": 2.2, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 6.0, "p25": 3.0, "p75": 12.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 2.0, "p25": 0.5, "p75": 3.5, "higher_is_better": false},
+    "DSO": {"mediana": 70, "p25": 40, "p75": 100, "higher_is_better": false},
+    "DPO": {"mediana": 50, "p25": 30, "p75": 80, "higher_is_better": false}
+  },
+  "default": {
+    "EBITDA Margin": {"mediana": 0.08, "p25": 0.04, "p75": 0.13, "higher_is_better": true},
+    "ROE": {"mediana": 0.06, "p25": 0.01, "p75": 0.12, "higher_is_better": true},
+    "ROA": {"mediana": 0.03, "p25": 0.01, "p75": 0.06, "higher_is_better": true},
+    "Leverage (D/E)": {"mediana": 2.8, "p25": 1.5, "p75": 4.2, "higher_is_better": false},
+    "Current Ratio": {"mediana": 1.2, "p25": 0.8, "p75": 1.7, "higher_is_better": true},
+    "Interest Coverage": {"mediana": 3.5, "p25": 1.5, "p75": 7.0, "higher_is_better": true},
+    "NFP/EBITDA": {"mediana": 3.2, "p25": 1.5, "p75": 5.2, "higher_is_better": false},
+    "DSO": {"mediana": 85, "p25": 55, "p75": 115, "higher_is_better": false},
+    "DPO": {"mediana": 75, "p25": 45, "p75": 105, "higher_is_better": false}
+  }
+}
