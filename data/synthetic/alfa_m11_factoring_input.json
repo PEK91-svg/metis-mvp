@@ -1,0 +1,73 @@
+{
+  "id_pratica": "PEF-FACT-2026-ALFA",
+  "cedente_piva": "01234567890",
+  "cedente_ragione_sociale": "Alfa Distribuzione S.r.l.",
+  "ceduti": [
+    {
+      "partita_iva": "IT99988877700",
+      "ragione_sociale": "Supermercati GDO S.p.A.",
+      "settore_ateco": "G47.11",
+      "rating_esterno": "BBB"
+    },
+    {
+      "partita_iva": "IT11122233300",
+      "ragione_sociale": "Ristorazione Catering S.r.l.",
+      "settore_ateco": "I56.10",
+      "rating_esterno": "BB"
+    },
+    {
+      "partita_iva": "IT44455566600",
+      "ragione_sociale": "Hotel Belvedere S.p.A.",
+      "settore_ateco": "I55.10",
+      "rating_esterno": "A"
+    }
+  ],
+  "portafoglio_fatture": [
+    {
+      "id_fattura": "FATT-00120",
+      "ceduto_piva": "IT99988877700",
+      "importo": 450000.0,
+      "data_emissione": "2026-01-15",
+      "data_scadenza": "2026-03-30",
+      "stato": "Aperta"
+    },
+    {
+      "id_fattura": "FATT-00121",
+      "ceduto_piva": "IT99988877700",
+      "importo": 150000.0,
+      "data_emissione": "2026-02-10",
+      "data_scadenza": "2026-04-10",
+      "stato": "Aperta"
+    },
+    {
+      "id_fattura": "FATT-00085",
+      "ceduto_piva": "IT11122233300",
+      "importo": 120000.0,
+      "data_emissione": "2025-11-05",
+      "data_scadenza": "2025-12-05",
+      "stato": "Scaduta"
+    },
+    {
+      "id_fattura": "FATT-00130",
+      "ceduto_piva": "IT44455566600",
+      "importo": 280000.0,
+      "data_emissione": "2026-03-01",
+      "data_scadenza": "2026-05-01",
+      "stato": "Aperta"
+    }
+  ],
+  "storico_resi": [
+    {
+      "anno": 2025,
+      "totale_fatturato": 4200000.0,
+      "totale_resi_o_note_credito": 85000.0,
+      "note": "Resi merce alimentare deperita"
+    },
+    {
+      "anno": 2024,
+      "totale_fatturato": 3800000.0,
+      "totale_resi_o_note_credito": 68000.0,
+      "note": "Sconti commerciali di fine anno"
+    }
+  ]
+}

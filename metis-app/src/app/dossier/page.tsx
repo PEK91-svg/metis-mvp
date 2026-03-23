@@ -24,6 +24,7 @@ const COMPANY_DATA: Record<number, { name: string; dossier_id: string; piva: str
   7:  { name: "Eta Holding",       dossier_id: "PEF-2025-H007", piva: "IT22334455667", lat: 45.4642, lng: 9.1900, indirizzo: "Corso Buenos Aires 15, Milano" },
   11: { name: "Lambda Group",      dossier_id: "PEF-2025-L011", piva: "IT66778800112", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma" },
   15: { name: "Omicron Digital",   dossier_id: "PEF-2025-O015", piva: "IT00112244556", lat: 43.7696, lng: 11.2558, indirizzo: "Via dei Calzaiuoli 5, Firenze" },
+  99: { name: "NanoBanana S.r.l.", dossier_id: "PEF-2026-NANO", piva: "IT09876543210", lat: 45.4654, lng: 9.1859, indirizzo: "Via del Commercio 12, 20121 Milano (MI)" },
 };
 
 export default function MetisAppWrapper() {
@@ -47,7 +48,7 @@ function MetisApp() {
   const [selectedModel, setSelectedModel] = useState<string>("altman");
   const [expandedCol, setExpandedCol] = useState<number | null>(null);
   const [showDelibera, setShowDelibera] = useState(false);
-  const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba' | 'policy' | 'cluster'>('ccii');
+  const [complianceTab, setComplianceTab] = useState<'ccii' | 'eba' | 'policy' | 'cluster' | 'bilancio'>('ccii');
   const [benchmarkMeta, setBenchmarkMeta] = useState(getBenchmarkMetadata());
   const [benchmarkRefreshing, setBenchmarkRefreshing] = useState(false);
   const [benchmarkRefreshMsg, setBenchmarkRefreshMsg] = useState('');
@@ -210,6 +211,10 @@ function MetisApp() {
     'text/plain',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.ms-excel',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/webp',
   ];
   const MAX_FILE_SIZE_MB = 20;
 
@@ -258,6 +263,81 @@ function MetisApp() {
       setTimeout(() => setStep("dashboard"), 500);
     }
   };
+
+  // ── Derived display values (must be before early returns so hooks below can depend on them) ──
+  const safeData = apiData?.kpi ? apiData : null;
+  const displayName = companyOverride?.name || safeData?.company_name || "ALFA ROMEO SRL";
+  const displayDossier = companyOverride?.dossier_id || safeData?.dossier_id || "PEF-2026-X892";
+  const displayPiva = companyOverride?.piva || safeData?.company_info?.partita_iva || "IT12345678901";
+  const displayLat = companyOverride?.lat || safeData?.company_info?.lat || 45.4708;
+  const displayLng = companyOverride?.lng || safeData?.company_info?.lng || 9.1911;
+  const displayIndirizzo = companyOverride?.indirizzo || safeData?.company_info?.indirizzo || "Via G. Verdi 42, Milano";
+
+  // ── CCII / EBA / CR computations (hooks must be before any early return) ─────
+  const { mockBilancioData, mockModelsData, cciiResult, ebaResult } = useMemo(() => {
+    const bilancio = {
+      companyName: displayName, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || 'G46',
+      dataChiusura: '31/12/2023',
+      ricavi: companyId === 99 ? 4850000 : 2450000,
+      costiOperativi: companyId === 99 ? 4170000 : 2000000,
+      ebitda: companyId === 99 ? 680000 : 294000,
+      ebitdaMargin: companyId === 99 ? 14 : 12,
+      ammortamenti: companyId === 99 ? 95000 : 45000,
+      ebit: companyId === 99 ? 585000 : 249000,
+      oneriFinanziari: companyId === 99 ? 52000 : 68000,
+      risultatoLordo: companyId === 99 ? 533000 : 181000,
+      imposte: companyId === 99 ? 147000 : 54000,
+      utileNetto: companyId === 99 ? 386000 : 127000,
+      totaleAttivo: companyId === 99 ? 2860000 : 1850000,
+      attivoCorrenti: companyId === 99 ? 2040000 : 920000,
+      cassa: companyId === 99 ? 310000 : 85000,
+      crediti: companyId === 99 ? 1250000 : 680000,
+      rimanenze: companyId === 99 ? 480000 : 155000,
+      attivoFisso: companyId === 99 ? 820000 : 930000,
+      totalePassivo: companyId === 99 ? 2860000 : 1850000,
+      passivoCorrenti: companyId === 99 ? 1200000 : 780000,
+      debitiVersoBanche: companyId === 99 ? 980000 : 680000,
+      debitiBreveTermine: companyId === 99 ? 580000 : 420000,
+      debitiLungoTermine: companyId === 99 ? 400000 : 260000,
+      totaleDebiti: companyId === 99 ? 1920000 : 1420000,
+      patrimonioNetto: companyId === 99 ? 940000 : 430000,
+      capitaleSociale: companyId === 99 ? 150000 : 100000,
+      utiliPortati: companyId === 99 ? 404000 : 303000,
+      capitaleDiLavoro: companyId === 99 ? 840000 : 140000,
+      utiliNonDistribuiti: companyId === 99 ? 404000 : 303000,
+      fatturato: companyId === 99 ? 4850000 : 2450000,
+      valoreAzioneMercato: companyId === 99 ? 940000 : 430000,
+      debtService: companyId === 99 ? 469000 : 203000,
+    };
+    const models = calculateAllModels(bilancio as any);
+    return {
+      mockBilancioData: bilancio,
+      mockModelsData: models,
+      cciiResult: runCCIICheck(bilancio as any, models),
+      ebaResult: runEBACheck(bilancio as any, models),
+    };
+  }, [displayName, displayPiva, safeData, companyId]);
+
+  // Fetch Gemini sentiment when company name is available
+  useEffect(() => {
+    if (!displayName || sentimentLoading || sentiment) return;
+    setSentimentLoading(true);
+    fetch("/api/sentiment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ companyName: displayName, piva: displayPiva }),
+    })
+      .then(r => r.json())
+      .then(data => setSentiment(data))
+      .catch(() => setSentiment(null))
+      .finally(() => setSentimentLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayName]);
+
+  const crData = useMemo(
+    () => buildCRAdapterData(displayPiva, safeData as any),
+    [displayPiva, safeData]
+  );
 
   if (step === "upload") {
     return (
@@ -376,64 +456,7 @@ function MetisApp() {
     );
   }
 
-  const safeData = apiData?.kpi ? apiData : null;
-  // Use company override from pratica navigation
-  const displayName = companyOverride?.name || safeData?.company_name || "ALFA ROMEO SRL";
-  const displayDossier = companyOverride?.dossier_id || safeData?.dossier_id || "PEF-2026-X892";
-  const displayPiva = companyOverride?.piva || safeData?.company_info?.partita_iva || "IT12345678901";
-  const displayLat = companyOverride?.lat || safeData?.company_info?.lat || 45.4708;
-  const displayLng = companyOverride?.lng || safeData?.company_info?.lng || 9.1911;
-  const displayIndirizzo = companyOverride?.indirizzo || safeData?.company_info?.indirizzo || "Via G. Verdi 42, Milano";
-
-  // ── CCII / EBA / CR computations ─────────────────────────────────────────────
-  // useMemo evita il ricalcolo ad ogni re-render — si ricalcola solo quando
-  // cambiano displayName, displayPiva o safeData (che dipendono da apiData).
-  const { mockBilancioData, mockModelsData, cciiResult, ebaResult } = useMemo(() => {
-    const bilancio = {
-      companyName: displayName, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || 'G46',
-      dataChiusura: '31/12/2023',
-      ricavi: 2450000, costiOperativi: 2000000, ebitda: 294000, ebitdaMargin: 12,
-      ammortamenti: 45000, ebit: 249000, oneriFinanziari: 68000,
-      risultatoLordo: 181000, imposte: 54000, utileNetto: 127000,
-      totaleAttivo: 1850000, attivoCorrenti: 920000, cassa: 85000,
-      crediti: 680000, rimanenze: 155000, attivoFisso: 930000,
-      totalePassivo: 1850000, passivoCorrenti: 780000,
-      debitiVersoBanche: 680000, debitiBreveTermine: 420000,
-      debitiLungoTermine: 260000, totaleDebiti: 1420000,
-      patrimonioNetto: 430000, capitaleSociale: 100000,
-      utiliPortati: 303000, capitaleDiLavoro: 140000,
-      utiliNonDistribuiti: 303000, fatturato: 2450000,
-      valoreAzioneMercato: 430000, debtService: 203000,
-    };
-    const models = calculateAllModels(bilancio as any);
-    return {
-      mockBilancioData: bilancio,
-      mockModelsData: models,
-      cciiResult: runCCIICheck(bilancio as any, models),
-      ebaResult: runEBACheck(bilancio as any, models),
-    };
-  }, [displayName, displayPiva, safeData]);
-
-  // Fetch Gemini sentiment when company name is available
-  useEffect(() => {
-    if (!displayName || sentimentLoading || sentiment) return;
-    setSentimentLoading(true);
-    fetch("/api/sentiment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ companyName: displayName, piva: displayPiva }),
-    })
-      .then(r => r.json())
-      .then(data => setSentiment(data))
-      .catch(() => setSentiment(null))
-      .finally(() => setSentimentLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName]);
-
-  const crData = useMemo(
-    () => buildCRAdapterData(displayPiva, safeData as any),
-    [displayPiva, safeData]
-  );
+  // (derived vars and hooks moved before early returns — see above)
 
   const handleBenchmarkRefresh = async () => {
     setBenchmarkRefreshing(true);
@@ -522,12 +545,12 @@ function MetisApp() {
               <div className="border border-glass-border rounded-lg p-5 mb-4 bg-black/30 transition hover:border-glass-hover">
                 <div className="font-space text-sm font-semibold mb-3 text-white">Lettura Sensori IA</div>
                 <div className="text-[13px] text-text-muted leading-relaxed">
-                  Ricavi: € 2.450.000<br/>
+                  Ricavi: € {(mockBilancioData.fatturato).toLocaleString('it-IT')}<br/>
                   <span className={`px-1 py-0.5 rounded cursor-default border-b border-dashed border-cyan transition-colors duration-300 ${hoveredLink === 'ebitda' ? 'bg-cyan text-black shadow-[0_0_8px_var(--color-cyan)]' : 'bg-cyan-dim text-cyan'}`}>
-                    EBITDA (Stimato): 12%
+                    EBITDA (Stimato): {mockBilancioData.ebitdaMargin}%
                   </span><br/>
-                  Debiti v/Banche: Lineare<br/>
-                  Cassa: Stabile
+                  Debiti v/Banche: € {(mockBilancioData.debitiVersoBanche).toLocaleString('it-IT')}<br/>
+                  Cassa: € {(mockBilancioData.cassa).toLocaleString('it-IT')}
                 </div>
               </div>
             </div>
@@ -903,6 +926,16 @@ function MetisApp() {
                   >
                     Cluster
                   </button>
+                  <button
+                    onClick={() => setComplianceTab('bilancio')}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
+                      complianceTab === 'bilancio'
+                        ? 'border-b-[#00FF66] text-[#00FF66] bg-[#00FF66]/5'
+                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Bilancio
+                  </button>
                 </div>
 
                 {/* Panel content */}
@@ -933,6 +966,105 @@ function MetisApp() {
                       <ErrorBoundary label="Cluster Performance">
                         <ClusterPerformance bilancioData={mockBilancioData} modelsData={mockModelsData} pd={2.1} />
                       </ErrorBoundary>
+                    </div>
+                  )}
+                  {complianceTab === 'bilancio' && (
+                    <div className="animate-[fadeUp_0.2s_ease-out_forwards] space-y-4 text-[11px]">
+                      {/* Stato Patrimoniale */}
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.2em] text-[#00FF66] font-space font-semibold mb-2 border-b border-[#00FF66]/20 pb-1">Stato Patrimoniale</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* ATTIVO */}
+                          <div>
+                            <div className="text-[9px] uppercase tracking-widest text-white/40 mb-1.5 font-space">Attivo</div>
+                            {[
+                              { label: 'Immobilizzazioni', value: mockBilancioData.attivoFisso },
+                              { label: 'Crediti Commerciali', value: mockBilancioData.crediti },
+                              { label: 'Rimanenze', value: mockBilancioData.rimanenze },
+                              { label: 'Cassa e Liquidità', value: mockBilancioData.cassa },
+                            ].map(({ label, value }) => (
+                              <div key={label} className="flex justify-between items-center py-1 border-b border-white/5">
+                                <span className="text-white/50">{label}</span>
+                                <span className="text-white font-mono font-semibold">{(value / 1000).toFixed(0)}K</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between items-center py-1.5 mt-1 rounded bg-white/5 px-1">
+                              <span className="text-white/70 font-semibold font-space text-[10px] uppercase">Totale Attivo</span>
+                              <span className="text-[#00FF66] font-mono font-bold">{(mockBilancioData.totaleAttivo / 1000).toFixed(0)}K</span>
+                            </div>
+                          </div>
+                          {/* PASSIVO */}
+                          <div>
+                            <div className="text-[9px] uppercase tracking-widest text-white/40 mb-1.5 font-space">Passivo & Patrimonio</div>
+                            {[
+                              { label: 'Patrimonio Netto', value: mockBilancioData.patrimonioNetto },
+                              { label: 'Debiti Banche BT', value: mockBilancioData.debitiBreveTermine },
+                              { label: 'Debiti Banche MLT', value: mockBilancioData.debitiLungoTermine },
+                              { label: 'Debiti Commerciali', value: mockBilancioData.passivoCorrenti - mockBilancioData.debitiBreveTermine },
+                            ].map(({ label, value }) => (
+                              <div key={label} className="flex justify-between items-center py-1 border-b border-white/5">
+                                <span className="text-white/50">{label}</span>
+                                <span className="text-white font-mono font-semibold">{(value / 1000).toFixed(0)}K</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between items-center py-1.5 mt-1 rounded bg-white/5 px-1">
+                              <span className="text-white/70 font-semibold font-space text-[10px] uppercase">Totale Passivo</span>
+                              <span className="text-[#00FF66] font-mono font-bold">{(mockBilancioData.totalePassivo / 1000).toFixed(0)}K</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Conto Economico */}
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.2em] text-cyan font-space font-semibold mb-2 border-b border-cyan/20 pb-1">Conto Economico</div>
+                        <div className="space-y-0.5">
+                          {[
+                            { label: 'Ricavi Netti', value: mockBilancioData.fatturato, color: 'text-white', bold: true, indent: 0 },
+                            { label: 'Costi Operativi', value: -mockBilancioData.costiOperativi, color: 'text-red-400', bold: false, indent: 1 },
+                            { label: 'EBITDA', value: mockBilancioData.ebitda, color: 'text-cyan', bold: true, indent: 0, pct: mockBilancioData.ebitdaMargin },
+                            { label: 'Ammortamenti', value: -mockBilancioData.ammortamenti, color: 'text-white/50', bold: false, indent: 1 },
+                            { label: 'EBIT', value: mockBilancioData.ebit, color: 'text-white', bold: true, indent: 0, pct: Math.round(mockBilancioData.ebit / mockBilancioData.fatturato * 100) },
+                            { label: 'Oneri Finanziari', value: -mockBilancioData.oneriFinanziari, color: 'text-white/50', bold: false, indent: 1 },
+                            { label: 'Utile Ante Imposte', value: mockBilancioData.risultatoLordo, color: 'text-white', bold: false, indent: 0 },
+                            { label: 'Imposte', value: -mockBilancioData.imposte, color: 'text-white/50', bold: false, indent: 1 },
+                            { label: 'Utile Netto', value: mockBilancioData.utileNetto, color: 'text-[#00FF66]', bold: true, indent: 0, pct: Math.round(mockBilancioData.utileNetto / mockBilancioData.fatturato * 100) },
+                          ].map(({ label, value, color, bold, indent, pct }) => (
+                            <div
+                              key={label}
+                              className={`flex justify-between items-center py-1 border-b border-white/5 ${bold ? 'bg-white/5 px-1 rounded' : ''}`}
+                              style={{ paddingLeft: indent ? '12px' : undefined }}
+                            >
+                              <span className={`${bold ? 'font-space font-semibold text-[10px] uppercase tracking-wider' : ''} text-white/60`}>{label}</span>
+                              <div className="flex items-center gap-2">
+                                {pct !== undefined && (
+                                  <span className="text-[9px] text-white/30 font-mono">{pct}%</span>
+                                )}
+                                <span className={`font-mono font-semibold ${color}`}>
+                                  {value >= 0 ? '' : '-'}€{Math.abs(value / 1000).toFixed(0)}K
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Indici di bilancio */}
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.2em] text-purple font-space font-semibold mb-2 border-b border-purple/20 pb-1">Indici Chiave</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: 'ROE', value: `${(mockBilancioData.utileNetto / mockBilancioData.patrimonioNetto * 100).toFixed(1)}%`, color: 'text-cyan' },
+                            { label: 'ROI', value: `${(mockBilancioData.ebit / mockBilancioData.totaleAttivo * 100).toFixed(1)}%`, color: 'text-green' },
+                            { label: 'Leverage', value: `${(mockBilancioData.debitiVersoBanche / mockBilancioData.patrimonioNetto).toFixed(2)}x`, color: 'text-yellow' },
+                          ].map(({ label, value, color }) => (
+                            <div key={label} className="text-center bg-black/30 rounded-lg p-2 border border-white/5">
+                              <div className="text-[9px] text-white/40 uppercase tracking-widest font-space">{label}</div>
+                              <div className={`font-mono font-bold text-lg mt-0.5 ${color}`}>{value}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

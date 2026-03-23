@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from m11_factoring.router import router as m11_router
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from duckduckgo_search import DDGS
@@ -19,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Connect the M11 Factoring Router
+app.include_router(m11_router)
 
 def agent_news_crawl(company_name: str) -> dict:
     """
@@ -134,7 +138,7 @@ def extract_financial_signals(content_text: str) -> dict:
     }
 
 
-def compute_all_models(is_healthy: bool, signals: dict | None = None) -> dict:
+def compute_all_models(is_healthy: bool, signals: "Optional[dict]" = None) -> dict:
     """
     Calcola 4 modelli di rischio deterministici calibrati sui segnali estratti.
     Se i segnali sono disponibili, applica una variazione continua ai valori base.
@@ -195,7 +199,13 @@ async def analyze_dossier(file: UploadFile = File(...)):
 
     # Read file content for real signal extraction
     content_bytes = await file.read()
-    content_text = content_bytes.decode("utf-8", errors="ignore")
+    
+    # Handle image files (OCR placeholder — uses filename for company name)
+    image_mimes = {'image/png', 'image/jpeg', 'image/jpg', 'image/webp'}
+    if file.content_type in image_mimes:
+        content_text = ""  # OCR not yet implemented — fallback to filename heuristic
+    else:
+        content_text = content_bytes.decode("utf-8", errors="ignore")
 
     filename = file.filename or "document.pdf"
     company_name = filename.replace("Bilancio_", "").replace(".txt", "").replace(".pdf", "").replace("_", " ").upper()

@@ -1,0 +1,53 @@
+{
+  "soggetto": {
+    "ragione_sociale": "NanoBanana S.r.l.",
+    "codice_fiscale": "12345678901",
+    "partita_iva": "12345678901",
+    "codice_ateco": "46.31",
+    "dimensione": "piccola",
+    "provincia": "MI",
+    "area_geografica": "Nord-Ovest"
+  },
+  "bilancio_t0": {
+    "ricavi": 4850000.0,
+    "costi_operativi": 3920000.0,
+    "ebitda": 680000.0,
+    "ammortamenti": 95000.0,
+    "oneri_finanziari": 52000.0,
+    "utile_netto": 118000.0,
+    "attivo_totale": 3200000.0,
+    "patrimonio_netto": 820000.0,
+    "debiti_finanziari_bt": 310000.0,
+    "debiti_finanziari_mlt": 540000.0,
+    "debiti_commerciali": 680000.0,
+    "crediti_commerciali": 920000.0,
+    "disponibilita_liquide": 145000.0,
+    "attivo_corrente": 1580000.0,
+    "passivo_corrente": 1140000.0,
+    "numero_dipendenti": 22,
+    "capex": 75000.0,
+    "imposte": 48000.0
+  },
+  "bilancio_t1": {
+    "ricavi": 4430000.0,
+    "costi_operativi": 3710000.0,
+    "ebitda": 590000.0,
+    "ammortamenti": 88000.0,
+    "oneri_finanziari": 48000.0,
+    "utile_netto": 95000.0,
+    "attivo_totale": 3050000.0,
+    "patrimonio_netto": 710000.0,
+    "debiti_finanziari_bt": 290000.0,
+    "debiti_finanziari_mlt": 580000.0,
+    "debiti_commerciali": 720000.0,
+    "crediti_commerciali": 840000.0,
+    "disponibilita_liquide": 98000.0,
+    "attivo_corrente": 1420000.0,
+    "passivo_corrente": 1180000.0,
+    "numero_dipendenti": 20,
+    "capex": 62000.0,
+    "imposte": 41000.0
+  },
+  "anno_t0": 2024,
+  "anno_t1": 2023
+}

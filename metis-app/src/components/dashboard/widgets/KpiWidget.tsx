@@ -41,7 +41,7 @@ export function KpiWidget({ data }: { data: DashboardData | null }) {
       delta: "+0.02",
       deltaUp: true,
       color: "#00FF66",
-      icon: "⚡",
+      icon: "🏦",
     },
     {
       id: "dscr",
@@ -52,7 +52,7 @@ export function KpiWidget({ data }: { data: DashboardData | null }) {
       delta: "+0.01",
       deltaUp: true,
       color: "#a78bfa",
-      icon: "🔷",
+      icon: "💳",
     },
     {
       id: "total",
