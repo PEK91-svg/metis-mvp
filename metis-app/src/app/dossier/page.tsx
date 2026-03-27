@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import CCIIPanel from "@/components/CCIIPanel";
@@ -19,12 +19,13 @@ import PolicyAdherencePanel from "@/components/PolicyAdherencePanel";
 
 // Mock company data for when navigating from pratica
 const COMPANY_DATA: Record<number, { name: string; dossier_id: string; piva: string; lat: number; lng: number; indirizzo: string }> = {
-  1:  { name: "Alpha S.p.A.",      dossier_id: "PEF-2025-A001", piva: "IT12345678901", lat: 45.4708, lng: 9.1911, indirizzo: "Via G. Verdi 42, Milano" },
-  5:  { name: "Epsilon S.r.l.",    dossier_id: "PEF-2025-E005", piva: "IT55443322110", lat: 44.4949, lng: 11.3426, indirizzo: "Via Rizzoli 8, Bologna" },
-  7:  { name: "Eta Holding",       dossier_id: "PEF-2025-H007", piva: "IT22334455667", lat: 45.4642, lng: 9.1900, indirizzo: "Corso Buenos Aires 15, Milano" },
-  11: { name: "Lambda Group",      dossier_id: "PEF-2025-L011", piva: "IT66778800112", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma" },
-  15: { name: "Omicron Digital",   dossier_id: "PEF-2025-O015", piva: "IT00112244556", lat: 43.7696, lng: 11.2558, indirizzo: "Via dei Calzaiuoli 5, Firenze" },
+  1: { name: "Alpha S.p.A.", dossier_id: "PEF-2025-A001", piva: "IT12345678901", lat: 45.4708, lng: 9.1911, indirizzo: "Via G. Verdi 42, Milano" },
+  5: { name: "Epsilon S.r.l.", dossier_id: "PEF-2025-E005", piva: "IT55443322110", lat: 44.4949, lng: 11.3426, indirizzo: "Via Rizzoli 8, Bologna" },
+  7: { name: "Eta Holding", dossier_id: "PEF-2025-H007", piva: "IT22334455667", lat: 45.4642, lng: 9.1900, indirizzo: "Corso Buenos Aires 15, Milano" },
+  11: { name: "Lambda Group", dossier_id: "PEF-2025-L011", piva: "IT66778800112", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma" },
+  15: { name: "Omicron Digital", dossier_id: "PEF-2025-O015", piva: "IT00112244556", lat: 43.7696, lng: 11.2558, indirizzo: "Via dei Calzaiuoli 5, Firenze" },
   99: { name: "NanoBanana S.r.l.", dossier_id: "PEF-2026-NANO", piva: "IT09876543210", lat: 45.4654, lng: 9.1859, indirizzo: "Via del Commercio 12, 20121 Milano (MI)" },
+  100: { name: "PECORELLA SPA", dossier_id: "PEF-2026-PECO", piva: "IT09876543210", lat: 37.3011, lng: 14.2106, indirizzo: "Via Vittorio Emanuele, 12 — 93013 Mazzarino (CL)" },
 };
 
 export default function MetisAppWrapper() {
@@ -75,7 +76,7 @@ function MetisApp() {
 
   const exportPDF = () => {
     const d = apiData;
-    const company = companyOverride?.name || d?.company_name || "ALFA ROMEO SRL";
+    const company = companyOverride?.name || d?.company_name || displayName || "AZIENDA CLIENTE";
     const dossierId = companyOverride?.dossier_id || d?.dossier_id || "PEF-2026-X892";
     const pd = d?.kpi?.pd || "2.1%";
     const altman = d?.risk_models?.altman?.score || "3.12";
@@ -265,49 +266,53 @@ function MetisApp() {
   };
 
   // ── Derived display values (must be before early returns so hooks below can depend on them) ──
-  const safeData = apiData?.kpi ? apiData : null;
-  const displayName = companyOverride?.name || safeData?.company_name || "ALFA ROMEO SRL";
-  const displayDossier = companyOverride?.dossier_id || safeData?.dossier_id || "PEF-2026-X892";
-  const displayPiva = companyOverride?.piva || safeData?.company_info?.partita_iva || "IT12345678901";
-  const displayLat = companyOverride?.lat || safeData?.company_info?.lat || 45.4708;
-  const displayLng = companyOverride?.lng || safeData?.company_info?.lng || 9.1911;
-  const displayIndirizzo = companyOverride?.indirizzo || safeData?.company_info?.indirizzo || "Via G. Verdi 42, Milano";
+  // safeData: usa apiData se ha almeno company_name (non richiede kpi obbligatorio)
+  const safeData = (apiData?.company_name || apiData?.kpi) ? apiData : null;
+  const displayName = companyOverride?.name || safeData?.company_name || selectedFile?.name?.replace('Bilancio_', '').replace('.png', '').replace('.pdf', '').replace('.txt', '').replace(/_/g, ' ').replace('2024', '').trim() || "AZIENDA CLIENTE";
+  const displayDossier = companyOverride?.dossier_id || safeData?.dossier_id || "PEF-2026-NEW";
+  const displayPiva = companyOverride?.piva || safeData?.company_info?.partita_iva || "—";
+  const displayLat = companyOverride?.lat || (safeData?.company_info?.lat as number) || 45.4708;
+  const displayLng = companyOverride?.lng || (safeData?.company_info?.lng as number) || 9.1911;
+  const displayIndirizzo = companyOverride?.indirizzo || safeData?.company_info?.indirizzo || "—";
 
   // ── CCII / EBA / CR computations (hooks must be before any early return) ─────
   const { mockBilancioData, mockModelsData, cciiResult, ebaResult } = useMemo(() => {
+    const isPeco = typeof displayName === 'string' && displayName.toUpperCase().includes('PECORELLA');
+    const isNano = companyId === 99;
+    const usePeco = isPeco || companyId === 100;
     const bilancio = {
-      companyName: displayName, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || 'G46',
-      dataChiusura: '31/12/2023',
-      ricavi: companyId === 99 ? 4850000 : 2450000,
-      costiOperativi: companyId === 99 ? 4170000 : 2000000,
-      ebitda: companyId === 99 ? 680000 : 294000,
-      ebitdaMargin: companyId === 99 ? 14 : 12,
-      ammortamenti: companyId === 99 ? 95000 : 45000,
-      ebit: companyId === 99 ? 585000 : 249000,
-      oneriFinanziari: companyId === 99 ? 52000 : 68000,
-      risultatoLordo: companyId === 99 ? 533000 : 181000,
-      imposte: companyId === 99 ? 147000 : 54000,
-      utileNetto: companyId === 99 ? 386000 : 127000,
-      totaleAttivo: companyId === 99 ? 2860000 : 1850000,
-      attivoCorrenti: companyId === 99 ? 2040000 : 920000,
-      cassa: companyId === 99 ? 310000 : 85000,
-      crediti: companyId === 99 ? 1250000 : 680000,
-      rimanenze: companyId === 99 ? 480000 : 155000,
-      attivoFisso: companyId === 99 ? 820000 : 930000,
-      totalePassivo: companyId === 99 ? 2860000 : 1850000,
-      passivoCorrenti: companyId === 99 ? 1200000 : 780000,
-      debitiVersoBanche: companyId === 99 ? 980000 : 680000,
-      debitiBreveTermine: companyId === 99 ? 580000 : 420000,
-      debitiLungoTermine: companyId === 99 ? 400000 : 260000,
-      totaleDebiti: companyId === 99 ? 1920000 : 1420000,
-      patrimonioNetto: companyId === 99 ? 940000 : 430000,
-      capitaleSociale: companyId === 99 ? 150000 : 100000,
-      utiliPortati: companyId === 99 ? 404000 : 303000,
-      capitaleDiLavoro: companyId === 99 ? 840000 : 140000,
-      utiliNonDistribuiti: companyId === 99 ? 404000 : 303000,
-      fatturato: companyId === 99 ? 4850000 : 2450000,
-      valoreAzioneMercato: companyId === 99 ? 940000 : 430000,
-      debtService: companyId === 99 ? 469000 : 203000,
+      companyName: displayName as string, partitaIva: displayPiva, settore: (safeData as any)?.benchmark?.settore_ateco || (usePeco ? 'J62.01' : 'G46'),
+      dataChiusura: '31/12/2024',
+      ricavi: usePeco ? 4850000 : isNano ? 4850000 : 2450000,
+      costiOperativi: usePeco ? 4190000 : isNano ? 4170000 : 2000000,
+      ebitda: usePeco ? 660000 : isNano ? 680000 : 294000,
+      ebitdaMargin: usePeco ? 13.6 : isNano ? 14 : 12,
+      ammortamenti: usePeco ? 180000 : isNano ? 95000 : 45000,
+      ebit: usePeco ? 480000 : isNano ? 585000 : 249000,
+      oneriFinanziari: usePeco ? 62000 : isNano ? 52000 : 68000,
+      risultatoLordo: usePeco ? 418000 : isNano ? 533000 : 181000,
+      imposte: usePeco ? 233000 : isNano ? 147000 : 54000,
+      utileNetto: usePeco ? 185000 : isNano ? 386000 : 127000,
+      totaleAttivo: usePeco ? 3240000 : isNano ? 2860000 : 1850000,
+      attivoCorrenti: usePeco ? 2070000 : isNano ? 2040000 : 920000,
+      cassa: usePeco ? 450000 : isNano ? 310000 : 85000,
+      crediti: usePeco ? 1240000 : isNano ? 1250000 : 680000,
+      rimanenze: usePeco ? 380000 : isNano ? 480000 : 155000,
+      attivoFisso: usePeco ? 1170000 : isNano ? 820000 : 930000,
+      totalePassivo: usePeco ? 3240000 : isNano ? 2860000 : 1850000,
+      passivoCorrenti: usePeco ? 1000000 : isNano ? 1200000 : 780000,
+      debitiVersoBanche: usePeco ? 750000 : isNano ? 980000 : 680000,
+      debitiBreveTermine: usePeco ? 500000 : isNano ? 580000 : 420000,
+      debitiLungoTermine: usePeco ? 375000 : isNano ? 400000 : 260000,
+      totaleDebiti: usePeco ? 1875000 : isNano ? 1920000 : 1420000,
+      patrimonioNetto: usePeco ? 1365000 : isNano ? 940000 : 430000,
+      capitaleSociale: usePeco ? 500000 : isNano ? 150000 : 100000,
+      utiliPortati: usePeco ? 680000 : isNano ? 404000 : 303000,
+      capitaleDiLavoro: usePeco ? 1070000 : isNano ? 840000 : 140000,
+      utiliNonDistribuiti: usePeco ? 680000 : isNano ? 404000 : 303000,
+      fatturato: usePeco ? 4850000 : isNano ? 4850000 : 2450000,
+      valoreAzioneMercato: usePeco ? 1365000 : isNano ? 940000 : 430000,
+      debtService: usePeco ? 242000 : isNano ? 469000 : 203000,
     };
     const models = calculateAllModels(bilancio as any);
     return {
@@ -318,20 +323,28 @@ function MetisApp() {
     };
   }, [displayName, displayPiva, safeData, companyId]);
 
-  // Fetch Gemini sentiment when company name is available
+  // Fetch Gemini sentiment when company name is available and changes
+  const sentimentFetchedFor = useRef<string>('');
   useEffect(() => {
-    if (!displayName || sentimentLoading || sentiment) return;
+    const name = typeof displayName === 'string' ? displayName : '';
+    // Skip generic fallbacks
+    if (!name || name === 'AZIENDA CLIENTE' || sentimentLoading) return;
+    // Already fetched for this exact name
+    if (sentimentFetchedFor.current === name) return;
+    // Reset previous sentiment when name changes
+    setSentiment(null);
     setSentimentLoading(true);
+    sentimentFetchedFor.current = name;
     fetch("/api/sentiment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ companyName: displayName, piva: displayPiva }),
+      body: JSON.stringify({ companyName: name, piva: displayPiva }),
     })
       .then(r => r.json())
       .then(data => setSentiment(data))
       .catch(() => setSentiment(null))
       .finally(() => setSentimentLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayName]);
 
   const crData = useMemo(
@@ -346,93 +359,93 @@ function MetisApp() {
 
         <main className="flex-1 flex items-center justify-center relative overflow-hidden bg-[var(--color-void)]">
 
-        {/* Ambient Background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(0,229,255,0.1),_transparent_50%)] pointer-events-none"></div>
-        <div className="absolute top-[20%] left-[15%] w-64 h-64 bg-purple/20 rounded-full blur-[100px] animate-pulse"></div>
-        <div className="absolute bottom-[20%] right-[15%] w-80 h-80 bg-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+          {/* Ambient Background */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(123,44,191,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom,_rgba(0,229,255,0.1),_transparent_50%)] pointer-events-none"></div>
+          <div className="absolute top-[20%] left-[15%] w-64 h-64 bg-purple/20 rounded-full blur-[100px] animate-pulse"></div>
+          <div className="absolute bottom-[20%] right-[15%] w-80 h-80 bg-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
 
-        {/* Two-Panel Card */}
-        <div className="relative z-10 flex flex-col md:flex-row max-w-[1000px] w-full mx-6 rounded-2xl overflow-hidden glass-panel border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          
-          {/* Left Panel — Brand */}
-          <div className="hidden md:flex flex-col justify-between w-1/2 p-12 bg-gradient-to-br from-black/80 to-[rgba(14,21,33,1)] border-r border-white/5 relative">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-6">
-                <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-12 h-12 rounded-xl shadow-[0_0_15px_rgba(0,229,255,0.2)]" />
-                <span className="font-space font-bold text-3xl tracking-widest text-white">METIS</span>
-              </div>
-              <div className="inline-block border border-cyan/30 bg-cyan/10 text-cyan text-[10px] font-space tracking-widest uppercase px-3 py-1 rounded-full mb-8">
-                AI Credit Underwriting v2.0
-              </div>
-              <h2 className="text-3xl font-light text-white leading-tight mb-6">
-                Analisi <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan to-purple">Automatica.</span><br/>
-                Decisione con <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green to-yellow">Fiducia.</span>
-              </h2>
-              <p className="text-text-muted text-sm leading-relaxed max-w-sm">
-                Carica un bilancio aziendale o una visura Centrale Rischi. Lo Swarm Multi-Agente elaborerà il dossier in pochi secondi, in modalità Glass-Box conforme EU AI Act.
-              </p>
+          {/* Two-Panel Card */}
+          <div className="relative z-10 flex flex-col md:flex-row max-w-[1000px] w-full mx-6 rounded-2xl overflow-hidden glass-panel border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
 
-              <div className="mt-8 space-y-3">
-                {['EU AI Act Conforme', 'D.Lgs. 14/2019 CCII', 'EBA/GL/2020/06', 'Glass-Box — No Black Box'].map(badge => (
-                  <div key={badge} className="flex items-center gap-2 text-white/60 text-xs">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan shrink-0"></div>
-                    {badge}
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Left Panel — Brand */}
+            <div className="hidden md:flex flex-col justify-between w-1/2 p-12 bg-gradient-to-br from-black/80 to-[rgba(14,21,33,1)] border-r border-white/5 relative">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
 
-            <div className="relative z-10 mt-16 font-space text-[10px] tracking-widest uppercase text-text-muted opacity-50">
-              Powered by Finomnia AI Research
-            </div>
-          </div>
-
-          {/* Right Panel — Upload */}
-          <div className="flex flex-col justify-center w-full md:w-1/2 p-10 lg:p-14 bg-[rgba(9,13,20,0.6)] backdrop-blur-md">
-            
-            <div className="mb-8">
-              <h3 className="font-space text-2xl font-bold text-white mb-2">Carica Nuovo Dossier</h3>
-              <p className="text-text-muted text-xs">Trascina o clicca per selezionare il documento da analizzare.</p>
-            </div>
-
-            {/* Drop Zone */}
-            <div className="relative border-2 border-dashed border-white/10 hover:border-cyan/60 transition-all rounded-xl p-10 mb-6 cursor-pointer bg-black/20 group">
-              <input 
-                type="file" 
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                onChange={handleFileChange}
-              />
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-cyan/10 flex items-center justify-center group-hover:bg-cyan/20 transition border border-cyan/20 group-hover:border-cyan/50">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-cyan">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-              </div>
-              <p className="font-space text-base text-white text-center mb-1">Trascina qui i documenti cliente</p>
-              <p className="text-xs text-text-muted text-center">PDF • XBRL • TXT — Bilancio, Visura CR</p>
-              
-              {selectedFile && (
-                <div className="mt-5 flex items-center gap-2 justify-center bg-cyan/10 border border-cyan/20 py-2 px-4 rounded-lg">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"></div>
-                  <p className="font-space text-sm text-cyan">Riconosciuto: <strong>{selectedFile.name}</strong></p>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <img src="/finomnia-logo.png" alt="FINOMNIA" className="w-12 h-12 rounded-xl shadow-[0_0_15px_rgba(0,229,255,0.2)]" />
+                  <span className="font-space font-bold text-3xl tracking-widest text-white">METIS</span>
                 </div>
-              )}
+                <div className="inline-block border border-cyan/30 bg-cyan/10 text-cyan text-[10px] font-space tracking-widest uppercase px-3 py-1 rounded-full mb-8">
+                  AI Credit Underwriting v2.0
+                </div>
+                <h2 className="text-3xl font-light text-white leading-tight mb-6">
+                  Analisi <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan to-purple">Automatica.</span><br />
+                  Decisione con <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green to-yellow">Fiducia.</span>
+                </h2>
+                <p className="text-text-muted text-sm leading-relaxed max-w-sm">
+                  Carica un bilancio aziendale o una visura Centrale Rischi. Lo Swarm Multi-Agente elaborerà il dossier in pochi secondi, in modalità Glass-Box conforme EU AI Act.
+                </p>
+
+                <div className="mt-8 space-y-3">
+                  {['EU AI Act Conforme', 'D.Lgs. 14/2019 CCII', 'EBA/GL/2020/06', 'Glass-Box — No Black Box'].map(badge => (
+                    <div key={badge} className="flex items-center gap-2 text-white/60 text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan shrink-0"></div>
+                      {badge}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative z-10 mt-16 font-space text-[10px] tracking-widest uppercase text-text-muted opacity-50">
+                Powered by Finomnia AI Research
+              </div>
             </div>
 
-            <button 
-              onClick={startAnalysis}
-              className="w-full py-3.5 rounded-lg font-space font-bold uppercase tracking-widest transition-all relative overflow-hidden group border border-transparent bg-gradient-to-r from-purple to-cyan text-white hover:shadow-[0_0_25px_rgba(123,44,191,0.4)]"
-            >
-              <span className="relative z-10">Avvia Analisi Multi-Agente</span>
-              <div className="absolute inset-0 -translate-x-full bg-white/10 skew-x-12 group-hover:translate-x-full transition-transform duration-700"></div>
-            </button>
+            {/* Right Panel — Upload */}
+            <div className="flex flex-col justify-center w-full md:w-1/2 p-10 lg:p-14 bg-[rgba(9,13,20,0.6)] backdrop-blur-md">
 
-            <div className="mt-6 text-center text-xs text-text-muted">
-              Nessun dato trasmesso a terzi · Elaborazione locale conforme GDPR
+              <div className="mb-8">
+                <h3 className="font-space text-2xl font-bold text-white mb-2">Carica Nuovo Dossier</h3>
+                <p className="text-text-muted text-xs">Trascina o clicca per selezionare il documento da analizzare.</p>
+              </div>
+
+              {/* Drop Zone */}
+              <div className="relative border-2 border-dashed border-white/10 hover:border-cyan/60 transition-all rounded-xl p-10 mb-6 cursor-pointer bg-black/20 group">
+                <input
+                  type="file"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  onChange={handleFileChange}
+                />
+                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-cyan/10 flex items-center justify-center group-hover:bg-cyan/20 transition border border-cyan/20 group-hover:border-cyan/50">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-cyan">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p className="font-space text-base text-white text-center mb-1">Trascina qui i documenti cliente</p>
+                <p className="text-xs text-text-muted text-center">PDF • XBRL • TXT — Bilancio, Visura CR</p>
+
+                {selectedFile && (
+                  <div className="mt-5 flex items-center gap-2 justify-center bg-cyan/10 border border-cyan/20 py-2 px-4 rounded-lg">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"></div>
+                    <p className="font-space text-sm text-cyan">Riconosciuto: <strong>{selectedFile.name}</strong></p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={startAnalysis}
+                className="w-full py-3.5 rounded-lg font-space font-bold uppercase tracking-widest transition-all relative overflow-hidden group border border-transparent bg-gradient-to-r from-purple to-cyan text-white hover:shadow-[0_0_25px_rgba(123,44,191,0.4)]"
+              >
+                <span className="relative z-10">Avvia Analisi Multi-Agente</span>
+                <div className="absolute inset-0 -translate-x-full bg-white/10 skew-x-12 group-hover:translate-x-full transition-transform duration-700"></div>
+              </button>
+
+              <div className="mt-6 text-center text-xs text-text-muted">
+                Nessun dato trasmesso a terzi · Elaborazione locale conforme GDPR
+              </div>
             </div>
           </div>
-        </div>
         </main>
       </div>
     );
@@ -448,7 +461,8 @@ function MetisApp() {
           <div className="w-64 h-1 bg-white/10 mt-6 rounded-full overflow-hidden">
             <div className="h-full bg-purple animate-[progress_3.5s_ease-out_forwards]"></div>
           </div>
-          <style dangerouslySetInnerHTML={{__html: `
+          <style dangerouslySetInnerHTML={{
+            __html: `
             @keyframes progress { from { width: 0%; } to { width: 100%; } }
           `}} />
         </main>
@@ -472,7 +486,7 @@ function MetisApp() {
       {/* Sci-Fi Background Layer */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,229,255,0.08),_transparent_50%),radial-gradient(ellipse_at_bottom_left,_rgba(123,44,191,0.08),_transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 pointer-events-none mix-blend-overlay" />
-      
+
       {/* Sidebar */}
       <Sidebar />
 
@@ -480,11 +494,11 @@ function MetisApp() {
       <div className="flex-1 flex flex-col p-6 h-full overflow-hidden relative z-10">
         {backendError && loadOp.phase === 'error' && (
           <div className="flex items-center gap-3 bg-red/10 border-l-4 border-red text-red text-xs font-space px-4 py-3 mb-6 shadow-[0_0_15px_rgba(255,0,0,0.15)]">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
             <span className="font-bold tracking-wide uppercase">{loadOp.message}</span>
           </div>
         )}
-        
+
         <header className="flex justify-between items-end border-b border-glass-border pb-5 mb-5 shrink-0">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -492,7 +506,7 @@ function MetisApp() {
               <div className="font-space text-[9px] text-cyan uppercase tracking-[0.3em] font-bold opacity-80">Metis Core // Active Session</div>
             </div>
             <h1 className="font-space text-4xl font-bold tracking-tighter text-white flex items-baseline gap-4">
-              {displayName} 
+              {displayName}
               <span className="text-cyan/40 text-sm font-mono tracking-widest font-normal">ID_{String(displayDossier).padStart(4, '0')}</span>
             </h1>
           </div>
@@ -511,7 +525,7 @@ function MetisApp() {
         </header>
 
         <div className={`grid ${expandedCol !== null ? 'grid-cols-1' : 'grid-cols-12'} gap-6 h-full min-h-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]`}>
-          
+
           {/* Column 1: Sources (col-span-3) */}
           <section className={`flex flex-col overflow-hidden transition-all duration-300 ${expandedCol !== null && expandedCol !== 1 ? 'hidden' : expandedCol === 1 ? 'col-span-12' : 'col-span-3'}`}>
             <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
@@ -545,11 +559,11 @@ function MetisApp() {
               <div className="border border-glass-border rounded-lg p-5 mb-4 bg-black/30 transition hover:border-glass-hover">
                 <div className="font-space text-sm font-semibold mb-3 text-white">Lettura Sensori IA</div>
                 <div className="text-[13px] text-text-muted leading-relaxed">
-                  Ricavi: € {(mockBilancioData.fatturato).toLocaleString('it-IT')}<br/>
+                  Ricavi: € {(mockBilancioData.fatturato).toLocaleString('it-IT')}<br />
                   <span className={`px-1 py-0.5 rounded cursor-default border-b border-dashed border-cyan transition-colors duration-300 ${hoveredLink === 'ebitda' ? 'bg-cyan text-black shadow-[0_0_8px_var(--color-cyan)]' : 'bg-cyan-dim text-cyan'}`}>
                     EBITDA (Stimato): {mockBilancioData.ebitdaMargin}%
-                  </span><br/>
-                  Debiti v/Banche: € {(mockBilancioData.debitiVersoBanche).toLocaleString('it-IT')}<br/>
+                  </span><br />
+                  Debiti v/Banche: € {(mockBilancioData.debitiVersoBanche).toLocaleString('it-IT')}<br />
                   Cassa: € {(mockBilancioData.cassa).toLocaleString('it-IT')}
                 </div>
               </div>
@@ -558,7 +572,7 @@ function MetisApp() {
 
           {/* Column 2: Agentic Output (col-span-5) */}
           <section className={`flex flex-col overflow-hidden transition-all duration-300 ${expandedCol !== null && expandedCol !== 2 ? 'hidden' : expandedCol === 2 ? 'col-span-12' : 'col-span-5'}`}>
-             <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
+            <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-purple font-bold">02</span> // METIS XAI SYNTHESIS
               </div>
@@ -571,7 +585,7 @@ function MetisApp() {
               </button>
             </div>
             <div className="p-5 flex-1 overflow-y-auto pr-3">
-              
+
               <div className="mb-6 animate-[fadeUp_0.6s_ease-out_forwards] opacity-0 translate-y-4" style={{ animationDelay: '0.1s' }}>
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <div className="w-2 h-2 rounded-full bg-purple shadow-[0_0_8px_var(--color-purple)]"></div>
@@ -579,7 +593,7 @@ function MetisApp() {
                 </div>
                 <div className="bg-white/5 border border-glass-border p-5 rounded-lg border-l-2 border-l-purple leading-relaxed">
                   {safeData ? (
-                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[0].html_text}} />
+                    <p dangerouslySetInnerHTML={{ __html: safeData.xai_narrative[0].html_text }} />
                   ) : (
                     <p>La struttura societaria appare consolidata. Nessun evento pregiudizievole rilevato a carico degli esponenti storici.</p>
                   )}
@@ -593,9 +607,9 @@ function MetisApp() {
                 </div>
                 <div className="bg-[rgba(0,255,102,0.05)] border border-glass-border p-5 rounded-lg border-l-2 border-l-green leading-relaxed">
                   {safeData ? (
-                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[1].html_text}} 
-                        onMouseEnter={(e) => { if((e.target as any).tagName === "SPAN") setHoveredLink('ebitda') }} 
-                        onMouseLeave={() => setHoveredLink(null)} />
+                    <p dangerouslySetInnerHTML={{ __html: safeData.xai_narrative[1].html_text }}
+                      onMouseEnter={(e) => { if ((e.target as any).tagName === "SPAN") setHoveredLink('ebitda') }}
+                      onMouseLeave={() => setHoveredLink(null)} />
                   ) : (
                     <p>Si registra un fatturato in crescita, tuttavia emerge un <span onMouseEnter={() => setHoveredLink('ebitda')} onMouseLeave={() => setHoveredLink(null)} className="text-cyan cursor-crosshair border-b border-dotted border-cyan hover:bg-cyan-dim transition px-0.5 font-medium">calo dell'EBITDA margin al 12%</span> correlato all'incremento del costo delle materie prima.</p>
                   )}
@@ -609,9 +623,9 @@ function MetisApp() {
                 </div>
                 <div className="bg-[rgba(250,204,21,0.05)] border border-glass-border p-5 rounded-lg border-l-2 border-l-yellow leading-relaxed">
                   {safeData ? (
-                     <p dangerouslySetInnerHTML={{__html: safeData.xai_narrative[2].html_text}} 
-                        onMouseEnter={(e) => { if((e.target as any).tagName === "SPAN") setHoveredLink('scaduti') }} 
-                        onMouseLeave={() => setHoveredLink(null)} />
+                    <p dangerouslySetInnerHTML={{ __html: safeData.xai_narrative[2].html_text }}
+                      onMouseEnter={(e) => { if ((e.target as any).tagName === "SPAN") setHoveredLink('scaduti') }}
+                      onMouseLeave={() => setHoveredLink(null)} />
                   ) : (
                     <p><strong>ATTENZIONE:</strong> Rilevato pattern irregolare negli andamentali. Troviamo <span onMouseEnter={() => setHoveredLink('scaduti')} onMouseLeave={() => setHoveredLink(null)} className="text-yellow cursor-crosshair border-b border-dotted border-yellow hover:bg-[rgba(250,204,21,0.15)] transition px-0.5 font-medium">scaduti persistenti per € 45.200</span> sulle linee autoliquidanti da oltre 60 giorni.</p>
                   )}
@@ -623,10 +637,9 @@ function MetisApp() {
                   <div className="w-2 h-2 rounded-full bg-cyan shadow-[0_0_8px_var(--color-cyan)]"></div>
                   <div className="font-space text-[11px] text-text-muted uppercase tracking-widest">Agent_News • Web Reputation (Gemini AI)</div>
                 </div>
-                <div className={`bg-[rgba(0,229,255,0.05)] border border-glass-border p-5 rounded-lg border-l-2 ${
-                  (sentiment?.label ?? safeData?.sentiment?.label) === "ALLERTA NEGATIVA" ? 'border-l-red' :
+                <div className={`bg-[rgba(0,229,255,0.05)] border border-glass-border p-5 rounded-lg border-l-2 ${(sentiment?.label ?? safeData?.sentiment?.label) === "ALLERTA NEGATIVA" ? 'border-l-red' :
                   (sentiment?.label ?? safeData?.sentiment?.label) === "MISTO" ? 'border-l-yellow' : 'border-l-cyan'
-                } leading-relaxed`}>
+                  } leading-relaxed`}>
                   <div className="flex justify-between items-center mb-4">
                     <span className="font-space font-bold tracking-wide text-white">Sentiment Scoring</span>
                     {sentimentLoading ? (
@@ -635,11 +648,10 @@ function MetisApp() {
                         Fetching...
                       </span>
                     ) : (
-                      <span className={`px-2.5 py-1 rounded text-[10px] border tracking-widest uppercase font-bold ${
-                        (sentiment?.label ?? safeData?.sentiment?.label) === "ALLERTA NEGATIVA" ? 'bg-red/10 border-red text-red shadow-[0_0_10px_rgba(255,0,0,0.2)]' :
+                      <span className={`px-2.5 py-1 rounded text-[10px] border tracking-widest uppercase font-bold ${(sentiment?.label ?? safeData?.sentiment?.label) === "ALLERTA NEGATIVA" ? 'bg-red/10 border-red text-red shadow-[0_0_10px_rgba(255,0,0,0.2)]' :
                         (sentiment?.label ?? safeData?.sentiment?.label) === "MISTO" ? 'bg-yellow/10 border-yellow text-yellow shadow-[0_0_10px_rgba(250,204,21,0.2)]' :
-                        'bg-cyan/10 border-cyan text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]'
-                      }`}>
+                          'bg-cyan/10 border-cyan text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]'
+                        }`}>
                         {sentiment?.score ?? safeData?.sentiment?.score ?? 50}/100 — {sentiment?.label ?? safeData?.sentiment?.label ?? 'NEUTRO'}
                       </span>
                     )}
@@ -691,7 +703,7 @@ function MetisApp() {
 
           {/* Column 3: Matrices & KPIs (col-span-4) */}
           <section className={`flex flex-col overflow-hidden transition-all duration-300 ${expandedCol !== null && expandedCol !== 3 ? 'hidden' : expandedCol === 3 ? 'col-span-12' : 'col-span-4'}`}>
-             <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
+            <div className="pb-3 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-white/50 font-space font-semibold flex justify-between items-center shrink-0 mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-yellow font-bold">03</span> // ANALYTICAL MODULES
               </div>
@@ -704,7 +716,7 @@ function MetisApp() {
               </button>
             </div>
             <div className="p-5 flex-1 overflow-y-auto">
-              
+
               {/* FIFA-style Risk Radar — replaces accordion */}
               <div className="mb-6 bg-black/20 border border-glass-border rounded-xl p-4">
                 <div className="text-[10px] text-text-muted uppercase tracking-widest font-space mb-3">Credit Risk Radar</div>
@@ -715,9 +727,8 @@ function MetisApp() {
               <div className="mb-6 bg-black/20 border border-glass-border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-3">
                   <div className="font-space text-xs tracking-widest text-text-muted uppercase">Forecast DSCR Prospettico 12M</div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${
-                    safeData?.forecast_dscr?.scenario_selezionato === 'STRESS' ? 'border-red/50 text-red bg-red/10' : 'border-green/50 text-green bg-green/10'
-                  }`}>Scenario: {safeData?.forecast_dscr?.scenario_selezionato || 'BASE'}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${safeData?.forecast_dscr?.scenario_selezionato === 'STRESS' ? 'border-red/50 text-red bg-red/10' : 'border-green/50 text-green bg-green/10'
+                    }`}>Scenario: {safeData?.forecast_dscr?.scenario_selezionato || 'BASE'}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3 mb-3">
                   <div className={`text-center p-3 rounded-lg border ${safeData?.forecast_dscr?.scenario_selezionato === 'BASE' && parseFloat(safeData?.forecast_dscr?.ottimistico) >= 1 ? 'border-green/30 bg-green/5' : 'border-glass-border bg-black/20'}`}>
@@ -750,25 +761,25 @@ function MetisApp() {
                   <div className="bg-[rgba(0,255,102,0.08)] p-3 flex flex-col transition hover:bg-[rgba(0,255,102,0.12)]">
                     <div className="font-space text-[10px] tracking-wider uppercase mb-2 text-green font-semibold">Strengths</div>
                     <ul className="text-[11px] text-slate-200 ml-3 list-disc leading-relaxed">
-                      {safeData ? safeData.swot_matrix.strengths.map((s:string, i:number) => <li key={i}>{s}</li>) : <li>Fatturato Crescente</li>}
+                      {safeData ? safeData.swot_matrix.strengths.map((s: string, i: number) => <li key={i}>{s}</li>) : <li>Fatturato Crescente</li>}
                     </ul>
                   </div>
                   <div className="bg-[rgba(250,204,21,0.05)] p-3 flex flex-col transition hover:bg-[rgba(250,204,21,0.1)]">
                     <div className="font-space text-[10px] tracking-wider uppercase mb-2 text-yellow font-semibold">Weaknesses</div>
                     <ul className="text-[11px] text-slate-200 ml-3 list-disc leading-relaxed">
-                       {safeData ? safeData.swot_matrix.weaknesses.map((s:string, i:number) => <li key={i}>{s}</li>) : <li>EBITDA in calo</li>}
+                      {safeData ? safeData.swot_matrix.weaknesses.map((s: string, i: number) => <li key={i}>{s}</li>) : <li>EBITDA in calo</li>}
                     </ul>
                   </div>
                   <div className="bg-[rgba(0,229,255,0.06)] p-3 flex flex-col transition hover:bg-[rgba(0,229,255,0.1)]">
                     <div className="font-space text-[10px] tracking-wider uppercase mb-2 text-cyan font-semibold">Opportunities</div>
                     <ul className="text-[11px] text-slate-200 ml-3 list-disc leading-relaxed">
-                       {safeData ? safeData.swot_matrix.opportunities.map((s:string, i:number) => <li key={i}>{s}</li>) : <li>Settore ATECO in boom</li>}
+                      {safeData ? safeData.swot_matrix.opportunities.map((s: string, i: number) => <li key={i}>{s}</li>) : <li>Settore ATECO in boom</li>}
                     </ul>
                   </div>
                   <div className="bg-[rgba(255,0,85,0.05)] p-3 flex flex-col transition hover:bg-[rgba(255,0,85,0.1)]">
                     <div className="font-space text-[10px] tracking-wider uppercase mb-2 text-red font-semibold">Threats</div>
                     <ul className="text-[11px] text-slate-200 ml-3 list-disc leading-relaxed">
-                       {safeData ? safeData.swot_matrix.threats.map((s:string, i:number) => <li key={i}>{s}</li>) : <li>Tassi BCE</li>}
+                      {safeData ? safeData.swot_matrix.threats.map((s: string, i: number) => <li key={i}>{s}</li>) : <li>Tassi BCE</li>}
                     </ul>
                   </div>
                 </div>
@@ -809,9 +820,8 @@ function MetisApp() {
                   </div>
                   <div className="text-center">
                     <div className="text-[10px] text-text-muted">Posizione</div>
-                    <div className={`font-space text-sm font-bold mt-1 px-2 py-0.5 rounded ${
-                      safeData?.benchmark?.posizione_vs_settore === 'SOTTO MEDIA' ? 'bg-red/10 text-red' : 'bg-green/10 text-green'
-                    }`}>{safeData?.benchmark?.posizione_vs_settore || 'SOPRA MEDIA'}</div>
+                    <div className={`font-space text-sm font-bold mt-1 px-2 py-0.5 rounded ${safeData?.benchmark?.posizione_vs_settore === 'SOTTO MEDIA' ? 'bg-red/10 text-red' : 'bg-green/10 text-green'
+                      }`}>{safeData?.benchmark?.posizione_vs_settore || 'SOPRA MEDIA'}</div>
                   </div>
                 </div>
                 <div className="text-[8px] text-text-muted border-t border-glass-border pt-1.5">{benchmarkMeta.fonte}</div>
@@ -821,38 +831,33 @@ function MetisApp() {
               <div className="mb-6 bg-black/20 border border-glass-border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-3">
                   <div className="font-space text-xs tracking-widest text-text-muted uppercase">Pattern CR 12 Mesi</div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${
-                    safeData?.cr_pattern?.trend === 'DETERIORAMENTO' ? 'border-red/50 text-red bg-red/10' : 'border-green/50 text-green bg-green/10'
-                  }`}>{safeData?.cr_pattern?.trend || 'STABILE'}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${safeData?.cr_pattern?.trend === 'DETERIORAMENTO' ? 'border-red/50 text-red bg-red/10' : 'border-green/50 text-green bg-green/10'
+                    }`}>{safeData?.cr_pattern?.trend || 'STABILE'}</span>
                 </div>
                 <div className="flex items-end gap-[3px] h-14">
-                  {(safeData?.cr_pattern?.utilizzato_pct || [72,74,78,76,80,82,85,83,88,90,86,78]).map((v: number, i: number) => (
+                  {(safeData?.cr_pattern?.utilizzato_pct || [72, 74, 78, 76, 80, 82, 85, 83, 88, 90, 86, 78]).map((v: number, i: number) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <div 
-                        className={`w-full rounded-t transition-all ${
-                          v > 90 ? 'bg-red' : v > 80 ? 'bg-yellow' : 'bg-cyan'
-                        }`}
+                      <div
+                        className={`w-full rounded-t transition-all ${v > 90 ? 'bg-red' : v > 80 ? 'bg-yellow' : 'bg-cyan'
+                          }`}
                         style={{ height: `${v * 0.55}px` }}
                       ></div>
-                      <span className="text-[8px] text-text-muted">{(safeData?.cr_pattern?.mesi || ['M','A','M','G','L','A','S','O','N','D','G','F'])[i]}</span>
+                      <span className="text-[8px] text-text-muted">{(safeData?.cr_pattern?.mesi || ['M', 'A', 'M', 'G', 'L', 'A', 'S', 'O', 'N', 'D', 'G', 'F'])[i]}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Cross-Check Semaphore (Module 6) */}
-              <div className={`mb-6 border rounded-lg p-4 ${
-                safeData?.cross_check?.alert ? 'border-red/50 bg-red/5' : 'border-green/50 bg-green/5'
-              }`}>
+              <div className={`mb-6 border rounded-lg p-4 ${safeData?.cross_check?.alert ? 'border-red/50 bg-red/5' : 'border-green/50 bg-green/5'
+                }`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full shadow-lg ${
-                    safeData?.cross_check?.alert ? 'bg-red shadow-red/50 animate-pulse' : 'bg-green shadow-green/50'
-                  }`}></div>
+                  <div className={`w-4 h-4 rounded-full shadow-lg ${safeData?.cross_check?.alert ? 'bg-red shadow-red/50 animate-pulse' : 'bg-green shadow-green/50'
+                    }`}></div>
                   <div>
                     <div className="font-space text-xs tracking-widest uppercase font-semibold text-white">Cross-Check Bilancio ↔ CR</div>
-                    <div className={`text-[11px] mt-1 ${
-                      safeData?.cross_check?.alert ? 'text-red' : 'text-green'
-                    }`}>
+                    <div className={`text-[11px] mt-1 ${safeData?.cross_check?.alert ? 'text-red' : 'text-green'
+                      }`}>
                       Mismatch Debiti: {safeData?.cross_check?.mismatch_pct || '15.3'}%
                       {safeData?.cross_check?.alert ? ' ⚠️ ANOMALIA RILEVATA' : ' ✓ Nei limiti'}
                     </div>
@@ -870,17 +875,15 @@ function MetisApp() {
                   </div>
                   <div className="flex gap-1">
                     {/* CCII overall badge */}
-                    <span className={`text-[8px] px-1.5 py-0.5 rounded border font-space font-semibold ${
-                      cciiResult.overallStatus === 'REGOLARE' ? 'text-green border-green/30 bg-green/10' :
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded border font-space font-semibold ${cciiResult.overallStatus === 'REGOLARE' ? 'text-green border-green/30 bg-green/10' :
                       cciiResult.overallStatus === 'ATTENZIONE' ? 'text-yellow border-yellow/30 bg-yellow/10' :
-                      'text-red border-red/30 bg-red/10'
-                    }`}>CCII: {cciiResult.overallStatus}</span>
+                        'text-red border-red/30 bg-red/10'
+                      }`}>CCII: {cciiResult.overallStatus}</span>
                     {/* EBA overall badge */}
-                    <span className={`text-[8px] px-1.5 py-0.5 rounded border font-space font-semibold ${
-                      ebaResult.overallStatus === 'CONFORME' ? 'text-green border-green/30 bg-green/10' :
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded border font-space font-semibold ${ebaResult.overallStatus === 'CONFORME' ? 'text-green border-green/30 bg-green/10' :
                       ebaResult.overallStatus === 'PARZIALMENTE CONFORME' ? 'text-yellow border-yellow/30 bg-yellow/10' :
-                      'text-red border-red/30 bg-red/10'
-                    }`}>EBA: {ebaResult.score}/100</span>
+                        'text-red border-red/30 bg-red/10'
+                      }`}>EBA: {ebaResult.score}/100</span>
                   </div>
                 </div>
 
@@ -888,51 +891,46 @@ function MetisApp() {
                 <div className="flex gap-0 border-b border-glass-border">
                   <button
                     onClick={() => setComplianceTab('ccii')}
-                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
-                      complianceTab === 'ccii'
-                        ? 'border-b-purple text-purple bg-purple/5'
-                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
-                    }`}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${complianceTab === 'ccii'
+                      ? 'border-b-purple text-purple bg-purple/5'
+                      : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                      }`}
                   >
                     D.Lgs. 14/2019 — CCII
                   </button>
                   <button
                     onClick={() => setComplianceTab('eba')}
-                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
-                      complianceTab === 'eba'
-                        ? 'border-b-cyan text-cyan bg-cyan/5'
-                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
-                    }`}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${complianceTab === 'eba'
+                      ? 'border-b-cyan text-cyan bg-cyan/5'
+                      : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                      }`}
                   >
                     EBA
                   </button>
                   <button
                     onClick={() => setComplianceTab('policy')}
-                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
-                      complianceTab === 'policy'
-                        ? 'border-b-green text-green bg-green/5'
-                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
-                    }`}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${complianceTab === 'policy'
+                      ? 'border-b-green text-green bg-green/5'
+                      : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                      }`}
                   >
                     Policy
                   </button>
                   <button
                     onClick={() => setComplianceTab('cluster')}
-                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
-                      complianceTab === 'cluster'
-                        ? 'border-b-yellow text-yellow bg-yellow/5'
-                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
-                    }`}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${complianceTab === 'cluster'
+                      ? 'border-b-yellow text-yellow bg-yellow/5'
+                      : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                      }`}
                   >
                     Cluster
                   </button>
                   <button
                     onClick={() => setComplianceTab('bilancio')}
-                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${
-                      complianceTab === 'bilancio'
-                        ? 'border-b-[#00FF66] text-[#00FF66] bg-[#00FF66]/5'
-                        : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
-                    }`}
+                    className={`flex-1 py-2.5 text-[10px] font-space font-semibold tracking-wider uppercase transition border-b-2 ${complianceTab === 'bilancio'
+                      ? 'border-b-[#00FF66] text-[#00FF66] bg-[#00FF66]/5'
+                      : 'border-b-transparent text-text-muted hover:text-white hover:bg-white/5'
+                      }`}
                   >
                     Bilancio
                   </button>
@@ -1086,9 +1084,8 @@ function MetisApp() {
         <>
           {/* Toggle Button */}
           <button onClick={() => setShowDelibera(!showDelibera)}
-            className={`fixed bottom-6 right-8 z-50 w-12 h-12 rounded-full flex items-center justify-center border shadow-lg transition-all duration-300 ${
-              showDelibera ? 'bg-red/20 border-red/50 text-red hover:bg-red/30' : 'bg-cyan/20 border-cyan/50 text-cyan hover:bg-cyan/30 animate-pulse'
-            }`}
+            className={`fixed bottom-6 right-8 z-50 w-12 h-12 rounded-full flex items-center justify-center border shadow-lg transition-all duration-300 ${showDelibera ? 'bg-red/20 border-red/50 text-red hover:bg-red/30' : 'bg-cyan/20 border-cyan/50 text-cyan hover:bg-cyan/30 animate-pulse'
+              }`}
             title={showDelibera ? 'Chiudi Delibera' : 'Apri Delibera'}>
             {showDelibera ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -1098,30 +1095,30 @@ function MetisApp() {
           </button>
 
           {/* Delibera Bar */}
-          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6 bg-[rgba(9,13,20,0.95)] border border-glass-border p-3 rounded-full shadow-[0_15px_30px_rgba(0,0,0,0.8)] backdrop-blur-md z-50 transition-all duration-500 ${
-            showDelibera ? 'translate-y-0 opacity-100' : 'translate-y-[120px] opacity-0 pointer-events-none'
-          }`}>
+          <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6 bg-[rgba(9,13,20,0.95)] border border-glass-border p-3 rounded-full shadow-[0_15px_30px_rgba(0,0,0,0.8)] backdrop-blur-md z-50 transition-all duration-500 ${showDelibera ? 'translate-y-0 opacity-100' : 'translate-y-[120px] opacity-0 pointer-events-none'
+            }`}>
             <div className="px-5 font-space text-xs text-white uppercase tracking-widest border-r border-glass-border font-bold">Azione Comitato Deliberante</div>
-            <button 
-               onClick={() => alert("✅ Pratica PEF Approvata. Generazione del fascicolo in PDF per il Comitato Crediti avviata con esito positivo.")}
-               className="bg-[rgba(0,255,102,0.1)] hover:bg-[rgba(0,255,102,0.2)] hover:shadow-[0_0_15px_rgba(0,255,102,0.2)] border border-[rgba(0,255,102,0.4)] text-green px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
+            <button
+              onClick={() => alert("✅ Pratica PEF Approvata. Generazione del fascicolo in PDF per il Comitato Crediti avviata con esito positivo.")}
+              className="bg-[rgba(0,255,102,0.1)] hover:bg-[rgba(0,255,102,0.2)] hover:shadow-[0_0_15px_rgba(0,255,102,0.2)] border border-[rgba(0,255,102,0.4)] text-green px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
               APPROVA PEF
             </button>
-            <button 
-               onClick={() => alert("⏳ Pratica Sospesa. Le richieste di integrazione documentale sono state notificate al Gestore Corporate.")}
-               className="bg-[rgba(250,204,21,0.1)] hover:bg-[rgba(250,204,21,0.2)] hover:shadow-[0_0_15px_rgba(250,204,21,0.2)] border border-[rgba(250,204,21,0.4)] text-yellow px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
+            <button
+              onClick={() => alert("⏳ Pratica Sospesa. Le richieste di integrazione documentale sono state notificate al Gestore Corporate.")}
+              className="bg-[rgba(250,204,21,0.1)] hover:bg-[rgba(250,204,21,0.2)] hover:shadow-[0_0_15px_rgba(250,204,21,0.2)] border border-[rgba(250,204,21,0.4)] text-yellow px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
               RICHIEDI INTEGRAZIONI
             </button>
-            <button 
-               onClick={() => alert("❌ Pratica Declinata definitivamente. Verbale di diniego e inserimento motivazione in piattaforma.")}
-               className="bg-[rgba(255,0,85,0.1)] hover:bg-[rgba(255,0,85,0.2)] hover:shadow-[0_0_15px_rgba(255,0,85,0.2)] border border-[rgba(255,0,85,0.4)] text-red px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
+            <button
+              onClick={() => alert("❌ Pratica Declinata definitivamente. Verbale di diniego e inserimento motivazione in piattaforma.")}
+              className="bg-[rgba(255,0,85,0.1)] hover:bg-[rgba(255,0,85,0.2)] hover:shadow-[0_0_15px_rgba(255,0,85,0.2)] border border-[rgba(255,0,85,0.4)] text-red px-6 py-2.5 rounded-full font-space text-[13px] font-bold tracking-wider transition">
               BOCCIA PRATICA
             </button>
           </div>
         </>
       )}
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(15px); }
           to { opacity: 1; transform: translateY(0); }
