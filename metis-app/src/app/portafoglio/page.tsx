@@ -37,48 +37,49 @@ interface Notification {
 const OPERATORS = ['M. Rossi', 'L. Bianchi', 'G. Verdi', 'A. Neri', 'S. Russo'];
 
 const mockCompanies: Company[] = [
-  { id: 1,  name: 'Alpha S.p.A.',        piva: 'IT12345678901', pd: 2.1,  altman: 3.12, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-18', created: '2025-01-15', sector: 'Manifatturiero', revenue: 15400000 },
-  { id: 2,  name: 'Beta Ltd.',           piva: 'IT98765432109', pd: 3.5,  altman: 2.85, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'L. Bianchi', updated: '2025-03-17', created: '2025-02-10', sector: 'Servizi',        revenue: 8200000 },
-  { id: 3,  name: 'Gamma SRL',           piva: 'IT11223344556', pd: 1.8,  altman: 3.45, status: 'DA REVISIONARE', risk: 'BASSO',   operator: 'G. Verdi',   updated: '2025-03-16', created: '2025-01-22', sector: 'Tech',           revenue: 22100000 },
-  { id: 4,  name: 'Delta Corp.',         piva: 'IT99887766554', pd: 5.2,  altman: 1.95, status: 'SOSPESA',        risk: 'ALTO',    operator: 'A. Neri',    updated: '2025-03-15', created: '2025-02-05', sector: 'Edilizia',       revenue: 4500000 },
-  { id: 5,  name: 'Epsilon S.r.l.',      piva: 'IT55443322110', pd: 0.9,  altman: 4.10, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-14', created: '2025-01-08', sector: 'Alimentare',     revenue: 31000000 },
-  { id: 6,  name: 'Zeta Industries',     piva: 'IT66778899001', pd: 7.8,  altman: 1.45, status: 'RIFIUTATA',      risk: 'CRITICO', operator: 'S. Russo',   updated: '2025-03-13', created: '2025-03-01', sector: 'Manifatturiero', revenue: 2100000 },
-  { id: 7,  name: 'Eta Holding',         piva: 'IT22334455667', pd: 1.5,  altman: 3.80, status: 'APPROVATA',      risk: 'BASSO',   operator: 'L. Bianchi', updated: '2025-03-12', created: '2025-01-20', sector: 'Servizi',        revenue: 45000000 },
-  { id: 8,  name: 'Theta Finance',       piva: 'IT33445566778', pd: 4.1,  altman: 2.20, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'G. Verdi',   updated: '2025-03-11', created: '2025-02-18', sector: 'Finanza',        revenue: 12800000 },
-  { id: 9,  name: 'Iota Tech',           piva: 'IT44556677889', pd: 2.8,  altman: 2.95, status: 'DA REVISIONARE', risk: 'MEDIO',   operator: 'A. Neri',    updated: '2025-03-10', created: '2025-02-25', sector: 'Tech',           revenue: 9700000 },
-  { id: 10, name: 'Kappa Logistics',     piva: 'IT55667788990', pd: 6.3,  altman: 1.60, status: 'SOSPESA',        risk: 'ALTO',    operator: 'S. Russo',   updated: '2025-03-09', created: '2025-01-30', sector: 'Trasporti',      revenue: 6300000 },
-  { id: 11, name: 'Lambda Group',        piva: 'IT66778800112', pd: 1.2,  altman: 3.95, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-08', created: '2025-01-12', sector: 'Alimentare',     revenue: 28500000 },
-  { id: 12, name: 'Mu Pharma',           piva: 'IT77889911223', pd: 3.2,  altman: 2.70, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'L. Bianchi', updated: '2025-03-07', created: '2025-03-05', sector: 'Pharma',         revenue: 18000000 },
-  { id: 13, name: 'Nu Energy',           piva: 'IT88990022334', pd: 8.5,  altman: 1.10, status: 'RIFIUTATA',      risk: 'CRITICO', operator: 'G. Verdi',   updated: '2025-03-06', created: '2025-02-15', sector: 'Energia',        revenue: 3400000 },
-  { id: 14, name: 'Xi Construction',     piva: 'IT99001133445', pd: 4.8,  altman: 2.05, status: 'DA REVISIONARE', risk: 'ALTO',    operator: 'A. Neri',    updated: '2025-03-05', created: '2025-02-20', sector: 'Edilizia',       revenue: 7600000 },
-  { id: 15, name: 'Omicron Digital',     piva: 'IT00112244556', pd: 1.0,  altman: 4.25, status: 'APPROVATA',      risk: 'BASSO',   operator: 'S. Russo',   updated: '2025-03-04', created: '2025-01-05', sector: 'Tech',           revenue: 52000000 },
-  { id: 16, name: 'Pi Consulting',       piva: 'IT11223355667', pd: 2.5,  altman: 3.10, status: 'IN ANALISI',     risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-03', created: '2025-03-02', sector: 'Servizi',        revenue: 5200000 },
-  { id: 17, name: 'Rho Automotive',      piva: 'IT22334466778', pd: 5.9,  altman: 1.75, status: 'SOSPESA',        risk: 'ALTO',    operator: 'L. Bianchi', updated: '2025-03-02', created: '2025-02-08', sector: 'Automotive',     revenue: 14200000 },
-  { id: 18, name: 'Sigma Textiles',      piva: 'IT33445577889', pd: 3.8,  altman: 2.50, status: 'DA REVISIONARE', risk: 'MEDIO',   operator: 'G. Verdi',   updated: '2025-03-01', created: '2025-01-28', sector: 'Manifatturiero', revenue: 11000000 },
+  { id: 1, name: 'Alpha S.p.A.', piva: 'IT12345678901', pd: 2.1, altman: 3.12, status: 'APPROVATA', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-18', created: '2025-01-15', sector: 'Manifatturiero', revenue: 15400000 },
+  { id: 2, name: 'Beta Ltd.', piva: 'IT98765432109', pd: 3.5, altman: 2.85, status: 'IN ANALISI', risk: 'MEDIO', operator: 'L. Bianchi', updated: '2025-03-17', created: '2025-02-10', sector: 'Servizi', revenue: 8200000 },
+  { id: 3, name: 'Gamma SRL', piva: 'IT11223344556', pd: 1.8, altman: 3.45, status: 'DA REVISIONARE', risk: 'BASSO', operator: 'G. Verdi', updated: '2025-03-16', created: '2025-01-22', sector: 'Tech', revenue: 22100000 },
+  { id: 4, name: 'Delta Corp.', piva: 'IT99887766554', pd: 5.2, altman: 1.95, status: 'SOSPESA', risk: 'ALTO', operator: 'A. Neri', updated: '2025-03-15', created: '2025-02-05', sector: 'Edilizia', revenue: 4500000 },
+  { id: 5, name: 'Epsilon S.r.l.', piva: 'IT55443322110', pd: 0.9, altman: 4.10, status: 'APPROVATA', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-14', created: '2025-01-08', sector: 'Alimentare', revenue: 31000000 },
+  { id: 6, name: 'Zeta Industries', piva: 'IT66778899001', pd: 7.8, altman: 1.45, status: 'RIFIUTATA', risk: 'CRITICO', operator: 'S. Russo', updated: '2025-03-13', created: '2025-03-01', sector: 'Manifatturiero', revenue: 2100000 },
+  { id: 7, name: 'Eta Holding', piva: 'IT22334455667', pd: 1.5, altman: 3.80, status: 'APPROVATA', risk: 'BASSO', operator: 'L. Bianchi', updated: '2025-03-12', created: '2025-01-20', sector: 'Servizi', revenue: 45000000 },
+  { id: 8, name: 'Theta Finance', piva: 'IT33445566778', pd: 4.1, altman: 2.20, status: 'IN ANALISI', risk: 'MEDIO', operator: 'G. Verdi', updated: '2025-03-11', created: '2025-02-18', sector: 'Finanza', revenue: 12800000 },
+  { id: 9, name: 'Iota Tech', piva: 'IT44556677889', pd: 2.8, altman: 2.95, status: 'DA REVISIONARE', risk: 'MEDIO', operator: 'A. Neri', updated: '2025-03-10', created: '2025-02-25', sector: 'Tech', revenue: 9700000 },
+  { id: 10, name: 'Kappa Logistics', piva: 'IT55667788990', pd: 6.3, altman: 1.60, status: 'SOSPESA', risk: 'ALTO', operator: 'S. Russo', updated: '2025-03-09', created: '2025-01-30', sector: 'Trasporti', revenue: 6300000 },
+  { id: 11, name: 'Lambda Group', piva: 'IT66778800112', pd: 1.2, altman: 3.95, status: 'APPROVATA', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-08', created: '2025-01-12', sector: 'Alimentare', revenue: 28500000 },
+  { id: 12, name: 'Mu Pharma', piva: 'IT77889911223', pd: 3.2, altman: 2.70, status: 'IN ANALISI', risk: 'MEDIO', operator: 'L. Bianchi', updated: '2025-03-07', created: '2025-03-05', sector: 'Pharma', revenue: 18000000 },
+  { id: 13, name: 'Nu Energy', piva: 'IT88990022334', pd: 8.5, altman: 1.10, status: 'RIFIUTATA', risk: 'CRITICO', operator: 'G. Verdi', updated: '2025-03-06', created: '2025-02-15', sector: 'Energia', revenue: 3400000 },
+  { id: 14, name: 'Xi Construction', piva: 'IT99001133445', pd: 4.8, altman: 2.05, status: 'DA REVISIONARE', risk: 'ALTO', operator: 'A. Neri', updated: '2025-03-05', created: '2025-02-20', sector: 'Edilizia', revenue: 7600000 },
+  { id: 15, name: 'Omicron Digital', piva: 'IT00112244556', pd: 1.0, altman: 4.25, status: 'APPROVATA', risk: 'BASSO', operator: 'S. Russo', updated: '2025-03-04', created: '2025-01-05', sector: 'Tech', revenue: 52000000 },
+  { id: 16, name: 'Pi Consulting', piva: 'IT11223355667', pd: 2.5, altman: 3.10, status: 'IN ANALISI', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-03', created: '2025-03-02', sector: 'Servizi', revenue: 5200000 },
+  { id: 17, name: 'Rho Automotive', piva: 'IT22334466778', pd: 5.9, altman: 1.75, status: 'SOSPESA', risk: 'ALTO', operator: 'L. Bianchi', updated: '2025-03-02', created: '2025-02-08', sector: 'Automotive', revenue: 14200000 },
+  { id: 18, name: 'Sigma Textiles', piva: 'IT33445577889', pd: 3.8, altman: 2.50, status: 'DA REVISIONARE', risk: 'MEDIO', operator: 'G. Verdi', updated: '2025-03-01', created: '2025-01-28', sector: 'Manifatturiero', revenue: 11000000 },
+  { id: 100, name: 'PECORELLA SPA', piva: 'IT09876543210', pd: 2.1, altman: 3.52, status: 'IN ANALISI', risk: 'BASSO', operator: 'METIS AI', updated: '2026-03-27', created: '2026-03-27', sector: 'Tech', revenue: 4850000 },
 ];
 
 const mockNotifications: Notification[] = [
-  { id: 1, type: 'danger',  message: 'Zeta Industries: PD oltre soglia critica (7.8%)',     time: '2 min fa',  read: false },
-  { id: 2, type: 'warning', message: 'Delta Corp.: pratica sospesa da oltre 15 giorni',     time: '1 ora fa',  read: false },
-  { id: 3, type: 'info',    message: 'Mu Pharma: nuova documentazione caricata',            time: '3 ore fa',  read: false },
-  { id: 4, type: 'success', message: 'Lambda Group: approvazione completata',                time: '5 ore fa',  read: true },
-  { id: 5, type: 'warning', message: 'Kappa Logistics: Altman Z-score sotto 1.8',           time: '1 giorno fa', read: true },
+  { id: 1, type: 'danger', message: 'Zeta Industries: PD oltre soglia critica (7.8%)', time: '2 min fa', read: false },
+  { id: 2, type: 'warning', message: 'Delta Corp.: pratica sospesa da oltre 15 giorni', time: '1 ora fa', read: false },
+  { id: 3, type: 'info', message: 'Mu Pharma: nuova documentazione caricata', time: '3 ore fa', read: false },
+  { id: 4, type: 'success', message: 'Lambda Group: approvazione completata', time: '5 ore fa', read: true },
+  { id: 5, type: 'warning', message: 'Kappa Logistics: Altman Z-score sotto 1.8', time: '1 giorno fa', read: true },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<Status, { color: string; icon: string; border: string; bg: string; text: string }> = {
-  'APPROVATA':      { color: 'green',  icon: '✓', border: 'border-green/50',  bg: 'bg-green/10',  text: 'text-green' },
-  'IN ANALISI':     { color: 'cyan',   icon: '◎', border: 'border-cyan/50',   bg: 'bg-cyan/10',   text: 'text-cyan' },
+  'APPROVATA': { color: 'green', icon: '✓', border: 'border-green/50', bg: 'bg-green/10', text: 'text-green' },
+  'IN ANALISI': { color: 'cyan', icon: '◎', border: 'border-cyan/50', bg: 'bg-cyan/10', text: 'text-cyan' },
   'DA REVISIONARE': { color: 'yellow', icon: '⚠', border: 'border-yellow/50', bg: 'bg-yellow/10', text: 'text-yellow' },
-  'SOSPESA':        { color: 'purple', icon: '⏸', border: 'border-purple/50', bg: 'bg-purple/10', text: 'text-purple' },
-  'RIFIUTATA':      { color: 'red',    icon: '✕', border: 'border-red/50',    bg: 'bg-red/10',    text: 'text-red' },
+  'SOSPESA': { color: 'purple', icon: '⏸', border: 'border-purple/50', bg: 'bg-purple/10', text: 'text-purple' },
+  'RIFIUTATA': { color: 'red', icon: '✕', border: 'border-red/50', bg: 'bg-red/10', text: 'text-red' },
 };
 
 const RISK_CONFIG: Record<RiskLevel, { border: string; bg: string; text: string }> = {
-  'BASSO':   { border: 'border-green/50',  bg: 'bg-green/10',  text: 'text-green' },
-  'MEDIO':   { border: 'border-yellow/50', bg: 'bg-yellow/10', text: 'text-yellow' },
-  'ALTO':    { border: 'border-red/40',    bg: 'bg-red/10',    text: 'text-red' },
-  'CRITICO': { border: 'border-red/70',    bg: 'bg-red/20',    text: 'text-red' },
+  'BASSO': { border: 'border-green/50', bg: 'bg-green/10', text: 'text-green' },
+  'MEDIO': { border: 'border-yellow/50', bg: 'bg-yellow/10', text: 'text-yellow' },
+  'ALTO': { border: 'border-red/40', bg: 'bg-red/10', text: 'text-red' },
+  'CRITICO': { border: 'border-red/70', bg: 'bg-red/20', text: 'text-red' },
 };
 
 type SortKey = 'name' | 'pd' | 'altman' | 'status' | 'updated' | 'risk' | 'revenue';
@@ -115,7 +116,7 @@ function StatusDistributionChart({ companies }: { companies: Company[] }) {
   return (
     <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden flex flex-col justify-between">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">Distribuzione Stati</h3>
-      
+
       <div className="relative flex gap-1 h-4 rounded-full bg-black/30 mb-4 cursor-crosshair">
         {bars.filter(b => b.count > 0).map(b => {
           const isHov = hovered === b.status;
@@ -242,7 +243,7 @@ function PDTrendMiniChart({ companies }: { companies: Company[] }) {
   return (
     <div className="flex-1 h-full bg-black/40 border border-white/10 shadow-lg rounded-xl p-5 relative overflow-hidden">
       <h3 className="text-[10px] uppercase tracking-wider text-cyan font-semibold font-[var(--font-space)] mb-3">PD Distribution</h3>
-      
+
       {hovIdx !== null && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
           <div className="px-3 py-1.5 rounded-lg border text-center whitespace-nowrap" style={{ background: "#0A0F1Aee", borderColor: points[hovIdx].pd > 5 ? "#FF005560" : "#00E5FF60" }}>
@@ -268,7 +269,7 @@ function PDTrendMiniChart({ companies }: { companies: Company[] }) {
           <path d={`${pathD} L 100 60 L 0 60 Z`} fill="url(#pdGrad)" />
           <path d={pathD} fill="none" stroke="#00E5FF" strokeWidth="0.8" />
           <line x1="0" y1={100 - (5 / max) * 80 - 10} x2="100" y2={100 - (5 / max) * 80 - 10} stroke="#FF0055" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.6" />
-          
+
           {points.map((p, i) => {
             const isHov = hovIdx === i;
             const isDanger = p.pd > 5;
@@ -388,7 +389,7 @@ function SortIndicator({ sortKey, currentKey, dir }: { sortKey: SortKey; current
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function PortafoglioDashboard() {
   const router = useRouter();
-  
+
   // Filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -556,7 +557,7 @@ export default function PortafoglioDashboard() {
                 <div className="font-space text-[9px] text-cyan uppercase tracking-[0.3em] font-bold opacity-80">Metis Core // Active Session</div>
               </div>
               <h1 className="font-space text-3xl font-bold tracking-tighter text-white flex items-baseline gap-4">
-                Portafoglio Creditizio 
+                Portafoglio Creditizio
                 <span className="text-cyan/40 text-sm font-mono tracking-widest font-normal">VOL_{filtered.length}</span>
               </h1>
             </div>
@@ -564,7 +565,7 @@ export default function PortafoglioDashboard() {
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:border-cyan/50 text-white transition-all shadow-lg"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
               <span className="font-space text-xs font-semibold uppercase tracking-widest">{showAdvancedFilters ? "Nascondi Toolbar" : "Toolbar di Ricerca"}</span>
             </button>
           </div>
@@ -586,7 +587,7 @@ export default function PortafoglioDashboard() {
           <div className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative z-30 ${showAdvancedFilters ? 'grid-rows-[1fr] opacity-100 mb-6' : 'grid-rows-[0fr] opacity-0 mb-0'}`}>
             <div className="overflow-hidden">
               <div className="glass-panel p-3 flex flex-col gap-4 border border-white/10 shadow-2xl bg-black/40 backdrop-blur-xl rounded-xl">
-                
+
                 {/* Main Row */}
                 <div className="flex items-center justify-between gap-4">
                   {/* Search Input with Autocomplete */}
@@ -601,12 +602,12 @@ export default function PortafoglioDashboard() {
                       onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                       className="w-full bg-black/30 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-cyan/50 transition font-space"
                     />
-                    
+
                     {/* Autocomplete Dropdown */}
                     {search.length > 0 && !companies.some(c => c.name.toLowerCase() === search.toLowerCase()) && (
                       <div className="absolute top-full left-0 mt-2 w-full bg-[#0A0F14] border border-white/10 rounded-lg shadow-2xl max-h-60 overflow-y-auto hidden group-focus-within:block z-50">
                         {companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).map(c => (
-                          <div 
+                          <div
                             key={c.id}
                             onMouseDown={() => router.push(`/pratica?id=${c.id}`)}
                             className="px-4 py-3 border-b border-white/5 hover:bg-cyan/10 cursor-pointer flex justify-between items-center transition"
@@ -633,7 +634,7 @@ export default function PortafoglioDashboard() {
                       <option value="">Tutti gli stati</option>
                       {(Object.keys(STATUS_CONFIG) as Status[]).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    
+
                     <select
                       value={riskFilter}
                       onChange={(e) => { setRiskFilter(e.target.value); setPage(1); }}
@@ -658,15 +659,15 @@ export default function PortafoglioDashboard() {
                   {/* Results Count & Export */}
                   <div className="flex items-center gap-4 shrink-0 border-l border-white/10 pl-4">
                     <div className="bg-black/30 border border-white/10 rounded-lg px-4 py-2">
-                       <span className="font-space text-lg text-cyan font-bold">{filtered.length}</span>
-                       <span className="text-[11px] text-text-muted ml-2 font-space uppercase tracking-widest">di {companies.length} pratiche</span>
+                      <span className="font-space text-lg text-cyan font-bold">{filtered.length}</span>
+                      <span className="text-[11px] text-text-muted ml-2 font-space uppercase tracking-widest">di {companies.length} pratiche</span>
                     </div>
                     <button
                       onClick={exportCSV}
                       className="w-10 h-10 rounded-lg bg-black/30 border border-white/10 hover:bg-cyan/10 hover:border-cyan/30 text-white/50 hover:text-cyan flex items-center justify-center transition"
                       title="Esporta CSV"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                     </button>
                   </div>
                 </div>
@@ -821,11 +822,10 @@ export default function PortafoglioDashboard() {
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`w-10 h-10 rounded-xl border flex items-center justify-center text-sm font-medium transition-all ${
-                      p === page
+                    className={`w-10 h-10 rounded-xl border flex items-center justify-center text-sm font-medium transition-all ${p === page
                         ? 'border-[#00E5FF]/50 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
                         : 'border-white/5 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

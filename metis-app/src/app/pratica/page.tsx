@@ -45,32 +45,42 @@ const REQUIRED_DOCS: RequiredDoc[] = [
 ];
 
 const MOCK_COMPANIES: Record<number, CompanyData> = {
-  1:  { id: 1,  name: "Alpha S.p.A.",       piva: "IT00000000001", status: "APPROVATA",      sector: "Manifatturiero", revenue: 15400000, pd: 2.1,  altman: 3.12, risk: "BASSO",   operator: "M. Rossi",   lat: 45.4718, lng: 9.1895, indirizzo: "Via Montenapoleone 3, Milano",
-        documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-20", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_alpha.pdf` })) },
-  2:  { id: 2,  name: "Beta Ltd.",          piva: "IT00000000002", status: "IN ANALISI",     sector: "Servizi",        revenue: 8200000,  pd: 3.5,  altman: 2.85, risk: "MEDIO",   operator: "L. Bianchi", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma",
-        documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 4 ? "uploaded" : "missing") as DocStatus, ...(i < 4 ? { uploadedAt: "2025-02-15", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_beta.pdf` } : {}) })) },
-  3:  { id: 3,  name: "Gamma SRL",          piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech",           revenue: 22100000, pd: 1.8,  altman: 3.45, risk: "BASSO",   operator: "G. Verdi",   lat: 45.0703, lng: 7.6869, indirizzo: "Corso Vittorio Emanuele II 15, Torino",
-        documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 3 ? "uploaded" : (i === 3 ? "error" : "missing")) as DocStatus, ...(i < 3 ? { uploadedAt: "2025-01-28", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_gamma.pdf` } : {}) })) },
-  4:  { id: 4,  name: "Delta Corp.",        piva: "IT00000000004", status: "SOSPESA",        sector: "Edilizia",       revenue: 4500000,  pd: 5.2,  altman: 1.95, risk: "ALTO",    operator: "A. Neri",    lat: 40.8518, lng: 14.2681, indirizzo: "Via Toledo 44, Napoli",
-        documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 2 ? "uploaded" : "missing") as DocStatus, ...(i < 2 ? { uploadedAt: "2025-02-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_delta.pdf` } : {}) })) },
-  5:  { id: 5,  name: "Epsilon S.r.l.",     piva: "IT00000000005", status: "APPROVATA",      sector: "Alimentare",     revenue: 31000000, pd: 0.9,  altman: 4.10, risk: "BASSO",   operator: "M. Rossi",   lat: 44.4949, lng: 11.3426, indirizzo: "Via Rizzoli 8, Bologna",
-        documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_epsilon.pdf` })) },
+  1: {
+    id: 1, name: "Alpha S.p.A.", piva: "IT00000000001", status: "APPROVATA", sector: "Manifatturiero", revenue: 15400000, pd: 2.1, altman: 3.12, risk: "BASSO", operator: "M. Rossi", lat: 45.4718, lng: 9.1895, indirizzo: "Via Montenapoleone 3, Milano",
+    documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-20", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_alpha.pdf` }))
+  },
+  2: {
+    id: 2, name: "Beta Ltd.", piva: "IT00000000002", status: "IN ANALISI", sector: "Servizi", revenue: 8200000, pd: 3.5, altman: 2.85, risk: "MEDIO", operator: "L. Bianchi", lat: 41.9028, lng: 12.4964, indirizzo: "Via del Corso 120, Roma",
+    documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 4 ? "uploaded" : "missing") as DocStatus, ...(i < 4 ? { uploadedAt: "2025-02-15", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_beta.pdf` } : {}) }))
+  },
+  3: {
+    id: 3, name: "Gamma SRL", piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech", revenue: 22100000, pd: 1.8, altman: 3.45, risk: "BASSO", operator: "G. Verdi", lat: 45.0703, lng: 7.6869, indirizzo: "Corso Vittorio Emanuele II 15, Torino",
+    documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 3 ? "uploaded" : (i === 3 ? "error" : "missing")) as DocStatus, ...(i < 3 ? { uploadedAt: "2025-01-28", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_gamma.pdf` } : {}) }))
+  },
+  4: {
+    id: 4, name: "Delta Corp.", piva: "IT00000000004", status: "SOSPESA", sector: "Edilizia", revenue: 4500000, pd: 5.2, altman: 1.95, risk: "ALTO", operator: "A. Neri", lat: 40.8518, lng: 14.2681, indirizzo: "Via Toledo 44, Napoli",
+    documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 2 ? "uploaded" : "missing") as DocStatus, ...(i < 2 ? { uploadedAt: "2025-02-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_delta.pdf` } : {}) }))
+  },
+  5: {
+    id: 5, name: "Epsilon S.r.l.", piva: "IT00000000005", status: "APPROVATA", sector: "Alimentare", revenue: 31000000, pd: 0.9, altman: 4.10, risk: "BASSO", operator: "M. Rossi", lat: 44.4949, lng: 11.3426, indirizzo: "Via Rizzoli 8, Bologna",
+    documents: REQUIRED_DOCS.map(d => ({ ...d, status: "uploaded" as DocStatus, uploadedAt: "2025-01-10", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_epsilon.pdf` }))
+  },
   // Resto: documenti parziali o mancanti
-  ...Object.fromEntries([6,7,8,9,10,11,12,13,14,15,16,17,18].map(id => {
+  ...Object.fromEntries([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(id => {
     const names: Record<number, [string, string, Status, string]> = {
-      6:  ["Zeta Industries",   "IT00000000006", "RIFIUTATA",      "Manifatturiero"],
-      7:  ["Eta Holding",       "IT00000000007", "APPROVATA",      "Servizi"],
-      8:  ["Theta Finance",     "IT00000000008", "IN ANALISI",     "Finanza"],
-      9:  ["Iota Tech",         "IT00000000009", "DA REVISIONARE", "Tech"],
-      10: ["Kappa Logistics",   "IT00000000010", "SOSPESA",        "Trasporti"],
-      11: ["Lambda Group",      "IT00000000011", "APPROVATA",      "Alimentare"],
-      12: ["Mu Pharma",         "IT00000000012", "IN ANALISI",     "Pharma"],
-      13: ["Nu Energy",         "IT00000000013", "RIFIUTATA",      "Energia"],
-      14: ["Xi Construction",   "IT00000000014", "DA REVISIONARE", "Edilizia"],
-      15: ["Omicron Digital",   "IT00000000015", "APPROVATA",      "Tech"],
-      16: ["Pi Consulting",     "IT00000000016", "IN ANALISI",     "Servizi"],
-      17: ["Rho Automotive",    "IT00000000017", "SOSPESA",        "Automotive"],
-      18: ["Sigma Textiles",    "IT00000000018", "DA REVISIONARE", "Manifatturiero"],
+      6: ["Zeta Industries", "IT00000000006", "RIFIUTATA", "Manifatturiero"],
+      7: ["Eta Holding", "IT00000000007", "APPROVATA", "Servizi"],
+      8: ["Theta Finance", "IT00000000008", "IN ANALISI", "Finanza"],
+      9: ["Iota Tech", "IT00000000009", "DA REVISIONARE", "Tech"],
+      10: ["Kappa Logistics", "IT00000000010", "SOSPESA", "Trasporti"],
+      11: ["Lambda Group", "IT00000000011", "APPROVATA", "Alimentare"],
+      12: ["Mu Pharma", "IT00000000012", "IN ANALISI", "Pharma"],
+      13: ["Nu Energy", "IT00000000013", "RIFIUTATA", "Energia"],
+      14: ["Xi Construction", "IT00000000014", "DA REVISIONARE", "Edilizia"],
+      15: ["Omicron Digital", "IT00000000015", "APPROVATA", "Tech"],
+      16: ["Pi Consulting", "IT00000000016", "IN ANALISI", "Servizi"],
+      17: ["Rho Automotive", "IT00000000017", "SOSPESA", "Automotive"],
+      18: ["Sigma Textiles", "IT00000000018", "DA REVISIONARE", "Manifatturiero"],
     };
     const [name, piva, status, sector] = names[id];
     const isComplete = ["APPROVATA"].includes(status);
@@ -84,13 +94,18 @@ const MOCK_COMPANIES: Record<number, CompanyData> = {
       })),
     }] as [number, CompanyData];
   })),
+  100: {
+    id: 100, name: "PECORELLA SPA", piva: "IT09876543210", status: "IN ANALISI", sector: "Tech", revenue: 4850000, pd: 2.1, altman: 3.52, risk: "BASSO", operator: "METIS AI",
+    lat: 37.3011, lng: 14.2106, indirizzo: "Via Vittorio Emanuele, 12 — 93013 Mazzarino (CL)",
+    documents: REQUIRED_DOCS.map((d, i) => ({ ...d, status: (i < 4 ? "uploaded" : "missing") as DocStatus, ...(i < 4 ? { uploadedAt: "2026-03-27", fileName: `${d.name.toLowerCase().replace(/\s/g, "_")}_pecorella.pdf` } : {}) }))
+  },
 };
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 const DOC_STATUS_CONFIG: Record<DocStatus, { icon: string; text: string; bg: string; border: string }> = {
-  uploaded: { icon: "✓", text: "text-green",  bg: "bg-green/10",  border: "border-green/30" },
-  missing:  { icon: "○", text: "text-white/30", bg: "bg-white/5",  border: "border-white/10" },
-  error:    { icon: "!", text: "text-red",    bg: "bg-red/10",    border: "border-red/30" },
+  uploaded: { icon: "✓", text: "text-green", bg: "bg-green/10", border: "border-green/30" },
+  missing: { icon: "○", text: "text-white/30", bg: "bg-white/5", border: "border-white/10" },
+  error: { icon: "!", text: "text-red", bg: "bg-red/10", border: "border-red/30" },
 };
 
 // ─── Metis AI Panel ─────────────────────────────────────────────────────────
@@ -156,18 +171,17 @@ function MetisAiPanel({ company, uploadedCount, totalDocs }: {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto max-h-[250px] space-y-3 pr-2 [scrollbar-width:thin] [scrollbar-color:rgba(0,229,255,0.2)_transparent]" aria-live="polite">
         {msgs.map((m, i) => (
-          <div key={i} className={`text-[12px] leading-relaxed px-4 py-3 rounded-xl ${
-            m.role === "assistant"
+          <div key={i} className={`text-[12px] leading-relaxed px-4 py-3 rounded-xl ${m.role === "assistant"
               ? "bg-black/40 border border-white/5 text-white/90 border-l-2 border-l-cyan/50"
               : "bg-cyan/10 border border-cyan/30 text-white ml-6 shadow-inner"
-          }`}>
+            }`}>
             {m.content}
           </div>
         ))}
         {loading && (
           <div className="flex items-center gap-3 px-4 py-3">
             <div className="flex gap-1.5">
-              {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+              {[0, 1, 2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan/60 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
             </div>
             <span className="text-[10px] font-space text-cyan/70 uppercase tracking-[0.1em] font-bold">Metis sta analizzando...</span>
           </div>
@@ -189,11 +203,10 @@ function MetisAiPanel({ company, uploadedCount, totalDocs }: {
           type="submit"
           disabled={loading || !input.trim()}
           aria-label="Invia messaggio"
-          className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-[#090D14] ${
-            input.trim() ? "bg-cyan/20 text-cyan border border-cyan/40 hover:bg-cyan/30 hover:scale-[1.05] hover:shadow-[0_0_15px_rgba(0,229,255,0.3)]" : "bg-white/5 text-white/20 border border-white/5"
-          }`}
+          className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-[#090D14] ${input.trim() ? "bg-cyan/20 text-cyan border border-cyan/40 hover:bg-cyan/30 hover:scale-[1.05] hover:shadow-[0_0_15px_rgba(0,229,255,0.3)]" : "bg-white/5 text-white/20 border border-white/5"
+            }`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
         </button>
       </form>
     </div>
@@ -216,7 +229,7 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
         <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-3">Proposta di Delibera</h3>
         <div className="flex items-center gap-3 bg-green/10 border border-green/30 rounded-xl p-4">
           <div className="w-10 h-10 rounded-full bg-green/20 flex items-center justify-center text-green shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
           </div>
           <div>
             <div className="text-green text-sm font-bold font-space uppercase tracking-widest">Pratica Approvata</div>
@@ -233,7 +246,7 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
         <h3 className="text-[10px] text-text-muted font-space uppercase tracking-[0.2em] font-bold mb-3">Proposta di Delibera</h3>
         <div className="flex items-center gap-3 bg-red/10 border border-red/30 rounded-xl p-4">
           <div className="w-10 h-10 rounded-full bg-red/20 flex items-center justify-center text-red shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </div>
           <div>
             <div className="text-red text-sm font-bold font-space uppercase tracking-widest">Pratica Rifiutata</div>
@@ -274,7 +287,7 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
               className="w-full flex items-center gap-4 p-4 rounded-xl border border-green/30 bg-green/5 hover:bg-green/10 hover:border-green/50 hover:shadow-[0_0_20px_rgba(0,255,102,0.15)] transition-all group"
             >
               <div className="w-10 h-10 rounded-xl bg-green/10 border border-green/30 flex items-center justify-center text-green shrink-0 group-hover:scale-110 transition-transform">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
               </div>
               <div className="text-left">
                 <div className="text-green text-sm font-bold font-space uppercase tracking-widest">Approva</div>
@@ -290,7 +303,7 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
               className="w-full flex items-center gap-4 p-4 rounded-xl border border-yellow/30 bg-yellow/5 hover:bg-yellow/10 hover:border-yellow/50 hover:shadow-[0_0_20px_rgba(250,204,21,0.15)] transition-all group"
             >
               <div className="w-10 h-10 rounded-xl bg-yellow/10 border border-yellow/30 flex items-center justify-center text-yellow shrink-0 group-hover:scale-110 transition-transform">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
               </div>
               <div className="text-left">
                 <div className="text-yellow text-sm font-bold font-space uppercase tracking-widest">Richiedi Integrazione</div>
@@ -306,7 +319,7 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
               className="w-full flex items-center gap-4 p-4 rounded-xl border border-red/30 bg-red/5 hover:bg-red/10 hover:border-red/50 hover:shadow-[0_0_20px_rgba(255,71,87,0.15)] transition-all group"
             >
               <div className="w-10 h-10 rounded-xl bg-red/10 border border-red/30 flex items-center justify-center text-red shrink-0 group-hover:scale-110 transition-transform">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </div>
               <div className="text-left">
                 <div className="text-red text-sm font-bold font-space uppercase tracking-widest">Rifiuta</div>
@@ -332,9 +345,9 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
                   background: step === "approve" ? "rgba(0,255,102,0.1)" : step === "escalation" ? "rgba(250,204,21,0.1)" : "rgba(255,71,87,0.1)",
                   borderColor: step === "approve" ? "rgba(0,255,102,0.4)" : step === "escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)"
                 }}>
-                {step === "approve" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
-                {step === "escalation" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
-                {step === "reject" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                {step === "approve" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>}
+                {step === "escalation" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
+                {step === "reject" && <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
               </div>
               <h2 className="text-white font-space text-lg font-bold mb-1">
                 {step === "approve" ? "Conferma Approvazione" : step === "escalation" ? "Richiesta di Integrazione" : "Conferma Rifiuto"}
@@ -387,9 +400,9 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
           style={{ borderColor: step === "done_approve" ? "rgba(0,255,102,0.4)" : step === "done_escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)" }}>
           <div className="w-10 h-10 rounded-xl flex items-center justify-center border shrink-0"
             style={{ background: step === "done_approve" ? "rgba(0,255,102,0.1)" : step === "done_escalation" ? "rgba(250,204,21,0.1)" : "rgba(255,71,87,0.1)", borderColor: step === "done_approve" ? "rgba(0,255,102,0.4)" : step === "done_escalation" ? "rgba(250,204,21,0.4)" : "rgba(255,71,87,0.4)" }}>
-            {step === "done_approve" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
-            {step === "done_escalation" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
-            {step === "done_reject" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+            {step === "done_approve" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-green)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>}
+            {step === "done_escalation" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
+            {step === "done_reject" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>}
           </div>
           <div>
             <div className="text-white text-sm font-bold font-space uppercase tracking-widest">
@@ -400,7 +413,7 @@ function DelibraPanel({ company }: { company: CompanyData; isElaborata: boolean 
             </div>
           </div>
           <button onClick={() => setStep("idle")} className="ml-4 text-white/30 hover:text-white transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
       )}
@@ -469,7 +482,7 @@ function PraticaPage() {
         <header className="h-[70px] border-b border-white/10 flex items-center justify-between px-8 bg-black/20 backdrop-blur-md z-10">
           <div className="flex items-center gap-4">
             <button onClick={() => router.push("/home")} className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white/60 hover:text-white transition shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><polyline points="15 18 9 12 15 6" /></svg>
               <span className="text-xs font-space font-medium tracking-wide">Indietro</span>
             </button>
             <div>
@@ -490,7 +503,7 @@ function PraticaPage() {
             {isElaborata && (
               <Link href={`/dossier?id=${company.id}`}>
                 <button className="flex items-center gap-2 bg-cyan/10 text-cyan hover:bg-cyan/20 border border-cyan/30 rounded-lg px-4 py-2 text-xs font-semibold font-space transition">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="3" x2="9" y2="21" /></svg>
                   Apri Dashboard Analisi
                 </button>
               </Link>
@@ -525,176 +538,175 @@ function PraticaPage() {
 
               {/* Documents Panel */}
               <div className="glass-panel border border-white/10 p-6 flex flex-col gap-5">
-              <header className="flex items-center justify-between">
-                <h2 className="font-space text-lg font-semibold text-white flex items-center gap-2 [text-wrap:balance]">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Documenti Richiesti
-                </h2>
-                <div className="flex items-center gap-3 text-[11px] font-space tracking-widest uppercase">
-                  <span className="text-green font-bold">{uploadedCount} caricati</span>
-                  {missingCount > 0 && <span className="text-white/20">|</span>}
-                  {missingCount > 0 && <span className="text-yellow font-bold">{missingCount} mancanti</span>}
-                  {errorCount > 0 && <span className="text-white/20">|</span>}
-                  {errorCount > 0 && <span className="text-red font-bold">{errorCount} errori</span>}
+                <header className="flex items-center justify-between">
+                  <h2 className="font-space text-lg font-semibold text-white flex items-center gap-2 [text-wrap:balance]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                    Documenti Richiesti
+                  </h2>
+                  <div className="flex items-center gap-3 text-[11px] font-space tracking-widest uppercase">
+                    <span className="text-green font-bold">{uploadedCount} caricati</span>
+                    {missingCount > 0 && <span className="text-white/20">|</span>}
+                    {missingCount > 0 && <span className="text-yellow font-bold">{missingCount} mancanti</span>}
+                    {errorCount > 0 && <span className="text-white/20">|</span>}
+                    {errorCount > 0 && <span className="text-red font-bold">{errorCount} errori</span>}
+                  </div>
+                </header>
+
+                {/* Progress Bar */}
+                <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan to-green transition-all duration-700 ease-out rounded-full shadow-[0_0_10px_var(--color-cyan)]"
+                    style={{ width: `${(uploadedCount / docs.length) * 100}%` }}
+                    role="progressbar"
+                    aria-valuenow={Math.round((uploadedCount / docs.length) * 100)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  />
                 </div>
-              </header>
 
-              {/* Progress Bar */}
-              <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan to-green transition-all duration-700 ease-out rounded-full shadow-[0_0_10px_var(--color-cyan)]"
-                  style={{ width: `${(uploadedCount / docs.length) * 100}%` }}
-                  role="progressbar"
-                  aria-valuenow={Math.round((uploadedCount / docs.length) * 100)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                />
-              </div>
-
-              {/* Document List */}
-              <div className="space-y-3 flex-1 overflow-y-auto pr-2 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]">
-                {docs.map((doc, idx) => {
-                  const dCfg = DOC_STATUS_CONFIG[doc.status];
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => doc.status === "uploaded" && setSelectedDoc({ title: doc.name, filename: doc.fileName })}
-                      className={`group flex items-center justify-between p-4 min-h-[4rem] rounded-xl border ${dCfg.border} ${dCfg.bg} transition-all duration-300 hover:border-white/30 ${doc.status === "uploaded" ? "cursor-pointer hover:bg-white/[0.08]" : "hover:bg-white/[0.04]"}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${dCfg.text} bg-black/40 border ${dCfg.border} shadow-inner`}>
-                          {typeof dCfg.icon === 'string' ? dCfg.icon : dCfg.icon}
-                        </div>
-                        <div className="flex flex-col justify-center">
-                          <div className="text-white text-sm font-semibold tracking-wide group-hover:text-cyan transition-colors">{doc.name}</div>
-                          <div className="text-text-muted text-[11px] mt-0.5">
-                            {doc.status === "uploaded"
-                              ? <span className="text-white/60 font-mono group-hover:text-white transition-colors">{doc.fileName} — <span className="text-text-muted">{doc.uploadedAt}</span></span>
-                              : doc.status === "error"
-                              ? <span className="text-red/80">Errore nel file caricato — necessario caricare un nuovo documento</span>
-                              : doc.description}
+                {/* Document List */}
+                <div className="space-y-3 flex-1 overflow-y-auto pr-2 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.1)_transparent]">
+                  {docs.map((doc, idx) => {
+                    const dCfg = DOC_STATUS_CONFIG[doc.status];
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => doc.status === "uploaded" && setSelectedDoc({ title: doc.name, filename: doc.fileName })}
+                        className={`group flex items-center justify-between p-4 min-h-[4rem] rounded-xl border ${dCfg.border} ${dCfg.bg} transition-all duration-300 hover:border-white/30 ${doc.status === "uploaded" ? "cursor-pointer hover:bg-white/[0.08]" : "hover:bg-white/[0.04]"}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${dCfg.text} bg-black/40 border ${dCfg.border} shadow-inner`}>
+                            {typeof dCfg.icon === 'string' ? dCfg.icon : dCfg.icon}
+                          </div>
+                          <div className="flex flex-col justify-center">
+                            <div className="text-white text-sm font-semibold tracking-wide group-hover:text-cyan transition-colors">{doc.name}</div>
+                            <div className="text-text-muted text-[11px] mt-0.5">
+                              {doc.status === "uploaded"
+                                ? <span className="text-white/60 font-mono group-hover:text-white transition-colors">{doc.fileName} — <span className="text-text-muted">{doc.uploadedAt}</span></span>
+                                : doc.status === "error"
+                                  ? <span className="text-red/80">Errore nel file caricato — necessario caricare un nuovo documento</span>
+                                  : doc.description}
+                            </div>
                           </div>
                         </div>
+                        <div>
+                          {doc.status === "uploaded" ? (
+                            <span className="text-[10px] font-space uppercase tracking-[0.2em] font-bold text-green bg-green/10 border border-green/30 px-3 py-1.5 rounded-lg shadow-[0_0_10px_rgba(0,255,102,0.1)] group-hover:bg-green/20 transition-colors">Apri ✓</span>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleUpload(idx); }}
+                              className={`text-[10px] font-space uppercase tracking-[0.2em] font-bold px-4 py-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${doc.status === "error"
+                                  ? "bg-red/10 text-red border border-red/40 hover:bg-red/20 hover:shadow-[0_0_15px_rgba(255,71,87,0.3)] focus-visible:ring-red"
+                                  : "bg-cyan/10 text-cyan border border-cyan/40 hover:bg-cyan/20 hover:shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:scale-[1.02] focus-visible:ring-cyan"
+                                }`}
+                              aria-label={`Carica documento ${doc.name}`}
+                            >
+                              {doc.status === "error" ? "Ricarica" : "Carica File"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Submit / Status */}
+                <div className="mt-2 pt-5 border-t border-white/10" aria-live="polite">
+                  {submitted ? (
+                    <div className="flex items-center gap-4 bg-green/10 border border-green/30 rounded-xl p-5 shadow-[0_0_20px_rgba(0,255,102,0.1)]">
+                      <div className="w-10 h-10 rounded-full bg-green/20 flex items-center justify-center text-green shrink-0">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
                       </div>
                       <div>
-                        {doc.status === "uploaded" ? (
-                          <span className="text-[10px] font-space uppercase tracking-[0.2em] font-bold text-green bg-green/10 border border-green/30 px-3 py-1.5 rounded-lg shadow-[0_0_10px_rgba(0,255,102,0.1)] group-hover:bg-green/20 transition-colors">Apri ✓</span>
-                        ) : (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleUpload(idx); }}
-                            className={`text-[10px] font-space uppercase tracking-[0.2em] font-bold px-4 py-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
-                              doc.status === "error"
-                                ? "bg-red/10 text-red border border-red/40 hover:bg-red/20 hover:shadow-[0_0_15px_rgba(255,71,87,0.3)] focus-visible:ring-red"
-                                : "bg-cyan/10 text-cyan border border-cyan/40 hover:bg-cyan/20 hover:shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:scale-[1.02] focus-visible:ring-cyan"
-                            }`}
-                            aria-label={`Carica documento ${doc.name}`}
-                          >
-                            {doc.status === "error" ? "Ricarica" : "Carica File"}
-                          </button>
-                        )}
+                        <div className="text-green text-sm font-bold font-space uppercase tracking-widest mb-1">Pratica Sottomessa</div>
+                        <div className="text-green/80 text-[11px] leading-relaxed">In coda per analisi automatica. Il motore XAI è in esecuzione, tempo stimato: 3-5 minuti...</div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Submit / Status */}
-              <div className="mt-2 pt-5 border-t border-white/10" aria-live="polite">
-                {submitted ? (
-                  <div className="flex items-center gap-4 bg-green/10 border border-green/30 rounded-xl p-5 shadow-[0_0_20px_rgba(0,255,102,0.1)]">
-                    <div className="w-10 h-10 rounded-full bg-green/20 flex items-center justify-center text-green shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div>
-                      <div className="text-green text-sm font-bold font-space uppercase tracking-widest mb-1">Pratica Sottomessa</div>
-                      <div className="text-green/80 text-[11px] leading-relaxed">In coda per analisi automatica. Il motore XAI è in esecuzione, tempo stimato: 3-5 minuti...</div>
-                    </div>
-                  </div>
-                ) : isElaborata ? (
-                  <div className="flex items-center gap-4 bg-cyan/10 border border-cyan/30 rounded-xl p-5 shadow-[0_0_20px_rgba(0,229,255,0.1)]">
-                    <div className="w-10 h-10 rounded-full bg-cyan/20 flex items-center justify-center text-cyan shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    </div>
-                    <div>
-                      <div className="text-cyan text-sm font-bold font-space uppercase tracking-widest mb-1">Analisi Completata</div>
-                      <div className="text-cyan/80 text-[11px] leading-relaxed">Tutti i moduli M1-M8 sono stati eseguiti con successo. Procedi alla Dashboard Analisi per i risultati XAI.</div>
-                    </div>
-                  </div>
-                ) : allUploaded ? (
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="w-full h-12 rounded-xl font-space font-bold uppercase tracking-[0.2em] text-xs transition-all bg-cyan text-black shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-70 disabled:hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] disabled:hover:bg-cyan flex items-center justify-center gap-3"
-                  >
-                    {submitting ? (
-                      <>
-                        <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                        Sottomissione Motore XAI...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                        Avvia Analisi Pratica
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-4 bg-yellow/10 border border-yellow/30 rounded-xl p-5">
-                    <div className="w-10 h-10 rounded-full bg-yellow/20 flex items-center justify-center text-yellow shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </div>
-                    <div>
-                      <div className="text-yellow text-sm font-bold font-space uppercase tracking-widest mb-1">Azione Richiesta</div>
-                      <div className="text-yellow/80 text-[11px] leading-relaxed">
-                        Sistema in attesa di <strong className="text-yellow">{missingCount}</strong> document{missingCount === 1 ? "o" : "i"}
-                        {errorCount > 0 && ` e correzione di ${errorCount} error${errorCount === 1 ? "e" : "i"}`} per sbloccare l'analisi automatica.
+                  ) : isElaborata ? (
+                    <div className="flex items-center gap-4 bg-cyan/10 border border-cyan/30 rounded-xl p-5 shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+                      <div className="w-10 h-10 rounded-full bg-cyan/20 flex items-center justify-center text-cyan shrink-0">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                      </div>
+                      <div>
+                        <div className="text-cyan text-sm font-bold font-space uppercase tracking-widest mb-1">Analisi Completata</div>
+                        <div className="text-cyan/80 text-[11px] leading-relaxed">Tutti i moduli M1-M8 sono stati eseguiti con successo. Procedi alla Dashboard Analisi per i risultati XAI.</div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  ) : allUploaded ? (
+                    <button
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      className="w-full h-12 rounded-xl font-space font-bold uppercase tracking-[0.2em] text-xs transition-all bg-cyan text-black shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-70 disabled:hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] disabled:hover:bg-cyan flex items-center justify-center gap-3"
+                    >
+                      {submitting ? (
+                        <>
+                          <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                          Sottomissione Motore XAI...
+                        </>
+                      ) : (
+                        <>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                          Avvia Analisi Pratica
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-4 bg-yellow/10 border border-yellow/30 rounded-xl p-5">
+                      <div className="w-10 h-10 rounded-full bg-yellow/20 flex items-center justify-center text-yellow shrink-0">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                      </div>
+                      <div>
+                        <div className="text-yellow text-sm font-bold font-space uppercase tracking-widest mb-1">Azione Richiesta</div>
+                        <div className="text-yellow/80 text-[11px] leading-relaxed">
+                          Sistema in attesa di <strong className="text-yellow">{missingCount}</strong> document{missingCount === 1 ? "o" : "i"}
+                          {errorCount > 0 && ` e correzione di ${errorCount} error${errorCount === 1 ? "e" : "i"}`} per sbloccare l'analisi automatica.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Bilanci Storici Panel */}
-            <div className="glass-panel border border-white/10 p-6 flex flex-col gap-4 rounded-xl">
-              <header className="flex items-center justify-between">
-                <h2 className="font-space text-lg font-semibold text-white flex items-center gap-2 [text-wrap:balance]">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="8" y1="18" x2="8" y2="15"/><line x1="16" y1="18" x2="16" y2="9"/></svg>
-                  Archivio Bilanci Storici
-                </h2>
-              </header>
+              {/* Bilanci Storici Panel */}
+              <div className="glass-panel border border-white/10 p-6 flex flex-col gap-4 rounded-xl">
+                <header className="flex items-center justify-between">
+                  <h2 className="font-space text-lg font-semibold text-white flex items-center gap-2 [text-wrap:balance]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="8" y1="18" x2="8" y2="15" /><line x1="16" y1="18" x2="16" y2="9" /></svg>
+                    Archivio Bilanci Storici
+                  </h2>
+                </header>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[11px]">
-                  <thead>
-                    <tr className="border-b border-white/10 text-text-muted font-space uppercase tracking-[0.1em]">
-                      <th className="pb-3 px-3 font-medium">Esercizio</th>
-                      <th className="pb-3 px-3 font-medium">Stato Patrimoniale</th>
-                      <th className="pb-3 px-3 font-medium">Conto Economico</th>
-                      <th className="pb-3 px-3 font-medium text-right">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {["2023", "2022", "2021"].map((yr) => (
-                      <tr key={yr} className="group hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3 px-3 text-white font-mono">{yr}</td>
-                        <td className="py-3 px-3 text-white/70">Depositato (XBRL)</td>
-                        <td className="py-3 px-3 text-white/70">Depositato (XBRL)</td>
-                        <td className="py-3 px-3 text-right">
-                          <button
-                            onClick={() => setSelectedDoc({ title: `Fascicolo di Bilancio ${yr}`, filename: `bilancio_xbrl_${yr}.pdf` })}
-                            className="text-[10px] font-space uppercase text-cyan hover:text-white border border-cyan/30 hover:border-cyan/60 hover:bg-cyan/10 px-3 py-1.5 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
-                          >
-                            Visualizza
-                          </button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[11px]">
+                    <thead>
+                      <tr className="border-b border-white/10 text-text-muted font-space uppercase tracking-[0.1em]">
+                        <th className="pb-3 px-3 font-medium">Esercizio</th>
+                        <th className="pb-3 px-3 font-medium">Stato Patrimoniale</th>
+                        <th className="pb-3 px-3 font-medium">Conto Economico</th>
+                        <th className="pb-3 px-3 font-medium text-right">Azioni</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {["2023", "2022", "2021"].map((yr) => (
+                        <tr key={yr} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3 px-3 text-white font-mono">{yr}</td>
+                          <td className="py-3 px-3 text-white/70">Depositato (XBRL)</td>
+                          <td className="py-3 px-3 text-white/70">Depositato (XBRL)</td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => setSelectedDoc({ title: `Fascicolo di Bilancio ${yr}`, filename: `bilancio_xbrl_${yr}.pdf` })}
+                              className="text-[10px] font-space uppercase text-cyan hover:text-white border border-cyan/30 hover:border-cyan/60 hover:bg-cyan/10 px-3 py-1.5 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+                            >
+                              Visualizza
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
             {/* Right Column — Info */}
             <div className="space-y-6">
               {/* Location Map Card */}
@@ -709,7 +721,7 @@ function PraticaPage() {
                   <div className="p-4 bg-black/40">
                     <div className="flex items-center gap-2 mb-2">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-cyan shrink-0">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
                       </svg>
                       <span className="text-[10px] text-cyan font-space uppercase tracking-[0.2em] font-bold">Sede Legale</span>
                     </div>
@@ -763,7 +775,7 @@ function PraticaPage() {
                       </div>
                       <span className={`flex items-center gap-1.5 text-[9px] font-space uppercase tracking-[0.1em] font-bold ${m.done ? "text-green" : "text-white/20"}`}>
                         {m.done ? (
-                          <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> Fatto</>
+                          <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg> Fatto</>
                         ) : "In attesa"}
                       </span>
                     </div>
@@ -781,7 +793,7 @@ function PraticaPage() {
 
       {/* Document Viewer Modal */}
       {selectedDoc && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 outline-none"
           tabIndex={-1}
           autoFocus
@@ -789,7 +801,7 @@ function PraticaPage() {
           onClick={() => setSelectedDoc(null)}
         >
           {/* Modal Container */}
-          <div 
+          <div
             className="w-full max-w-5xl h-[85vh] bg-[#0A0E17] border border-cyan/30 rounded-2xl flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,229,255,0.1)] animate-in fade-in zoom-in duration-300"
             onClick={(e) => e.stopPropagation()}
           >
@@ -797,7 +809,7 @@ function PraticaPage() {
             <div className="h-14 bg-black/60 border-b border-white/10 flex items-center justify-between px-6 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-lg bg-cyan/10 border border-cyan/30 flex items-center justify-center text-cyan shadow-[0_0_10px_rgba(0,229,255,0.2)]">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
                 </div>
                 <div>
                   <h3 className="text-white text-sm font-space font-bold tracking-wide">{selectedDoc.title}</h3>
@@ -807,19 +819,19 @@ function PraticaPage() {
               <div className="flex items-center gap-3">
                 {/* Fake action buttons */}
                 <button className="text-white/50 hover:text-white p-2 transition-colors rounded hover:bg-white/10" aria-label="Scarica PDF" title="Scarica Documento">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                 </button>
                 <button className="text-white/50 hover:text-white p-2 transition-colors rounded hover:bg-white/10" aria-label="Stampa" title="Stampa Documento">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
                 </button>
                 <div className="w-px h-6 bg-white/10 mx-1"></div>
-                <button 
+                <button
                   onClick={() => setSelectedDoc(null)}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-red/10 text-red border border-red/30 hover:bg-red/20 transition-all shadow-[0_0_10px_rgba(255,71,87,0.1)]"
                   aria-label="Chiudi visualizzatore"
                   title="Chiudi"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               </div>
             </div>

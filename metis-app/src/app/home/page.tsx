@@ -36,32 +36,33 @@ interface Notification {
 const OPERATORS = ['M. Rossi', 'L. Bianchi', 'G. Verdi', 'A. Neri', 'S. Russo'];
 
 const mockCompanies: Company[] = [
-  { id: 1,  name: 'Alpha S.p.A.',        piva: 'IT00000000001', pd: 2.1,  altman: 3.12, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-18', created: '2025-01-15', sector: 'Manifatturiero', revenue: 15400000 },
-  { id: 2,  name: 'Beta Ltd.',           piva: 'IT00000000002', pd: 3.5,  altman: 2.85, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'L. Bianchi', updated: '2025-03-17', created: '2025-02-10', sector: 'Servizi',        revenue: 8200000 },
-  { id: 3,  name: 'Gamma SRL',           piva: 'IT00000000003', pd: 1.8,  altman: 3.45, status: 'DA REVISIONARE', risk: 'BASSO',   operator: 'G. Verdi',   updated: '2025-03-16', created: '2025-01-22', sector: 'Tech',           revenue: 22100000 },
-  { id: 4,  name: 'Delta Corp.',         piva: 'IT00000000004', pd: 5.2,  altman: 1.95, status: 'SOSPESA',        risk: 'ALTO',    operator: 'A. Neri',    updated: '2025-03-15', created: '2025-02-05', sector: 'Edilizia',       revenue: 4500000 },
-  { id: 5,  name: 'Epsilon S.r.l.',      piva: 'IT00000000005', pd: 0.9,  altman: 4.10, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-14', created: '2025-01-08', sector: 'Alimentare',     revenue: 31000000 },
-  { id: 6,  name: 'Zeta Industries',     piva: 'IT00000000006', pd: 7.8,  altman: 1.45, status: 'RIFIUTATA',      risk: 'CRITICO', operator: 'S. Russo',   updated: '2025-03-13', created: '2025-03-01', sector: 'Manifatturiero', revenue: 2100000 },
-  { id: 7,  name: 'Eta Holding',         piva: 'IT00000000007', pd: 1.5,  altman: 3.80, status: 'APPROVATA',      risk: 'BASSO',   operator: 'L. Bianchi', updated: '2025-03-12', created: '2025-01-20', sector: 'Servizi',        revenue: 45000000 },
-  { id: 8,  name: 'Theta Finance',       piva: 'IT00000000008', pd: 4.1,  altman: 2.20, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'G. Verdi',   updated: '2025-03-11', created: '2025-02-18', sector: 'Finanza',        revenue: 12800000 },
-  { id: 9,  name: 'Iota Tech',           piva: 'IT00000000009', pd: 2.8,  altman: 2.95, status: 'DA REVISIONARE', risk: 'MEDIO',   operator: 'A. Neri',    updated: '2025-03-10', created: '2025-02-25', sector: 'Tech',           revenue: 9700000 },
-  { id: 10, name: 'Kappa Logistics',     piva: 'IT00000000010', pd: 6.3,  altman: 1.60, status: 'SOSPESA',        risk: 'ALTO',    operator: 'S. Russo',   updated: '2025-03-09', created: '2025-01-30', sector: 'Trasporti',      revenue: 6300000 },
-  { id: 11, name: 'Lambda Group',        piva: 'IT00000000011', pd: 1.2,  altman: 3.95, status: 'APPROVATA',      risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-08', created: '2025-01-12', sector: 'Alimentare',     revenue: 28500000 },
-  { id: 12, name: 'Mu Pharma',           piva: 'IT00000000012', pd: 3.2,  altman: 2.70, status: 'IN ANALISI',     risk: 'MEDIO',   operator: 'L. Bianchi', updated: '2025-03-07', created: '2025-03-05', sector: 'Pharma',         revenue: 18000000 },
-  { id: 13, name: 'Nu Energy',           piva: 'IT00000000013', pd: 8.5,  altman: 1.10, status: 'RIFIUTATA',      risk: 'CRITICO', operator: 'G. Verdi',   updated: '2025-03-06', created: '2025-02-15', sector: 'Energia',        revenue: 3400000 },
-  { id: 14, name: 'Xi Construction',     piva: 'IT00000000014', pd: 4.8,  altman: 2.05, status: 'DA REVISIONARE', risk: 'ALTO',    operator: 'A. Neri',    updated: '2025-03-05', created: '2025-02-20', sector: 'Edilizia',       revenue: 7600000 },
-  { id: 15, name: 'Omicron Digital',     piva: 'IT00000000015', pd: 1.0,  altman: 4.25, status: 'APPROVATA',      risk: 'BASSO',   operator: 'S. Russo',   updated: '2025-03-04', created: '2025-01-05', sector: 'Tech',           revenue: 52000000 },
-  { id: 16, name: 'Pi Consulting',       piva: 'IT00000000016', pd: 2.5,  altman: 3.10, status: 'IN ANALISI',     risk: 'BASSO',   operator: 'M. Rossi',   updated: '2025-03-03', created: '2025-03-02', sector: 'Servizi',        revenue: 5200000 },
-  { id: 17, name: 'Rho Automotive',      piva: 'IT00000000017', pd: 5.9,  altman: 1.75, status: 'SOSPESA',        risk: 'ALTO',    operator: 'L. Bianchi', updated: '2025-03-02', created: '2025-02-08', sector: 'Automotive',     revenue: 14200000 },
-  { id: 18, name: 'Sigma Textiles',      piva: 'IT00000000018', pd: 3.8,  altman: 2.50, status: 'DA REVISIONARE', risk: 'MEDIO',   operator: 'G. Verdi',   updated: '2025-03-01', created: '2025-01-28', sector: 'Manifatturiero', revenue: 11000000 },
+  { id: 1, name: 'Alpha S.p.A.', piva: 'IT00000000001', pd: 2.1, altman: 3.12, status: 'APPROVATA', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-18', created: '2025-01-15', sector: 'Manifatturiero', revenue: 15400000 },
+  { id: 2, name: 'Beta Ltd.', piva: 'IT00000000002', pd: 3.5, altman: 2.85, status: 'IN ANALISI', risk: 'MEDIO', operator: 'L. Bianchi', updated: '2025-03-17', created: '2025-02-10', sector: 'Servizi', revenue: 8200000 },
+  { id: 3, name: 'Gamma SRL', piva: 'IT00000000003', pd: 1.8, altman: 3.45, status: 'DA REVISIONARE', risk: 'BASSO', operator: 'G. Verdi', updated: '2025-03-16', created: '2025-01-22', sector: 'Tech', revenue: 22100000 },
+  { id: 4, name: 'Delta Corp.', piva: 'IT00000000004', pd: 5.2, altman: 1.95, status: 'SOSPESA', risk: 'ALTO', operator: 'A. Neri', updated: '2025-03-15', created: '2025-02-05', sector: 'Edilizia', revenue: 4500000 },
+  { id: 5, name: 'Epsilon S.r.l.', piva: 'IT00000000005', pd: 0.9, altman: 4.10, status: 'APPROVATA', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-14', created: '2025-01-08', sector: 'Alimentare', revenue: 31000000 },
+  { id: 6, name: 'Zeta Industries', piva: 'IT00000000006', pd: 7.8, altman: 1.45, status: 'RIFIUTATA', risk: 'CRITICO', operator: 'S. Russo', updated: '2025-03-13', created: '2025-03-01', sector: 'Manifatturiero', revenue: 2100000 },
+  { id: 7, name: 'Eta Holding', piva: 'IT00000000007', pd: 1.5, altman: 3.80, status: 'APPROVATA', risk: 'BASSO', operator: 'L. Bianchi', updated: '2025-03-12', created: '2025-01-20', sector: 'Servizi', revenue: 45000000 },
+  { id: 8, name: 'Theta Finance', piva: 'IT00000000008', pd: 4.1, altman: 2.20, status: 'IN ANALISI', risk: 'MEDIO', operator: 'G. Verdi', updated: '2025-03-11', created: '2025-02-18', sector: 'Finanza', revenue: 12800000 },
+  { id: 9, name: 'Iota Tech', piva: 'IT00000000009', pd: 2.8, altman: 2.95, status: 'DA REVISIONARE', risk: 'MEDIO', operator: 'A. Neri', updated: '2025-03-10', created: '2025-02-25', sector: 'Tech', revenue: 9700000 },
+  { id: 10, name: 'Kappa Logistics', piva: 'IT00000000010', pd: 6.3, altman: 1.60, status: 'SOSPESA', risk: 'ALTO', operator: 'S. Russo', updated: '2025-03-09', created: '2025-01-30', sector: 'Trasporti', revenue: 6300000 },
+  { id: 11, name: 'Lambda Group', piva: 'IT00000000011', pd: 1.2, altman: 3.95, status: 'APPROVATA', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-08', created: '2025-01-12', sector: 'Alimentare', revenue: 28500000 },
+  { id: 12, name: 'Mu Pharma', piva: 'IT00000000012', pd: 3.2, altman: 2.70, status: 'IN ANALISI', risk: 'MEDIO', operator: 'L. Bianchi', updated: '2025-03-07', created: '2025-03-05', sector: 'Pharma', revenue: 18000000 },
+  { id: 13, name: 'Nu Energy', piva: 'IT00000000013', pd: 8.5, altman: 1.10, status: 'RIFIUTATA', risk: 'CRITICO', operator: 'G. Verdi', updated: '2025-03-06', created: '2025-02-15', sector: 'Energia', revenue: 3400000 },
+  { id: 14, name: 'Xi Construction', piva: 'IT00000000014', pd: 4.8, altman: 2.05, status: 'DA REVISIONARE', risk: 'ALTO', operator: 'A. Neri', updated: '2025-03-05', created: '2025-02-20', sector: 'Edilizia', revenue: 7600000 },
+  { id: 15, name: 'Omicron Digital', piva: 'IT00000000015', pd: 1.0, altman: 4.25, status: 'APPROVATA', risk: 'BASSO', operator: 'S. Russo', updated: '2025-03-04', created: '2025-01-05', sector: 'Tech', revenue: 52000000 },
+  { id: 16, name: 'Pi Consulting', piva: 'IT00000000016', pd: 2.5, altman: 3.10, status: 'IN ANALISI', risk: 'BASSO', operator: 'M. Rossi', updated: '2025-03-03', created: '2025-03-02', sector: 'Servizi', revenue: 5200000 },
+  { id: 17, name: 'Rho Automotive', piva: 'IT00000000017', pd: 5.9, altman: 1.75, status: 'SOSPESA', risk: 'ALTO', operator: 'L. Bianchi', updated: '2025-03-02', created: '2025-02-08', sector: 'Automotive', revenue: 14200000 },
+  { id: 18, name: 'Sigma Textiles', piva: 'IT00000000018', pd: 3.8, altman: 2.50, status: 'DA REVISIONARE', risk: 'MEDIO', operator: 'G. Verdi', updated: '2025-03-01', created: '2025-01-28', sector: 'Manifatturiero', revenue: 11000000 },
+  { id: 100, name: 'PECORELLA SPA', piva: 'IT09876543210', pd: 2.1, altman: 3.52, status: 'IN ANALISI', risk: 'BASSO', operator: 'METIS AI', updated: '2026-03-27', created: '2026-03-27', sector: 'Tech', revenue: 4850000 },
 ];
 
 const mockNotifications: Notification[] = [
-  { id: 1, type: 'danger',  message: 'Zeta Industries: PD oltre soglia critica (7.8%)',     time: '2 min fa',  read: false },
-  { id: 2, type: 'warning', message: 'Delta Corp.: pratica sospesa da oltre 15 giorni',     time: '1 ora fa',  read: false },
-  { id: 3, type: 'info',    message: 'Mu Pharma: nuova documentazione caricata',            time: '3 ore fa',  read: false },
-  { id: 4, type: 'success', message: 'Lambda Group: approvazione completata',                time: '5 ore fa',  read: true },
-  { id: 5, type: 'warning', message: 'Kappa Logistics: Altman Z-score sotto 1.8',           time: '1 giorno fa', read: true },
+  { id: 1, type: 'danger', message: 'Zeta Industries: PD oltre soglia critica (7.8%)', time: '2 min fa', read: false },
+  { id: 2, type: 'warning', message: 'Delta Corp.: pratica sospesa da oltre 15 giorni', time: '1 ora fa', read: false },
+  { id: 3, type: 'info', message: 'Mu Pharma: nuova documentazione caricata', time: '3 ore fa', read: false },
+  { id: 4, type: 'success', message: 'Lambda Group: approvazione completata', time: '5 ore fa', read: true },
+  { id: 5, type: 'warning', message: 'Kappa Logistics: Altman Z-score sotto 1.8', time: '1 giorno fa', read: true },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -283,7 +284,7 @@ function SortIndicator({ sortKey, currentKey, dir }: { sortKey: SortKey; current
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function HomeDashboard() {
   const router = useRouter();
-  
+
   // Filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -312,7 +313,7 @@ export default function HomeDashboard() {
 
   useEffect(() => {
     let currentCompanies = [...mockCompanies];
-    
+
     // 1. Load from localStorage (Dossier manual adds)
     const stored = loadPratiche();
     if (stored.length > 0) {
@@ -333,17 +334,17 @@ export default function HomeDashboard() {
           const data = JSON.parse(newAnalysisStr);
           const { soggetto, score_in_analisi, bilancio_t0 } = data;
           const newComp: Company = {
-            id: 999, 
-            name: soggetto.ragione_sociale, 
-            piva: soggetto.partita_iva, 
+            id: 999,
+            name: soggetto.ragione_sociale,
+            piva: soggetto.partita_iva,
             pd: score_in_analisi.pd_stimata,
-            altman: score_in_analisi.altman_z_stimato, 
-            status: "IN ANALISI", 
+            altman: score_in_analisi.altman_z_stimato,
+            status: "IN ANALISI",
             risk: score_in_analisi.rischio_stimato as RiskLevel,
-            operator: "METIS AI", 
-            updated: new Date().toISOString().slice(0,10), 
-            created: new Date().toISOString().slice(0,10),
-            sector: soggetto.settore, 
+            operator: "METIS AI",
+            updated: new Date().toISOString().slice(0, 10),
+            created: new Date().toISOString().slice(0, 10),
+            sector: soggetto.settore,
             revenue: bilancio_t0.ricavi,
           };
           const idx = currentCompanies.findIndex(c => c.name === newComp.name || c.piva === newComp.piva);
