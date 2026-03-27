@@ -5,24 +5,25 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // ─── Portfolio data (mirrors home/page.tsx mock) ─────────────────────────────
 const PRATICHE = [
-  { id: 1,  name: "Alpha S.p.A.",     piva: "IT00000000001", status: "APPROVATA",      sector: "Manifatturiero", risk: "BASSO",   pd: 2.1, altman: 3.12, revenue: 15400000, operator: "M. Rossi"   },
-  { id: 2,  name: "Beta Ltd.",        piva: "IT00000000002", status: "IN ANALISI",     sector: "Servizi",        risk: "MEDIO",   pd: 3.5, altman: 2.85, revenue: 8200000,  operator: "L. Bianchi" },
-  { id: 3,  name: "Gamma SRL",        piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech",           risk: "BASSO",   pd: 1.8, altman: 3.45, revenue: 22100000, operator: "G. Verdi"   },
-  { id: 4,  name: "Delta Corp.",      piva: "IT00000000004", status: "SOSPESA",        sector: "Edilizia",       risk: "ALTO",    pd: 5.2, altman: 1.95, revenue: 4500000,  operator: "A. Neri"    },
-  { id: 5,  name: "Epsilon S.r.l.",   piva: "IT00000000005", status: "APPROVATA",      sector: "Alimentare",     risk: "BASSO",   pd: 0.9, altman: 4.10, revenue: 31000000, operator: "M. Rossi"   },
-  { id: 6,  name: "Zeta Industries",  piva: "IT00000000006", status: "RIFIUTATA",      sector: "Manifatturiero", risk: "CRITICO", pd: 7.8, altman: 1.45, revenue: 2100000,  operator: "S. Russo"   },
-  { id: 7,  name: "Eta Holding",      piva: "IT00000000007", status: "APPROVATA",      sector: "Servizi",        risk: "BASSO",   pd: 1.5, altman: 3.80, revenue: 45000000, operator: "L. Bianchi" },
-  { id: 8,  name: "Theta Finance",    piva: "IT00000000008", status: "IN ANALISI",     sector: "Finanza",        risk: "MEDIO",   pd: 4.1, altman: 2.20, revenue: 12800000, operator: "G. Verdi"   },
-  { id: 9,  name: "Iota Tech",        piva: "IT00000000009", status: "DA REVISIONARE", sector: "Tech",           risk: "MEDIO",   pd: 2.8, altman: 2.95, revenue: 9700000,  operator: "A. Neri"    },
-  { id: 10, name: "Kappa Logistics",  piva: "IT00000000010", status: "SOSPESA",        sector: "Trasporti",      risk: "ALTO",    pd: 6.3, altman: 1.60, revenue: 6300000,  operator: "S. Russo"   },
-  { id: 11, name: "Lambda Group",     piva: "IT00000000011", status: "APPROVATA",      sector: "Alimentare",     risk: "BASSO",   pd: 1.2, altman: 3.95, revenue: 28500000, operator: "M. Rossi"   },
-  { id: 12, name: "Mu Pharma",        piva: "IT00000000012", status: "IN ANALISI",     sector: "Pharma",         risk: "MEDIO",   pd: 3.2, altman: 2.70, revenue: 18000000, operator: "L. Bianchi" },
-  { id: 13, name: "Nu Energy",        piva: "IT00000000013", status: "RIFIUTATA",      sector: "Energia",        risk: "CRITICO", pd: 8.5, altman: 1.10, revenue: 3400000,  operator: "G. Verdi"   },
-  { id: 14, name: "Xi Construction",  piva: "IT00000000014", status: "DA REVISIONARE", sector: "Edilizia",       risk: "ALTO",    pd: 4.8, altman: 2.05, revenue: 7600000,  operator: "A. Neri"    },
-  { id: 15, name: "Omicron Digital",  piva: "IT00000000015", status: "APPROVATA",      sector: "Tech",           risk: "BASSO",   pd: 1.0, altman: 4.25, revenue: 52000000, operator: "S. Russo"   },
-  { id: 16, name: "Pi Consulting",    piva: "IT00000000016", status: "IN ANALISI",     sector: "Servizi",        risk: "BASSO",   pd: 2.5, altman: 3.10, revenue: 5200000,  operator: "M. Rossi"   },
-  { id: 17, name: "Rho Automotive",   piva: "IT00000000017", status: "SOSPESA",        sector: "Automotive",     risk: "ALTO",    pd: 5.9, altman: 1.75, revenue: 14200000, operator: "L. Bianchi" },
-  { id: 18, name: "Sigma Textiles",   piva: "IT00000000018", status: "DA REVISIONARE", sector: "Manifatturiero", risk: "MEDIO",   pd: 3.8, altman: 2.50, revenue: 11000000, operator: "G. Verdi"   },
+  { id: 1, name: "Alpha S.p.A.", piva: "IT00000000001", status: "APPROVATA", sector: "Manifatturiero", risk: "BASSO", pd: 2.1, altman: 3.12, revenue: 15400000, operator: "M. Rossi" },
+  { id: 2, name: "Beta Ltd.", piva: "IT00000000002", status: "IN ANALISI", sector: "Servizi", risk: "MEDIO", pd: 3.5, altman: 2.85, revenue: 8200000, operator: "L. Bianchi" },
+  { id: 3, name: "Gamma SRL", piva: "IT00000000003", status: "DA REVISIONARE", sector: "Tech", risk: "BASSO", pd: 1.8, altman: 3.45, revenue: 22100000, operator: "G. Verdi" },
+  { id: 4, name: "Delta Corp.", piva: "IT00000000004", status: "SOSPESA", sector: "Edilizia", risk: "ALTO", pd: 5.2, altman: 1.95, revenue: 4500000, operator: "A. Neri" },
+  { id: 5, name: "Epsilon S.r.l.", piva: "IT00000000005", status: "APPROVATA", sector: "Alimentare", risk: "BASSO", pd: 0.9, altman: 4.10, revenue: 31000000, operator: "M. Rossi" },
+  { id: 6, name: "Zeta Industries", piva: "IT00000000006", status: "RIFIUTATA", sector: "Manifatturiero", risk: "CRITICO", pd: 7.8, altman: 1.45, revenue: 2100000, operator: "S. Russo" },
+  { id: 7, name: "Eta Holding", piva: "IT00000000007", status: "APPROVATA", sector: "Servizi", risk: "BASSO", pd: 1.5, altman: 3.80, revenue: 45000000, operator: "L. Bianchi" },
+  { id: 8, name: "Theta Finance", piva: "IT00000000008", status: "IN ANALISI", sector: "Finanza", risk: "MEDIO", pd: 4.1, altman: 2.20, revenue: 12800000, operator: "G. Verdi" },
+  { id: 9, name: "Iota Tech", piva: "IT00000000009", status: "DA REVISIONARE", sector: "Tech", risk: "MEDIO", pd: 2.8, altman: 2.95, revenue: 9700000, operator: "A. Neri" },
+  { id: 10, name: "Kappa Logistics", piva: "IT00000000010", status: "SOSPESA", sector: "Trasporti", risk: "ALTO", pd: 6.3, altman: 1.60, revenue: 6300000, operator: "S. Russo" },
+  { id: 11, name: "Lambda Group", piva: "IT00000000011", status: "APPROVATA", sector: "Alimentare", risk: "BASSO", pd: 1.2, altman: 3.95, revenue: 28500000, operator: "M. Rossi" },
+  { id: 12, name: "Mu Pharma", piva: "IT00000000012", status: "IN ANALISI", sector: "Pharma", risk: "MEDIO", pd: 3.2, altman: 2.70, revenue: 18000000, operator: "L. Bianchi" },
+  { id: 13, name: "Nu Energy", piva: "IT00000000013", status: "RIFIUTATA", sector: "Energia", risk: "CRITICO", pd: 8.5, altman: 1.10, revenue: 3400000, operator: "G. Verdi" },
+  { id: 14, name: "Xi Construction", piva: "IT00000000014", status: "DA REVISIONARE", sector: "Edilizia", risk: "ALTO", pd: 4.8, altman: 2.05, revenue: 7600000, operator: "A. Neri" },
+  { id: 15, name: "Omicron Digital", piva: "IT00000000015", status: "APPROVATA", sector: "Tech", risk: "BASSO", pd: 1.0, altman: 4.25, revenue: 52000000, operator: "S. Russo" },
+  { id: 16, name: "Pi Consulting", piva: "IT00000000016", status: "IN ANALISI", sector: "Servizi", risk: "BASSO", pd: 2.5, altman: 3.10, revenue: 5200000, operator: "M. Rossi" },
+  { id: 17, name: "Rho Automotive", piva: "IT00000000017", status: "SOSPESA", sector: "Automotive", risk: "ALTO", pd: 5.9, altman: 1.75, revenue: 14200000, operator: "L. Bianchi" },
+  { id: 18, name: "Sigma Textiles", piva: "IT00000000018", status: "DA REVISIONARE", sector: "Manifatturiero", risk: "MEDIO", pd: 3.8, altman: 2.50, revenue: 11000000, operator: "G. Verdi" },
+  { id: 100, name: "PECORELLA SPA", piva: "IT09876543210", status: "IN ANALISI", sector: "Tech", risk: "BASSO", pd: 2.1, altman: 3.52, revenue: 4850000, operator: "METIS AI" },
 ];
 
 // ─── Tool implementations ─────────────────────────────────────────────────────
@@ -88,10 +89,10 @@ function naviga_a({ page, id }: { page: string; id?: number }) {
 // ─── Tool dispatch ────────────────────────────────────────────────────────────
 function executeTool(name: string, args: Record<string, unknown>) {
   switch (name) {
-    case "cerca_pratiche":        return cerca_pratiche(args as Parameters<typeof cerca_pratiche>[0]);
+    case "cerca_pratiche": return cerca_pratiche(args as Parameters<typeof cerca_pratiche>[0]);
     case "get_pratica_dettaglio": return get_pratica_dettaglio(args as Parameters<typeof get_pratica_dettaglio>[0]);
-    case "get_portfolio_kpi":     return get_portfolio_kpi();
-    case "naviga_a":              return naviga_a(args as Parameters<typeof naviga_a>[0]);
+    case "get_portfolio_kpi": return get_portfolio_kpi();
+    case "naviga_a": return naviga_a(args as Parameters<typeof naviga_a>[0]);
     default: return { error: "Tool non trovato" };
   }
 }
@@ -103,14 +104,125 @@ Sei un analista del credito super-intelligente (Underwriter Copilot) con accesso
 
 **TOOL DISPONIBILI**: usa i tool ogni volta che l'utente chiede dati su pratiche, portafoglio, statistiche. Non inventare dati che puoi recuperare con i tool.
 
-**MODELLI DI RISCHIO INTEGRATI**:
-- Altman Z-Score: >2.9 Safe, 1.23-2.9 Grey Zone, <1.23 Distress
-- PD (Probabilità Default): <3% Basso, 3-6% Medio, >6% Alto
-- DSCR Forecast: soglia critica <1.1x
-- Moduli Analisi: M1 PEF, M2 NLP Sentiment, M3 KPI, M4 Benchmark ISTAT, M5 Centrale Rischi, M6 Cross-check, M7 DSCR, M8 SWOT
-- Conformità: EU AI Act, CCII D.Lgs.14/2019, EBA/GL/2020/06 ESG
+Quando proponi di aprire una pratica o un dossier, usa il tool naviga_a — il frontend mostrerà automaticamente una card interattiva cliccabile.
 
-Quando proponi di aprire una pratica o un dossier, usa il tool naviga_a — il frontend mostrerà automaticamente una card interattiva cliccabile.`;
+---
+## KNOWLEDGE BASE COMPLETA
+
+### 1. ARCHITETTURA MODULARE (M1-M8 + E1-E7 + X)
+
+**Moduli Motore (M)** — Processano i dati grezzi:
+- **M1** — Sintesi PEF: parsing automatico del bilancio (PDF/XBRL/JSON), estrazione SP e CE
+- **M2** — NLP Sentiment: analisi sentiment web tramite Gemini AI e DuckDuckGo, score 0-100, articoli positivi/negativi/neutri
+- **M3** — KPI Bilancio: calcolo automatico di 20+ indicatori (ROE, ROI, EBITDA margin, current ratio, leverage, ecc.)
+- **M4** — Benchmark ISTAT: confronto KPI con medie ISTAT per codice ATECO e classe dimensionale
+- **M5** — Centrale Rischi: analisi segnalazioni Bankitalia, utilizzo fidi, sconfinamenti, garanzie MCC
+- **M6** — Cross-check: validazione incrociata tra bilancio, CR e visura camerale per individuare incongruenze
+- **M7** — DSCR Forecast: proiezione cash flow a 6 mesi in 3 scenari (base, stress, ottimistico)
+- **M8** — SWOT AI: analisi Strengths/Weaknesses/Opportunities/Threats generata da Gemini AI
+
+**Moduli Esito (E)** — Producono output analitici:
+- **E1** — Cluster Analysis: segmentazione rischio in 5 cluster (Eccellenza → Criticità)
+- **E2** — Scoring: modelli Altman Z-Score, Ohlson O-Score, Zmijewski X-Score → PD media ponderata
+- **E3** — CCII: indici early warning Codice Crisi (D.Lgs.14/2019): DSCR prospettico, PN positivo, debiti tributari
+- **E4** — Teoria dei Giochi: modello Stackelberg banca-debitore con equilibrio di Nash
+- **E5** — Simulatore Prodotti PEF: comparazione 5 prodotti creditizi con tasso suggerito
+- **E6** — XAI Narrative: spiegazione narrativa Glass-Box generata da Gemini AI
+- **E7** — SWOT Riepilogo: sintesi decisionale con raccomandazione finale
+
+**Modulo X** — Delibera:
+- Proposta di delibera finale con raccomandazione (Approvare / Rifiutare / Richiedere integrazione)
+
+### 2. MODELLI DI RISCHIO
+
+**Altman Z-Score** (peso 30% nella PD):
+- Formula: Z = 1.2×WC/TA + 1.4×RE/TA + 3.3×EBIT/TA + 0.6×MVE/TL + 1.0×S/TA
+- Soglie: >2.99 Safe Zone | 1.81-2.99 Grey Zone | <1.81 Distress
+- Se Z>2.99 → PD stimata 0.5% | Se 1.81-2.99 → PD 5% | Se <1.81 → PD 15%
+
+**Ohlson O-Score** (peso 40% nella PD):
+- Modello logistico con 9 variabili: dimensione, leverage, capitale circolante, utile netto, cash flow operativo, ecc.
+- Output: probabilità diretta di default (0-1)
+
+**Zmijewski X-Score** (peso 30% nella PD):
+- Modello probit con 3 variabili: ROA, leverage, liquidità
+- Output: probabilità diretta di default (0-1)
+
+**PD Finale** = Ohlson×40% + Zmijewski×30% + Altman_convertito×30%
+- <2% → rischio BASSO | 2-5% → MEDIO | >5% → ALTO
+
+### 3. TEORIA DEI GIOCHI (E4)
+
+Modello **Stackelberg a informazione completa** con 2 attori:
+
+**Giocatore 1 — BANCA (Leader)** — 3 strategie:
+| Strategia | Spread (bp) | Garanzie | LTV Max |
+|-----------|-------------|----------|--------|
+| CONSERVATIVE | +200bp | Forti | 50% |
+| BALANCED | +120bp | Moderate | 70% |
+| AGGRESSIVE | +60bp | Leggere | 85% |
+
+**Giocatore 2 — DEBITORE (Follower)** — 3 strategie:
+| Strategia | Accetta |
+|-----------|--------|
+| ACCEPT_ALL | Tutte le condizioni |
+| NEGOTIATE | Solo BALANCED o AGGRESSIVE |
+| WALK_AWAY | Solo AGGRESSIVE |
+
+**Calcolo Payoff per ogni cella della matrice 3×3:**
+- Se il debitore non accetta → payoff 0/0
+- **Payoff Banca** = Spread × Importo × (1 − PD × LGD_aggiustata)
+  - LGD base 45% (Basilea), aggiustata: Forti ×0.55, Moderate ×0.75, Leggere ×0.95
+- **Payoff Debitore** = (Tasso_max − Tasso_effettivo) × Importo − Costo_garanzie × Importo
+  - Costi garanzie: Forti 2.5%, Moderate 1.2%, Leggere 0.4%/anno
+
+**Equilibrio di Nash**: cella dove NESSUNO dei due giocatori migliora cambiando strategia unilateralmente.
+- Se multipli → si sceglie quello con payoff combinato maggiore
+- Se nessuno → fallback al massimo payoff combinato
+- Verifica strict Nash: nessuna alternativa con payoff equivalente
+
+**Sensitività**: ricalcolo con PD a ±1% e ±2% per verificare stabilità dell'equilibrio.
+
+### 4. SIMULATORE PRODOTTI PEF (E5)
+
+5 prodotti creditizi simulati con parametri risk-adjusted:
+
+| Prodotto | Spread Base | Commissione | LGD Base | Durata |
+|----------|-------------|------------|----------|--------|
+| Revolving | 3.50% | 0.50% | 55% | 12-60 mesi |
+| Chirografario | 2.80% | 0.30% | 60% | 12-84 mesi |
+| Ipotecario | 1.40% | 0.15% | 25% | 60-240 mesi |
+| SBF (Anticipo Fatture) | 2.20% | 0.80% | 40% | 3-12 mesi |
+| Leasing | 2.00% | 0.40% | 30% | 24-120 mesi |
+
+**Tasso suggerito** = EURIBOR 6M (3.20%) + Spread risk-adjusted
+
+Lo spread viene aggiustato in base al bilancio:
+- EBITDA margin >20% → −0.30% | <8% → +0.50%
+- Leverage >4x → +0.80% | >3x → +0.40% | <1.5x → −0.20%
+- Ricavi >€10M → −0.20% | <€2M → +0.30%
+
+**LGD stimata** aggiustata per: leverage, rapporto importo/attivo, tipo garanzia (ipoteca −15%, leasing −10%, SBF −5/10%)
+
+**Margine Banca** = spread + commissione − costo_rischio (PD×LGD)
+
+**Score prodotto (0-100)** = Margine×30% + (100−Rischio)×30% + DSCR_post×25% + Copertura×15%
+→ Il prodotto con score più alto = **RACCOMANDATO**
+
+### 5. CONFORMITÀ NORMATIVA
+- **EU AI Act**: Glass-Box approach con XAI narrative
+- **CCII D.Lgs.14/2019**: indici di allerta per crisi d'impresa
+- **EBA/GL/2020/06**: linee guida ESG nella concessione credito
+- **Basilea III/IV**: LGD standardizzata 45%, RWA calculation
+
+### 6. DSCR FORECAST (M7)
+3 scenari prospettici a 6 mesi:
+- **Base**: crescita ricavi +3%, costi stabili
+- **Stress**: ricavi −10%, costi +5%
+- **Ottimistico**: ricavi +8%, costi −2%
+Soglia critica DSCR < 1.1x → segnalazione alert
+
+---`;
 
 // ─── Tool declarations for Gemini ────────────────────────────────────────────
 const tools = [{
@@ -121,10 +233,10 @@ const tools = [{
       parameters: {
         type: SchemaType.OBJECT,
         properties: {
-          status:  { type: SchemaType.STRING, description: "Stato: APPROVATA, IN ANALISI, DA REVISIONARE, SOSPESA, RIFIUTATA" },
+          status: { type: SchemaType.STRING, description: "Stato: APPROVATA, IN ANALISI, DA REVISIONARE, SOSPESA, RIFIUTATA" },
           rischio: { type: SchemaType.STRING, description: "Livello rischio: BASSO, MEDIO, ALTO, CRITICO" },
           settore: { type: SchemaType.STRING, description: "Settore industriale es. Tech, Edilizia, Manifatturiero" },
-          query:   { type: SchemaType.STRING, description: "Ricerca testuale libera su nome azienda o PIVA" },
+          query: { type: SchemaType.STRING, description: "Ricerca testuale libera su nome azienda o PIVA" },
         },
       },
     },
@@ -134,7 +246,7 @@ const tools = [{
       parameters: {
         type: SchemaType.OBJECT,
         properties: {
-          id:   { type: SchemaType.NUMBER, description: "ID numerico della pratica" },
+          id: { type: SchemaType.NUMBER, description: "ID numerico della pratica" },
           name: { type: SchemaType.STRING, description: "Nome dell'azienda (anche parziale)" },
         },
       },
@@ -151,7 +263,7 @@ const tools = [{
         type: SchemaType.OBJECT,
         properties: {
           page: { type: SchemaType.STRING, description: "Nome pagina: home, pratica, dossier, copilot, portafoglio, rule-engine" },
-          id:   { type: SchemaType.NUMBER, description: "ID pratica/dossier (se applicabile)" },
+          id: { type: SchemaType.NUMBER, description: "ID pratica/dossier (se applicabile)" },
         },
         required: ["page"],
       },

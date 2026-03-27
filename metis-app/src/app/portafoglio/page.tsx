@@ -402,8 +402,8 @@ export default function PortafoglioDashboard() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Sorting
-  const [sortKey, setSortKey] = useState<SortKey>('updated');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -823,8 +823,8 @@ export default function PortafoglioDashboard() {
                     key={p}
                     onClick={() => setPage(p)}
                     className={`w-10 h-10 rounded-xl border flex items-center justify-center text-sm font-medium transition-all ${p === page
-                        ? 'border-[#00E5FF]/50 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
-                        : 'border-white/5 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5'
+                      ? 'border-[#00E5FF]/50 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
+                      : 'border-white/5 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/5'
                       }`}
                   >
                     {p}
